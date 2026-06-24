@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Plus, Trophy, Zap, Users } from 'lucide-react'
+import { DeleteButton } from '@/components/shared/DeleteButton'
+import { Plus, Trophy, Zap, Users, Pencil } from 'lucide-react'
 
 export default async function ChallengesPage() {
   const supabase = await createServerSupabaseClient()
@@ -41,11 +42,7 @@ export default async function ChallengesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {challenges.map((c) => (
-              <Link
-                key={c.id}
-                href={`/challenges/${c.id}`}
-                className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg transition border-t-4 border-ruwad-lime"
-              >
+              <div key={c.id} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg transition border-t-4 border-ruwad-lime">
                 <div className="flex items-start justify-between">
                   <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{c.title}</h3>
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
@@ -55,11 +52,21 @@ export default async function ChallengesPage() {
                   </span>
                 </div>
                 <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">{c.description || 'بلا وصف'}</p>
-                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50 mt-1">
+                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50">
                   <span className="flex items-center gap-1.5"><Zap size={16} className="text-ruwad-navy/40" /> {c.challenge_questions?.[0]?.count ?? 0} سؤال</span>
                   <span className="flex items-center gap-1.5"><Users size={16} /> {c.challenge_submissions?.[0]?.count ?? 0} مشارك</span>
                 </div>
-              </Link>
+
+                <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
+                  <Link href={`/challenges/${c.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">
+                    <Pencil size={15} /> تعديل
+                  </Link>
+                  <Link href={`/challenges/${c.id}/results`} className="flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-navy hover:bg-ruwad-gray/30 px-3 py-2 rounded-ruwad-sm transition">
+                    <Trophy size={15} />
+                  </Link>
+                  <DeleteButton table="challenges" id={c.id} label="حذف" confirmText="حذف التحدي سيحذف معه كل أسئلته ونتائج المشاركين فيه نهائياً. متابعة؟" />
+                </div>
+              </div>
             ))}
           </div>
         )}

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Plus, FileCheck, Users } from 'lucide-react'
+import { DeleteButton } from '@/components/shared/DeleteButton'
+import { Plus, FileCheck, Users, Pencil } from 'lucide-react'
 
 export default async function AssignmentsPage() {
   const supabase = await createServerSupabaseClient()
@@ -34,14 +35,10 @@ export default async function AssignmentsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {assignments.map((a) => (
-              <Link
-                key={a.id}
-                href={`/assignments/${a.id}`}
-                className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
-              >
+              <div key={a.id} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition">
                 <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{a.title}</h3>
                 <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">{a.description || 'بلا وصف'}</p>
-                <div className="flex items-center justify-between text-sm text-ruwad-navy/50 mt-1">
+                <div className="flex items-center justify-between text-sm text-ruwad-navy/50">
                   <span className="flex items-center gap-1.5">
                     <Users size={16} /> {a.assignment_submissions?.[0]?.count ?? 0} تسليم
                   </span>
@@ -49,7 +46,14 @@ export default async function AssignmentsPage() {
                     <span>الموعد: {new Date(a.due_date).toLocaleDateString('ar')}</span>
                   )}
                 </div>
-              </Link>
+
+                <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
+                  <Link href={`/assignments/${a.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">
+                    <Pencil size={15} /> تعديل / تصحيح
+                  </Link>
+                  <DeleteButton table="assignments" id={a.id} label="حذف" confirmText="حذف الواجب سيحذف معه كل تسليمات الطلاب فيه نهائياً. متابعة؟" />
+                </div>
+              </div>
             ))}
           </div>
         )}

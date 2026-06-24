@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Plus, BookOpen, Users } from 'lucide-react'
+import { DeleteButton } from '@/components/shared/DeleteButton'
+import { Plus, BookOpen, Users, Pencil } from 'lucide-react'
 
 export default async function CoursesPage() {
   const supabase = await createServerSupabaseClient()
@@ -35,9 +36,8 @@ export default async function CoursesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((course) => (
-              <Link
+              <div
                 key={course.id}
-                href={`/courses/${course.id}`}
                 className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
               >
                 <div className="flex items-start justify-between">
@@ -55,7 +55,7 @@ export default async function CoursesPage() {
                 <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
                   {course.description || 'بلا وصف'}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50 mt-1">
+                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50">
                   <span className="flex items-center gap-1.5">
                     <BookOpen size={16} /> {course.lectures?.[0]?.count ?? 0} محاضرة
                   </span>
@@ -63,7 +63,17 @@ export default async function CoursesPage() {
                     <Users size={16} /> {course.enrollments?.[0]?.count ?? 0} طالب
                   </span>
                 </div>
-              </Link>
+
+                <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
+                  <Link
+                    href={`/courses/${course.id}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition"
+                  >
+                    <Pencil size={15} /> تعديل
+                  </Link>
+                  <DeleteButton table="courses" id={course.id} label="حذف" confirmText="حذف الكورس سيحذف معه كل محاضراته وتسجيلات الطلاب فيه نهائياً. متابعة؟" />
+                </div>
+              </div>
             ))}
           </div>
         )}

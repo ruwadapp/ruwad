@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Plus, ClipboardList, MessageSquare } from 'lucide-react'
+import { DeleteButton } from '@/components/shared/DeleteButton'
+import { Plus, ClipboardList, MessageSquare, Pencil, BarChart3 } from 'lucide-react'
 
 export default async function SurveysPage() {
   const supabase = await createServerSupabaseClient()
@@ -34,11 +35,7 @@ export default async function SurveysPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {surveys.map((survey) => (
-              <Link
-                key={survey.id}
-                href={`/surveys/${survey.id}`}
-                className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
-              >
+              <div key={survey.id} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition">
                 <div className="flex items-start justify-between">
                   <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{survey.title}</h3>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
@@ -50,7 +47,7 @@ export default async function SurveysPage() {
                 <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
                   {survey.description || 'بلا وصف'}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50 mt-1">
+                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50">
                   <span className="flex items-center gap-1.5">
                     <ClipboardList size={16} /> {survey.survey_questions?.[0]?.count ?? 0} سؤال
                   </span>
@@ -58,7 +55,17 @@ export default async function SurveysPage() {
                     <MessageSquare size={16} /> {survey.survey_responses?.[0]?.count ?? 0} رد
                   </span>
                 </div>
-              </Link>
+
+                <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
+                  <Link href={`/surveys/${survey.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">
+                    <Pencil size={15} /> تعديل
+                  </Link>
+                  <Link href={`/surveys/${survey.id}/results`} className="flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-navy hover:bg-ruwad-gray/30 px-3 py-2 rounded-ruwad-sm transition">
+                    <BarChart3 size={15} />
+                  </Link>
+                  <DeleteButton table="surveys" id={survey.id} label="حذف" confirmText="حذف الاستبيان سيحذف معه كل أسئلته وردود المشاركين فيه نهائياً. متابعة؟" />
+                </div>
+              </div>
             ))}
           </div>
         )}
