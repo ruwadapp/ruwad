@@ -266,14 +266,20 @@ export interface Notification {
 }
 
 // ======= BADGES =======
+export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary'
+
 export interface Badge {
   id: string
   name: string
   description: string | null
   icon: string | null
-  condition_type: 'exam_score' | 'attendance_rate' | 'course_complete' | 'challenge_win' | 'submissions_count'
+  condition_type:
+    | 'exam_score' | 'attendance_rate' | 'course_complete' | 'challenge_win' | 'submissions_count'
+    | 'first_enrollment' | 'first_lecture_complete' | 'first_exam_submit' | 'challenge_score' | 'platform_pioneer'
   condition_value: number
   trainer_id: string | null
+  rarity: BadgeRarity
+  max_winners: number | null
 }
 
 export interface StudentBadge {

@@ -4,9 +4,9 @@ import { createServerClient } from '@supabase/ssr'
 
 const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
-  '/challenges', '/assignments', '/attendance', '/analytics',
+  '/challenges', '/assignments', '/attendance', '/badges', '/analytics',
 ]
-const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress']
+const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/my-badges', '/progress']
 
 export async function middleware(request: NextRequest) {
   const { user, response } = await updateSession(request)

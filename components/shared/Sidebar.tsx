@@ -18,6 +18,7 @@ const trainerNav = [
   { href: '/challenges', label: 'التحديات', icon: Trophy },
   { href: '/assignments', label: 'الوظائف', icon: FileCheck },
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
+  { href: '/badges', label: 'الشارات', icon: Award },
   { href: '/analytics', label: 'التحليلات', icon: BarChart3 },
 ]
 
@@ -28,6 +29,7 @@ const studentNav = [
   { href: '/my-challenges', label: 'التحديات', icon: Trophy },
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },
   { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
+  { href: '/my-badges', label: 'شاراتي', icon: Award },
   { href: '/progress', label: 'تقدّمي', icon: Award },
 ]
 
