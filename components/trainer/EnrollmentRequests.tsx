@@ -2,11 +2,28 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Enrollment } from '@/lib/types'
-import { UserCheck, UserX, Clock, Users } from 'lucide-react'
+import { UserCheck, UserX, Clock, Users, RefreshCw } from 'lucide-react'
 
 export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]; initial: Enrollment[] }) {
   const [items, setItems] = useState<Enrollment[]>(initial)
+  const [refreshing, setRefreshing] = useState(false)
   const supabase = createClient()
+
+  const fetchAll = useCallback(async () => {
+    if (courseIds.length === 0) return
+    const { data } = await supabase
+      .from('enrollments')
+      .select('*, student:profiles(full_name, avatar_url), course:courses(title)')
+      .in('course_id', courseIds)
+      .order('enrolled_at', { ascending: false })
+    if (data) setItems(data)
+  }, [courseIds, supabase])
+
+  async function manualRefresh() {
+    setRefreshing(true)
+    await fetchAll()
+    setRefreshing(false)
+  }
 
   const fetchJoined = useCallback(async (enrollmentId: string) => {
     const { data } = await supabase
@@ -17,6 +34,7 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
     return data
   }, [supabase])
 
+  // Realtime كخط أول — يحدّث فوراً لحظة وصول طلب جديد
   useEffect(() => {
     if (courseIds.length === 0) return
     const channel = supabase
@@ -28,13 +46,19 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
           const newRow = payload.new as Enrollment
           if (!courseIds.includes(newRow.course_id)) return
           const joined = await fetchJoined(newRow.id)
-          if (joined) setItems((prev) => [joined, ...prev])
+          if (joined) setItems((prev) => (prev.some((p) => p.id === joined.id) ? prev : [joined, ...prev]))
         }
       )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [courseIds, supabase, fetchJoined])
+
+  // خط ثانٍ احتياطي — تحديث دوري كل 10 ثوانٍ في حال تعطّل الاتصال اللحظي خلف بعض الشبكات
+  useEffect(() => {
+    const interval = setInterval(fetchAll, 10000)
+    return () => clearInterval(interval)
+  }, [fetchAll])
 
   async function respond(id: string, status: 'approved' | 'rejected') {
     const { data: { user } } = await supabase.auth.getUser()
@@ -51,9 +75,18 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
   return (
     <div className="flex flex-col gap-6">
       <div className="bg-white rounded-ruwad shadow-card p-6">
-        <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-          <Clock size={20} className="text-ruwad-blue" /> طلبات الالتحاق ({pending.length})
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-ruwad-navy flex items-center gap-2">
+            <Clock size={20} className="text-ruwad-blue" /> طلبات الالتحاق ({pending.length})
+          </h2>
+          <button
+            onClick={manualRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 text-sm font-semibold text-ruwad-blue disabled:opacity-50"
+          >
+            <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} /> تحديث
+          </button>
+        </div>
 
         {pending.length === 0 ? (
           <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا توجد طلبات جديدة حالياً.</p>
