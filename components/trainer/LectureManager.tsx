@@ -72,6 +72,7 @@ export function LectureManager({ courseId, lectures }: { courseId: string; lectu
                 </div>
                 <button
                   onClick={() => togglePublish(lecture)}
+                  title="اضغط لتبديل حالة النشر"
                   className={`text-xs font-semibold px-3 py-1.5 rounded-full transition shrink-0 ${
                     lecture.is_published
                       ? 'bg-ruwad-lime text-ruwad-navy'

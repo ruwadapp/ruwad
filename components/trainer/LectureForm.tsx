@@ -31,7 +31,7 @@ export function LectureForm({ courseId, nextOrderIndex }: { courseId: string; ne
       content: content || null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
       order_index: nextOrderIndex,
-      is_published: false,
+      is_published: true,
     })
 
     if (insertError) {
