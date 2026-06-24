@@ -26,6 +26,7 @@ const studentNav = [
   { href: '/my-courses', label: 'كورساتي', icon: GraduationCap },
   { href: '/my-exams', label: 'امتحاناتي', icon: FileText },
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },
+  { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/progress', label: 'تقدّمي', icon: Award },
 ]
 
