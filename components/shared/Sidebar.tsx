@@ -29,8 +29,7 @@ const studentNav = [
   { href: '/my-challenges', label: 'التحديات', icon: Trophy },
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },
   { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
-  { href: '/my-badges', label: 'شاراتي', icon: Award },
-  { href: '/progress', label: 'تقدّمي', icon: Award },
+  { href: '/progress', label: 'تقدّمي وشاراتي', icon: Award },
 ]
 
 export function Sidebar({ profile }: { profile: Profile | null }) {
