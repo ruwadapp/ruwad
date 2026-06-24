@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut,
-  Home, GraduationCap, Award, ListChecks,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -13,6 +13,7 @@ const trainerNav = [
   { href: '/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/students', label: 'الطلاب', icon: Users },
   { href: '/courses', label: 'الكورسات', icon: BookOpen },
+  { href: '/presentations', label: 'العروض التقديمية', icon: MonitorPlay },
   { href: '/exams', label: 'الامتحانات', icon: FileText },
   { href: '/surveys', label: 'الاستبيانات', icon: ClipboardList },
   { href: '/challenges', label: 'التحديات', icon: Trophy },
@@ -25,6 +26,7 @@ const trainerNav = [
 const studentNav = [
   { href: '/home', label: 'الرئيسية', icon: Home },
   { href: '/my-courses', label: 'كورساتي', icon: GraduationCap },
+  { href: '/my-presentations', label: 'العروض التقديمية', icon: MonitorPlay },
   { href: '/my-exams', label: 'امتحاناتي', icon: FileText },
   { href: '/my-challenges', label: 'التحديات', icon: Trophy },
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },

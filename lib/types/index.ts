@@ -265,7 +265,59 @@ export interface Notification {
   created_at: string
 }
 
-// ======= BADGES =======
+// ======= PRESENTATIONS (Mentimeter-style) =======
+export type SlideType = 'text' | 'stat' | 'poll' | 'open_text'
+
+export interface Presentation {
+  id: string
+  trainer_id: string
+  title: string
+  description: string | null
+  created_at: string
+  updated_at: string
+  slides?: PresentationSlide[]
+}
+
+export interface PresentationSlide {
+  id: string
+  presentation_id: string
+  slide_type: SlideType
+  order_index: number
+  title: string
+  body: string | null
+  options: { id?: string; text?: string; label?: string; value?: number }[]
+  created_at: string
+}
+
+export interface PresentationSession {
+  id: string
+  presentation_id: string
+  trainer_id: string
+  session_code: string
+  current_slide_index: number
+  is_active: boolean
+  started_at: string
+  ended_at: string | null
+  presentation?: Presentation
+}
+
+export interface PresentationParticipant {
+  id: string
+  session_id: string
+  student_id: string
+  joined_at: string
+  student?: Profile
+}
+
+export interface PresentationResponse {
+  id: string
+  session_id: string
+  slide_id: string
+  student_id: string
+  answer: { optionId?: string; text?: string }
+  submitted_at: string
+  student?: Profile
+}
 export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary'
 
 export interface Badge {
