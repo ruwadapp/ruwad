@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { CheckCircle2, Circle, Video, FileText } from 'lucide-react'
+import { CheckCircle2, Circle, Video, FileText, Clock, XCircle } from 'lucide-react'
 
 export default async function StudentCourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,6 +17,31 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
     .single()
 
   if (!enrollment || !enrollment.course) redirect('/my-courses')
+
+  if (enrollment.status !== 'approved') {
+    return (
+      <>
+        <Header title={enrollment.course.title} />
+        <main className="p-6">
+          <div className="bg-white rounded-ruwad shadow-card p-10 flex flex-col items-center gap-3 text-center max-w-sm mx-auto">
+            {enrollment.status === 'pending' ? (
+              <>
+                <Clock size={48} className="text-ruwad-navy/40" />
+                <h2 className="font-bold text-ruwad-navy">طلبك بانتظار موافقة المدرب</h2>
+                <p className="text-sm text-ruwad-navy/60">ستظهر محتويات الكورس بعد قبول طلب التحاقك.</p>
+              </>
+            ) : (
+              <>
+                <XCircle size={48} className="text-red-400" />
+                <h2 className="font-bold text-ruwad-navy">تم رفض طلب التحاقك بهذا الكورس</h2>
+              </>
+            )}
+            <Link href="/my-courses" className="text-ruwad-blue text-sm font-semibold mt-2">رجوع لكورساتي</Link>
+          </div>
+        </main>
+      </>
+    )
+  }
 
   const { data: lectures } = await supabase
     .from('lectures')

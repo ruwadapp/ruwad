@@ -17,7 +17,8 @@ export default async function StudentLecturePage({
     .select('id')
     .eq('course_id', id)
     .eq('student_id', user!.id)
-    .single()
+    .eq('status', 'approved')
+    .maybeSingle()
 
   if (!enrollment) redirect('/my-courses')
 

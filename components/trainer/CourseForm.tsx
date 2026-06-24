@@ -67,6 +67,16 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
         <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>
       )}
 
+      {initialCourse && (
+        <div className="flex items-center justify-between bg-ruwad-blue/5 rounded-ruwad-sm px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-ruwad-navy">كود الانضمام لهذا الكورس</p>
+            <p className="text-xs text-ruwad-navy/50">شارك هذا الكود مع طلابك ليطلبوا الالتحاق</p>
+          </div>
+          <p className="text-2xl font-mono font-bold text-ruwad-blue tracking-widest">{initialCourse.course_code}</p>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <label htmlFor="title" className="text-sm font-medium text-ruwad-navy">عنوان الكورس</label>
         <input

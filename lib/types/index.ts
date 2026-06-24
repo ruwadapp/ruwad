@@ -20,6 +20,7 @@ export interface Course {
   description: string | null
   cover_image: string | null
   status: 'draft' | 'published' | 'archived'
+  course_code: string
   created_at: string
   updated_at: string
   lectures?: Lecture[]
@@ -47,6 +48,8 @@ export interface Attachment {
   type: 'pdf' | 'image' | 'video' | 'other'
 }
 
+export type EnrollmentStatus = 'pending' | 'approved' | 'rejected'
+
 export interface Enrollment {
   id: string
   student_id: string
@@ -54,6 +57,11 @@ export interface Enrollment {
   enrolled_at: string
   progress: number
   completed_at: string | null
+  status: EnrollmentStatus
+  responded_at: string | null
+  responded_by: string | null
+  course?: Course
+  student?: Profile
 }
 
 // ======= EXAMS =======
