@@ -14,7 +14,7 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
     if (courseIds.length === 0) return
     const { data, error } = await supabase
       .from('enrollments')
-      .select('*, student:profiles(full_name, avatar_url), course:courses(title)')
+      .select('*, student:profiles!student_id(full_name, avatar_url), course:courses(title)')
       .in('course_id', courseIds)
       .order('enrolled_at', { ascending: false })
     if (error) {
@@ -34,7 +34,7 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
   const fetchJoined = useCallback(async (enrollmentId: string) => {
     const { data } = await supabase
       .from('enrollments')
-      .select('*, student:profiles(full_name, avatar_url), course:courses(title)')
+      .select('*, student:profiles!student_id(full_name, avatar_url), course:courses(title)')
       .eq('id', enrollmentId)
       .single()
     return data

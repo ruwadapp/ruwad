@@ -11,7 +11,7 @@ export default async function StudentsPage() {
 
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from('enrollments')
-    .select('*, student:profiles(full_name, avatar_url), course:courses(title)')
+    .select('*, student:profiles!student_id(full_name, avatar_url), course:courses(title)')
     .in('course_id', courseIds.length ? courseIds : ['00000000-0000-0000-0000-000000000000'])
     .order('enrolled_at', { ascending: false })
 

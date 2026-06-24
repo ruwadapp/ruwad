@@ -23,7 +23,7 @@ export default async function AttendanceSessionPage({
 
   const { data: records } = await supabase
     .from('attendance_records')
-    .select('*, student:profiles(full_name, avatar_url)')
+    .select('*, student:profiles!student_id(full_name, avatar_url)')
     .eq('session_id', sessionId)
     .order('checked_in_at', { ascending: true })
 
