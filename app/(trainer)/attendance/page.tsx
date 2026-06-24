@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CreateSessionForm } from '@/components/trainer/CreateSessionForm'
-import { CalendarCheck, Circle } from 'lucide-react'
+import { CalendarCheck, Circle, BarChart3 } from 'lucide-react'
 
 export default async function AttendancePage() {
   const supabase = await createServerSupabaseClient()
@@ -21,7 +21,15 @@ export default async function AttendancePage() {
     <>
       <Header title="الحضور" />
       <main className="p-6 flex flex-col gap-6">
-        <CreateSessionForm courses={courses ?? []} />
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <CreateSessionForm courses={courses ?? []} />
+          <Link
+            href="/attendance/analytics"
+            className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition flex items-center gap-2 h-fit"
+          >
+            <BarChart3 size={18} /> إحصاءات الحضور الشاملة
+          </Link>
+        </div>
 
         {!sessions || sessions.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center">
