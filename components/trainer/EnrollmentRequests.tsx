@@ -7,15 +7,21 @@ import { UserCheck, UserX, Clock, Users, RefreshCw } from 'lucide-react'
 export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]; initial: Enrollment[] }) {
   const [items, setItems] = useState<Enrollment[]>(initial)
   const [refreshing, setRefreshing] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const supabase = createClient()
 
   const fetchAll = useCallback(async () => {
     if (courseIds.length === 0) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('enrollments')
       .select('*, student:profiles(full_name, avatar_url), course:courses(title)')
       .in('course_id', courseIds)
       .order('enrolled_at', { ascending: false })
+    if (error) {
+      setFetchError(error.message)
+      return
+    }
+    setFetchError(null)
     if (data) setItems(data)
   }, [courseIds, supabase])
 
@@ -74,6 +80,11 @@ export function EnrollmentRequests({ courseIds, initial }: { courseIds: string[]
 
   return (
     <div className="flex flex-col gap-6">
+      {fetchError && (
+        <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">
+          تعذّر تحميل الطلبات: {fetchError}
+        </div>
+      )}
       <div className="bg-white rounded-ruwad shadow-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-ruwad-navy flex items-center gap-2">
