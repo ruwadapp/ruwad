@@ -36,7 +36,7 @@ const config: Config = {
         'ruwad-sm': '12px',
       },
       fontFamily: {
-        arabic: ['Cairo', 'Noto Sans Arabic', 'sans-serif'],
+        arabic: ['Tajawal', 'Noto Sans Arabic', 'sans-serif'],
         latin: ['Inter', 'sans-serif'],
       },
       boxShadow: {
