@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { AttendancePanel } from '@/components/trainer/AttendancePanel'
+import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function AttendanceSessionPage({
   params,
@@ -30,7 +31,10 @@ export default async function AttendanceSessionPage({
   return (
     <>
       <Header title={session.title} />
-      <main className="p-6">
+      <main className="p-6 flex flex-col gap-4">
+        <div className="flex justify-end">
+          <DeleteButton table="attendance_sessions" id={sessionId} redirectTo="/attendance" label="حذف الجلسة" />
+        </div>
         <AttendancePanel session={session} initialRecords={records ?? []} />
       </main>
     </>

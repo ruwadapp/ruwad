@@ -2,13 +2,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import type { Lecture } from '@/lib/types'
 
-export function LectureForm({ courseId, nextOrderIndex }: { courseId: string; nextOrderIndex: number }) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
-  const [content, setContent] = useState('')
-  const [durationMinutes, setDurationMinutes] = useState<string>('')
+export function LectureForm({
+  courseId,
+  nextOrderIndex,
+  initialLecture,
+}: {
+  courseId: string
+  nextOrderIndex: number
+  initialLecture?: Lecture
+}) {
+  const [title, setTitle] = useState(initialLecture?.title ?? '')
+  const [description, setDescription] = useState(initialLecture?.description ?? '')
+  const [videoUrl, setVideoUrl] = useState(initialLecture?.video_url ?? '')
+  const [content, setContent] = useState(initialLecture?.content ?? '')
+  const [durationMinutes, setDurationMinutes] = useState<string>(initialLecture?.duration_minutes?.toString() ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -23,13 +32,25 @@ export function LectureForm({ courseId, nextOrderIndex }: { courseId: string; ne
     setLoading(true)
     setError(null)
 
-    const { error: insertError } = await supabase.from('lectures').insert({
-      course_id: courseId,
+    const payload = {
       title,
       description: description || null,
       video_url: videoUrl || null,
       content: content || null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
+    }
+
+    if (initialLecture) {
+      const { error: updateError } = await supabase.from('lectures').update(payload).eq('id', initialLecture.id)
+      if (updateError) { setError('حدث خطأ أثناء حفظ التعديلات'); setLoading(false); return }
+      router.push(`/courses/${courseId}`)
+      router.refresh()
+      return
+    }
+
+    const { error: insertError } = await supabase.from('lectures').insert({
+      course_id: courseId,
+      ...payload,
       order_index: nextOrderIndex,
       is_published: true,
     })
@@ -114,7 +135,7 @@ export function LectureForm({ courseId, nextOrderIndex }: { courseId: string; ne
         disabled={loading}
         className="bg-ruwad-blue text-white px-6 py-3 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad disabled:opacity-50 mt-2 w-fit"
       >
-        {loading ? 'جارٍ الحفظ...' : 'إضافة المحاضرة'}
+        {loading ? 'جارٍ الحفظ...' : initialLecture ? 'حفظ التعديلات' : 'إضافة المحاضرة'}
       </button>
     </form>
   )

@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CourseForm } from '@/components/trainer/CourseForm'
 import { LectureManager } from '@/components/trainer/LectureManager'
+import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -28,6 +29,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     <>
       <Header title={course.title} />
       <main className="p-6 flex flex-col gap-6">
+        <div className="flex justify-end">
+          <DeleteButton table="courses" id={id} redirectTo="/courses" label="حذف الكورس" />
+        </div>
         <CourseForm initialCourse={course} />
         <LectureManager courseId={id} lectures={lectures ?? []} />
       </main>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Lecture } from '@/lib/types'
-import { Plus, Trash2, Video, FileText, GripVertical } from 'lucide-react'
+import { Plus, Trash2, Video, FileText, GripVertical, Pencil } from 'lucide-react'
 
 export function LectureManager({ courseId, lectures }: { courseId: string; lectures: Lecture[] }) {
   const [items, setItems] = useState(lectures)
@@ -81,6 +81,13 @@ export function LectureManager({ courseId, lectures }: { courseId: string; lectu
                 >
                   {lecture.is_published ? 'منشورة' : 'مسودة'}
                 </button>
+                <Link
+                  href={`/courses/${courseId}/lectures/${lecture.id}/edit`}
+                  aria-label="تعديل المحاضرة"
+                  className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0"
+                >
+                  <Pencil size={16} />
+                </Link>
                 <button
                   onClick={() => deleteLecture(lecture.id)}
                   aria-label="حذف المحاضرة"

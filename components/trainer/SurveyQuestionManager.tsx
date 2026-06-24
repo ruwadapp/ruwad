@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { SurveyQuestion, SurveyQuestionType } from '@/lib/types'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 
 const TYPE_LABELS: Record<SurveyQuestionType, string> = {
   rating: 'تقييم (1-5)',
@@ -18,7 +18,8 @@ const NEEDS_OPTIONS: SurveyQuestionType[] = ['multiple_choice', 'checkbox']
 
 export function SurveyQuestionManager({ surveyId, questions }: { surveyId: string; questions: SurveyQuestion[] }) {
   const [items, setItems] = useState(questions)
-  const [adding, setAdding] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [type, setType] = useState<SurveyQuestionType>('rating')
   const [text, setText] = useState('')
   const [options, setOptions] = useState(['', '', ''])
@@ -33,10 +34,20 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
     setOptions(['', '', ''])
     setType('rating')
     setIsRequired(true)
-    setAdding(false)
+    setFormOpen(false)
+    setEditingId(null)
   }
 
-  async function addQuestion(e: React.FormEvent) {
+  function startEdit(q: SurveyQuestion) {
+    setEditingId(q.id)
+    setText(q.question_text)
+    setType(q.question_type)
+    setIsRequired(q.is_required)
+    setOptions(q.options.length ? [...q.options, '', '', ''].slice(0, Math.max(3, q.options.length)) : ['', '', ''])
+    setFormOpen(true)
+  }
+
+  async function saveQuestion(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) { setError('نص السؤال مطلوب'); return }
 
@@ -48,6 +59,22 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
 
     setLoading(true)
     setError(null)
+
+    if (editingId) {
+      const { data, error: updateError } = await supabase
+        .from('survey_questions')
+        .update({ question_text: text, question_type: type, options: finalOptions, is_required: isRequired })
+        .eq('id', editingId)
+        .select()
+        .single()
+
+      if (updateError || !data) { setError('حدث خطأ أثناء حفظ التعديلات'); setLoading(false); return }
+      setItems((prev) => prev.map((q) => (q.id === editingId ? data : q)))
+      resetForm()
+      setLoading(false)
+      router.refresh()
+      return
+    }
 
     const { data, error: insertError } = await supabase
       .from('survey_questions')
@@ -83,9 +110,9 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
     <div className="bg-white rounded-ruwad shadow-card p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-ruwad-navy">أسئلة الاستبيان</h2>
-        {!adding && (
+        {!formOpen && (
           <button
-            onClick={() => setAdding(true)}
+            onClick={() => setFormOpen(true)}
             className="bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition flex items-center gap-1.5"
           >
             <Plus size={16} /> سؤال جديد
@@ -93,8 +120,8 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
         )}
       </div>
 
-      {adding && (
-        <form onSubmit={addQuestion} className="flex flex-col gap-3 border border-ruwad-gray/60 rounded-ruwad-sm p-4 mb-4">
+      {formOpen && (
+        <form onSubmit={saveQuestion} className="flex flex-col gap-3 border border-ruwad-gray/60 rounded-ruwad-sm p-4 mb-4">
           {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-3 py-2">{error}</div>}
 
           <select
@@ -152,7 +179,7 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
               disabled={loading}
               className="bg-ruwad-blue text-white px-5 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
             >
-              {loading ? 'جارٍ الحفظ...' : 'إضافة السؤال'}
+              {loading ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديلات' : 'إضافة السؤال'}
             </button>
             <button type="button" onClick={resetForm} className="px-5 py-2 rounded-ruwad-sm text-sm font-semibold text-ruwad-navy/60 hover:bg-ruwad-gray/30 transition">
               إلغاء
@@ -176,6 +203,9 @@ export function SurveyQuestionManager({ surveyId, questions }: { surveyId: strin
                   {TYPE_LABELS[q.question_type]} {q.is_required && '· إلزامي'}
                 </p>
               </div>
+              <button onClick={() => startEdit(q)} aria-label="تعديل السؤال" className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0">
+                <Pencil size={16} />
+              </button>
               <button onClick={() => deleteQuestion(q.id)} aria-label="حذف السؤال" className="text-red-500 hover:bg-red-50 p-2 rounded-ruwad-sm transition shrink-0">
                 <Trash2 size={16} />
               </button>

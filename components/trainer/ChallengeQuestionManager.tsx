@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ChallengeQuestion } from '@/lib/types'
-import { Plus, Trash2, Zap } from 'lucide-react'
+import { Plus, Trash2, Zap, Pencil } from 'lucide-react'
 
 type CQType = 'multiple_choice' | 'true_false' | 'short_answer'
 const TYPE_LABELS: Record<CQType, string> = {
@@ -14,7 +14,8 @@ const TYPE_LABELS: Record<CQType, string> = {
 
 export function ChallengeQuestionManager({ challengeId, questions }: { challengeId: string; questions: ChallengeQuestion[] }) {
   const [items, setItems] = useState(questions)
-  const [adding, setAdding] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [type, setType] = useState<CQType>('multiple_choice')
   const [text, setText] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
@@ -34,10 +35,28 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
 
   function resetForm() {
     setText(''); setOptions(['', '', '', '']); setCorrectOption('A')
-    setCorrectTrueFalse('true'); setCorrectShortAnswer(''); setMarks('10'); setAdding(false)
+    setCorrectTrueFalse('true'); setCorrectShortAnswer(''); setMarks('10')
+    setFormOpen(false); setEditingId(null)
   }
 
-  async function addQuestion(e: React.FormEvent) {
+  function startEdit(q: ChallengeQuestion) {
+    setEditingId(q.id)
+    setText(q.question_text)
+    setType(q.question_type)
+    setMarks(q.marks.toString())
+    if (q.question_type === 'multiple_choice') {
+      const letters = ['A', 'B', 'C', 'D']
+      setOptions(letters.map((l) => q.options.find((o) => o.id === l)?.text ?? ''))
+      setCorrectOption(typeof q.correct_answer === 'string' ? q.correct_answer : 'A')
+    } else if (q.question_type === 'true_false') {
+      setCorrectTrueFalse(typeof q.correct_answer === 'string' ? q.correct_answer : 'true')
+    } else {
+      setCorrectShortAnswer(typeof q.correct_answer === 'string' ? q.correct_answer : '')
+    }
+    setFormOpen(true)
+  }
+
+  async function saveQuestion(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) { setError('نص السؤال مطلوب'); return }
     setLoading(true)
@@ -56,6 +75,27 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
       correctAnswer = correctTrueFalse
     } else {
       correctAnswer = correctShortAnswer || null
+    }
+
+    if (editingId) {
+      const { data, error: updateError } = await supabase
+        .from('challenge_questions')
+        .update({
+          question_text: text, question_type: type, options: questionOptions,
+          correct_answer: correctAnswer, marks: Number(marks) || 10,
+        })
+        .eq('id', editingId)
+        .select()
+        .single()
+
+      if (updateError || !data) { setError('حدث خطأ أثناء حفظ التعديلات'); setLoading(false); return }
+      const updated = items.map((q) => (q.id === editingId ? data : q))
+      setItems(updated)
+      await syncTotalMarks(updated)
+      resetForm()
+      setLoading(false)
+      router.refresh()
+      return
     }
 
     const { data, error: insertError } = await supabase
@@ -96,15 +136,15 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
           <Zap size={20} className="text-ruwad-navy" />
           أسئلة التحدي <span className="text-sm text-ruwad-navy/50 font-normal">({items.reduce((s, q) => s + q.marks, 0)} نقطة)</span>
         </h2>
-        {!adding && (
-          <button onClick={() => setAdding(true)} className="bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5">
+        {!formOpen && (
+          <button onClick={() => setFormOpen(true)} className="bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5">
             <Plus size={16} /> سؤال جديد
           </button>
         )}
       </div>
 
-      {adding && (
-        <form onSubmit={addQuestion} className="flex flex-col gap-3 border-2 border-ruwad-lime/60 rounded-ruwad-sm p-4 mb-4">
+      {formOpen && (
+        <form onSubmit={saveQuestion} className="flex flex-col gap-3 border-2 border-ruwad-lime/60 rounded-ruwad-sm p-4 mb-4">
           {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-3 py-2">{error}</div>}
 
           <div className="grid grid-cols-2 gap-3">
@@ -146,7 +186,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
 
           <div className="flex gap-2">
             <button type="submit" disabled={loading} className="bg-ruwad-lime text-ruwad-navy px-5 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition disabled:opacity-50">
-              {loading ? 'جارٍ الحفظ...' : 'إضافة السؤال'}
+              {loading ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديلات' : 'إضافة السؤال'}
             </button>
             <button type="button" onClick={resetForm} className="px-5 py-2 rounded-ruwad-sm text-sm font-semibold text-ruwad-navy/60 hover:bg-ruwad-gray/30 transition">إلغاء</button>
           </div>
@@ -164,6 +204,9 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
                 <p className="font-medium text-ruwad-navy">{q.question_text}</p>
                 <p className="text-xs text-ruwad-navy/50 mt-1">{TYPE_LABELS[q.question_type]} · {q.marks} نقطة</p>
               </div>
+              <button onClick={() => startEdit(q)} aria-label="تعديل السؤال" className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0">
+                <Pencil size={16} />
+              </button>
               <button onClick={() => deleteQuestion(q.id)} aria-label="حذف السؤال" className="text-red-500 hover:bg-red-50 p-2 rounded-ruwad-sm transition shrink-0">
                 <Trash2 size={16} />
               </button>

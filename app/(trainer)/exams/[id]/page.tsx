@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { ExamForm } from '@/components/trainer/ExamForm'
 import { QuestionManager } from '@/components/trainer/QuestionManager'
+import { DeleteButton } from '@/components/shared/DeleteButton'
 import { BarChart3 } from 'lucide-react'
 
 export default async function ExamDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +31,8 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
     <>
       <Header title={exam.title} />
       <main className="p-6 flex flex-col gap-6">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <DeleteButton table="exams" id={id} redirectTo="/exams" label="حذف الامتحان" />
           <Link
             href={`/exams/${id}/results`}
             className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition flex items-center gap-2"

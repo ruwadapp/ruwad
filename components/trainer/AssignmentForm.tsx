@@ -2,16 +2,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Course } from '@/lib/types'
+import type { Assignment, Course } from '@/lib/types'
 
-export function AssignmentForm({ courses }: { courses: Course[] }) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [instructions, setInstructions] = useState('')
-  const [courseId, setCourseId] = useState('')
-  const [totalMarks, setTotalMarks] = useState('100')
-  const [dueDate, setDueDate] = useState('')
-  const [attachmentUrl, setAttachmentUrl] = useState('')
+export function AssignmentForm({ courses, initialAssignment }: { courses: Course[]; initialAssignment?: Assignment }) {
+  const [title, setTitle] = useState(initialAssignment?.title ?? '')
+  const [description, setDescription] = useState(initialAssignment?.description ?? '')
+  const [instructions, setInstructions] = useState(initialAssignment?.instructions ?? '')
+  const [courseId, setCourseId] = useState(initialAssignment?.course_id ?? '')
+  const [totalMarks, setTotalMarks] = useState(initialAssignment?.total_marks?.toString() ?? '100')
+  const [dueDate, setDueDate] = useState(initialAssignment?.due_date ? initialAssignment.due_date.slice(0, 10) : '')
+  const [attachmentUrl, setAttachmentUrl] = useState(initialAssignment?.attachments?.[0]?.url ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -23,13 +23,8 @@ export function AssignmentForm({ courses }: { courses: Course[] }) {
     setLoading(true)
     setError(null)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const attachments = attachmentUrl ? [{ name: 'مرفق', url: attachmentUrl }] : []
-
-    const { error: insertError } = await supabase.from('assignments').insert({
-      trainer_id: user.id,
+    const payload = {
       course_id: courseId || null,
       title,
       description: description || null,
@@ -37,9 +32,20 @@ export function AssignmentForm({ courses }: { courses: Course[] }) {
       attachments,
       total_marks: Number(totalMarks) || 100,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      is_active: true,
-    })
+    }
 
+    if (initialAssignment) {
+      const { error: updateError } = await supabase.from('assignments').update(payload).eq('id', initialAssignment.id)
+      if (updateError) { setError('حدث خطأ أثناء الحفظ'); setLoading(false); return }
+      router.refresh()
+      setLoading(false)
+      return
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { error: insertError } = await supabase.from('assignments').insert({ ...payload, trainer_id: user.id, is_active: true })
     if (insertError) { setError('حدث خطأ أثناء إنشاء الواجب'); setLoading(false); return }
     router.push('/assignments')
     router.refresh()
@@ -96,7 +102,7 @@ export function AssignmentForm({ courses }: { courses: Course[] }) {
 
       <button type="submit" disabled={loading}
         className="bg-ruwad-blue text-white px-6 py-3 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad disabled:opacity-50 mt-2 w-fit">
-        {loading ? 'جارٍ الإنشاء...' : 'إنشاء الواجب'}
+        {loading ? 'جارٍ الحفظ...' : initialAssignment ? 'حفظ التعديلات' : 'إنشاء الواجب'}
       </button>
     </form>
   )

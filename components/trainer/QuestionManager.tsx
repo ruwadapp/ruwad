@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Question, QuestionType } from '@/lib/types'
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: 'اختيار من متعدد',
@@ -14,7 +14,8 @@ const TYPE_LABELS: Record<QuestionType, string> = {
 
 export function QuestionManager({ examId, questions }: { examId: string; questions: Question[] }) {
   const [items, setItems] = useState(questions)
-  const [adding, setAdding] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [type, setType] = useState<QuestionType>('multiple_choice')
   const [text, setText] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
@@ -42,18 +43,29 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
     setMarks('1')
     setExplanation('')
     setType('multiple_choice')
-    setAdding(false)
+    setFormOpen(false)
+    setEditingId(null)
   }
 
-  async function addQuestion(e: React.FormEvent) {
-    e.preventDefault()
-    if (!text.trim()) {
-      setError('نص السؤال مطلوب')
-      return
+  function startEdit(q: Question) {
+    setEditingId(q.id)
+    setText(q.question_text)
+    setType(q.question_type)
+    setMarks(q.marks.toString())
+    setExplanation(q.explanation ?? '')
+    if (q.question_type === 'multiple_choice') {
+      const letters = ['A', 'B', 'C', 'D']
+      setOptions(letters.map((l) => q.options.find((o) => o.id === l)?.text ?? ''))
+      setCorrectOption(typeof q.correct_answer === 'string' ? q.correct_answer : 'A')
+    } else if (q.question_type === 'true_false') {
+      setCorrectTrueFalse(typeof q.correct_answer === 'string' ? q.correct_answer : 'true')
+    } else if (q.question_type === 'short_answer') {
+      setCorrectShortAnswer(typeof q.correct_answer === 'string' ? q.correct_answer : '')
     }
-    setLoading(true)
-    setError(null)
+    setFormOpen(true)
+  }
 
+  function buildPayload() {
     let questionOptions: { id: string; text: string }[] = []
     let correctAnswer: string | null = null
 
@@ -62,11 +74,6 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
       questionOptions = options
         .map((opt, idx) => ({ id: letters[idx], text: opt }))
         .filter((o) => o.text.trim() !== '')
-      if (questionOptions.length < 2) {
-        setError('أضف خيارين على الأقل')
-        setLoading(false)
-        return
-      }
       correctAnswer = correctOption
     } else if (type === 'true_false') {
       questionOptions = [
@@ -76,6 +83,49 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
       correctAnswer = correctTrueFalse
     } else if (type === 'short_answer') {
       correctAnswer = correctShortAnswer || null
+    }
+
+    return { questionOptions, correctAnswer }
+  }
+
+  async function saveQuestion(e: React.FormEvent) {
+    e.preventDefault()
+    if (!text.trim()) {
+      setError('نص السؤال مطلوب')
+      return
+    }
+    const { questionOptions, correctAnswer } = buildPayload()
+    if (type === 'multiple_choice' && questionOptions.length < 2) {
+      setError('أضف خيارين على الأقل')
+      return
+    }
+    setLoading(true)
+    setError(null)
+
+    if (editingId) {
+      const { data, error: updateError } = await supabase
+        .from('questions')
+        .update({
+          question_text: text,
+          question_type: type,
+          options: questionOptions,
+          correct_answer: correctAnswer,
+          marks: Number(marks) || 1,
+          explanation: explanation || null,
+        })
+        .eq('id', editingId)
+        .select()
+        .single()
+
+      if (updateError || !data) { setError('حدث خطأ أثناء حفظ التعديلات'); setLoading(false); return }
+
+      const updated = items.map((q) => (q.id === editingId ? data : q))
+      setItems(updated)
+      await syncExamTotalMarks(updated)
+      resetForm()
+      setLoading(false)
+      router.refresh()
+      return
     }
 
     const { data, error: insertError } = await supabase
@@ -124,9 +174,9 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
         <h2 className="text-lg font-bold text-ruwad-navy">
           الأسئلة <span className="text-sm text-ruwad-navy/50 font-normal">({items.reduce((s, q) => s + q.marks, 0)} درجة)</span>
         </h2>
-        {!adding && (
+        {!formOpen && (
           <button
-            onClick={() => setAdding(true)}
+            onClick={() => setFormOpen(true)}
             className="bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition flex items-center gap-1.5"
           >
             <Plus size={16} /> سؤال جديد
@@ -134,8 +184,8 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
         )}
       </div>
 
-      {adding && (
-        <form onSubmit={addQuestion} className="flex flex-col gap-3 border border-ruwad-gray/60 rounded-ruwad-sm p-4 mb-4">
+      {formOpen && (
+        <form onSubmit={saveQuestion} className="flex flex-col gap-3 border border-ruwad-gray/60 rounded-ruwad-sm p-4 mb-4">
           {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-3 py-2">{error}</div>}
 
           <div className="grid grid-cols-2 gap-3">
@@ -234,7 +284,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
               disabled={loading}
               className="bg-ruwad-blue text-white px-5 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
             >
-              {loading ? 'جارٍ الحفظ...' : 'إضافة السؤال'}
+              {loading ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديلات' : 'إضافة السؤال'}
             </button>
             <button
               type="button"
@@ -262,6 +312,13 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
                   {TYPE_LABELS[q.question_type]} · {q.marks} درجة
                 </p>
               </div>
+              <button
+                onClick={() => startEdit(q)}
+                aria-label="تعديل السؤال"
+                className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0"
+              >
+                <Pencil size={16} />
+              </button>
               <button
                 onClick={() => deleteQuestion(q.id)}
                 aria-label="حذف السؤال"

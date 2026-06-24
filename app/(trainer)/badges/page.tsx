@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { BadgeCard } from '@/components/shared/BadgeCard'
 import { CreateBadgeForm } from '@/components/trainer/CreateBadgeForm'
+import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function TrainerBadgesPage() {
   const supabase = await createServerSupabaseClient()
@@ -41,7 +42,10 @@ export default async function TrainerBadgesPage() {
             <h2 className="text-lg font-bold text-ruwad-navy mb-4">شاراتي المخصصة</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {customBadges.map((badge) => (
-                <BadgeCard key={badge.id} badge={badge} earned={true} />
+                <div key={badge.id} className="flex flex-col gap-2">
+                  <BadgeCard badge={badge} earned={true} />
+                  <DeleteButton table="badges" id={badge.id} label="حذف" confirmText="حذف هذه الشارة سيُلغي منحها لكل من حصل عليها سابقاً. متابعة؟" />
+                </div>
               ))}
             </div>
           </section>
