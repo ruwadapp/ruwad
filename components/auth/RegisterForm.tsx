@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
@@ -12,7 +11,6 @@ export function RegisterForm() {
   const [role, setRole] = useState<UserRole>('student')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
   async function handleRegister(e: React.FormEvent) {
@@ -35,12 +33,11 @@ export function RegisterForm() {
     }
 
     if (data.user && !data.session) {
-      router.push('/login')
+      window.location.href = '/login'
       return
     }
 
-    router.push(role === 'trainer' ? '/dashboard' : '/home')
-    router.refresh()
+    window.location.href = role === 'trainer' ? '/dashboard' : '/home'
   }
 
   return (
