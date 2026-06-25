@@ -6,7 +6,7 @@ export default async function StudentsPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: courses } = await supabase.from('courses').select('id').eq('trainer_id', user!.id)
+  const { data: courses } = await supabase.from('courses').select('id, title').eq('trainer_id', user!.id)
   const courseIds = (courses ?? []).map((c) => c.id)
 
   const { data: enrollments, error: enrollmentsError } = await supabase
@@ -32,7 +32,7 @@ export default async function StudentsPage() {
     <>
       <Header title="الطلاب" />
       <main className="p-6">
-        <EnrollmentRequests courseIds={courseIds} initial={enrollments ?? []} />
+        <EnrollmentRequests courses={courses ?? []} initial={enrollments ?? []} />
       </main>
     </>
   )
