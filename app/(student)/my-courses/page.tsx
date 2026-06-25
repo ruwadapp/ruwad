@@ -42,19 +42,28 @@ export default async function MyCoursesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {approved.map((enrollment) => (
-                <Link
-                  key={enrollment.id}
-                  href={`/my-courses/${enrollment.course_id}`}
-                  className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
-                >
-                  <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{enrollment.course?.title}</h3>
-                  <div className="w-full bg-ruwad-gray/40 rounded-full h-2">
-                    <div className="bg-ruwad-blue h-2 rounded-full" style={{ width: `${enrollment.progress ?? 0}%` }} />
-                  </div>
-                  <p className="text-xs text-ruwad-navy/50">{enrollment.progress ?? 0}% مكتمل</p>
-                </Link>
-              ))}
+              {approved.map((enrollment, idx) => {
+                const progress = enrollment.progress ?? 0
+                const isDone = progress >= 100
+                return (
+                  <Link
+                    key={enrollment.id}
+                    href={`/my-courses/${enrollment.course_id}`}
+                    className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg transition border-t-4 ${
+                      isDone ? 'border-ruwad-lime' : ['border-ruwad-blue', 'border-ruwad-navy', 'border-ruwad-lime'][idx % 3]
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{enrollment.course?.title}</h3>
+                      {isDone && <span className="text-xs font-bold bg-ruwad-lime text-ruwad-navy px-2.5 py-1 rounded-full shrink-0">مكتمل 🎉</span>}
+                    </div>
+                    <div className="w-full bg-ruwad-gray/40 rounded-full h-2.5">
+                      <div className={`h-2.5 rounded-full transition-all ${isDone ? 'bg-ruwad-lime' : 'bg-ruwad-blue'}`} style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="text-xs text-ruwad-navy/50">{progress}% مكتمل</p>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </section>

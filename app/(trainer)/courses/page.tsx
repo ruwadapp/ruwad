@@ -35,10 +35,12 @@ export default async function CoursesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courses.map((course) => (
+            {courses.map((course, idx) => (
               <div
                 key={course.id}
-                className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
+                className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition border-t-4 ${
+                  ['border-ruwad-blue', 'border-ruwad-lime', 'border-ruwad-navy'][idx % 3]
+                }`}
               >
                 <div className="flex items-start justify-between">
                   <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{course.title}</h3>

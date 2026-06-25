@@ -1,6 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { Header } from '@/components/shared/Header'
 import { LectureViewer } from '@/components/student/LectureViewer'
 
 export default async function StudentLecturePage({
@@ -14,7 +13,7 @@ export default async function StudentLecturePage({
 
   const { data: enrollment } = await supabase
     .from('enrollments')
-    .select('id')
+    .select('id, progress, course:courses(title)')
     .eq('course_id', id)
     .eq('student_id', user!.id)
     .eq('status', 'approved')
@@ -22,40 +21,33 @@ export default async function StudentLecturePage({
 
   if (!enrollment) redirect('/my-courses')
 
-  const { data: lecture } = await supabase
+  const { data: allLectures } = await supabase
     .from('lectures')
     .select('*')
-    .eq('id', lectureId)
     .eq('course_id', id)
     .eq('is_published', true)
-    .single()
+    .order('order_index', { ascending: true })
 
+  const lecture = (allLectures ?? []).find((l) => l.id === lectureId)
   if (!lecture) notFound()
 
-  const { count: totalPublishedLectures } = await supabase
-    .from('lectures')
-    .select('id', { count: 'exact', head: true })
-    .eq('course_id', id)
-    .eq('is_published', true)
-
-  const { data: progressRow } = await supabase
+  const { data: progressRows } = await supabase
     .from('lecture_progress')
-    .select('completed')
+    .select('lecture_id, completed')
     .eq('student_id', user!.id)
-    .eq('lecture_id', lectureId)
-    .maybeSingle()
+
+  const completedIds = new Set((progressRows ?? []).filter((p) => p.completed).map((p) => p.lecture_id))
+  const courseTitle = (enrollment.course as unknown as { title?: string })?.title ?? ''
 
   return (
-    <>
-      <Header title={lecture.title} />
-      <main className="p-6">
-        <LectureViewer
-          lecture={lecture}
-          courseId={id}
-          totalPublishedLectures={totalPublishedLectures ?? 0}
-          initiallyCompleted={progressRow?.completed ?? false}
-        />
-      </main>
-    </>
+    <LectureViewer
+      lecture={lecture}
+      allLectures={allLectures ?? []}
+      completedIds={Array.from(completedIds)}
+      courseId={id}
+      courseTitle={courseTitle}
+      courseProgress={enrollment.progress ?? 0}
+      initiallyCompleted={completedIds.has(lecture.id)}
+    />
   )
 }

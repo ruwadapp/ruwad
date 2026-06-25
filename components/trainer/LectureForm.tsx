@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Lecture } from '@/lib/types'
+import { RichTextEditor } from './RichTextEditor'
+import { BarChart3, Plus, Trash2 } from 'lucide-react'
 
 export function LectureForm({
   courseId,
@@ -18,10 +20,21 @@ export function LectureForm({
   const [videoUrl, setVideoUrl] = useState(initialLecture?.video_url ?? '')
   const [content, setContent] = useState(initialLecture?.content ?? '')
   const [durationMinutes, setDurationMinutes] = useState<string>(initialLecture?.duration_minutes?.toString() ?? '')
+  const [stats, setStats] = useState<{ label: string; value: string }[]>(initialLecture?.stats ?? [])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  function addStat() {
+    setStats((prev) => [...prev, { label: '', value: '' }])
+  }
+  function updateStat(idx: number, field: 'label' | 'value', val: string) {
+    setStats((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: val } : s)))
+  }
+  function removeStat(idx: number) {
+    setStats((prev) => prev.filter((_, i) => i !== idx))
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -32,12 +45,15 @@ export function LectureForm({
     setLoading(true)
     setError(null)
 
+    const cleanedStats = stats.filter((s) => s.label.trim() !== '')
+
     const payload = {
       title,
       description: description || null,
       video_url: videoUrl || null,
       content: content || null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
+      stats: cleanedStats,
     }
 
     if (initialLecture) {
@@ -119,15 +135,39 @@ export function LectureForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="content" className="text-sm font-medium text-ruwad-navy">محتوى المحاضرة (نص/ملاحظات)</label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={6}
-          className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition resize-none"
-          placeholder="يمكنك كتابة ملخص أو محتوى المحاضرة هنا"
-        />
+        <label className="text-sm font-medium text-ruwad-navy">محتوى المحاضرة</label>
+        <RichTextEditor value={content} onChange={setContent} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-ruwad-navy flex items-center gap-1.5">
+            <BarChart3 size={16} className="text-ruwad-blue" /> إحصائيات المحاضرة (اختياري)
+          </label>
+          <button type="button" onClick={addStat} className="text-xs font-semibold text-ruwad-blue flex items-center gap-1">
+            <Plus size={14} /> إضافة إحصائية
+          </button>
+        </div>
+        <p className="text-xs text-ruwad-navy/50">مثال: "عدد الأسئلة: 12" أو "نسبة الإتمام المتوقعة: 90%" — تظهر كبطاقات بارزة للطالب.</p>
+        {stats.map((s, idx) => (
+          <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <input
+              value={s.label}
+              onChange={(e) => updateStat(idx, 'label', e.target.value)}
+              placeholder="التسمية"
+              className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm outline-none focus:border-ruwad-blue"
+            />
+            <input
+              value={s.value}
+              onChange={(e) => updateStat(idx, 'value', e.target.value)}
+              placeholder="القيمة"
+              className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm outline-none focus:border-ruwad-blue"
+            />
+            <button type="button" onClick={() => removeStat(idx)} className="text-red-400 hover:bg-red-50 p-2 rounded-ruwad-sm transition">
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
       </div>
 
       <button

@@ -40,6 +40,7 @@ export interface Lecture {
   order_index: number
   duration_minutes: number | null
   is_published: boolean
+  stats: { label: string; value: string }[]
   created_at: string
 }
 
