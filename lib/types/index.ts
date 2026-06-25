@@ -39,6 +39,7 @@ export interface Lecture {
   order_index: number
   duration_minutes: number | null
   is_published: boolean
+  ai_summary: string | null
   created_at: string
 }
 

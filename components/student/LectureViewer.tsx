@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CheckCircle2 } from 'lucide-react'
 import type { Lecture } from '@/lib/types'
+import { TextToSpeechButton } from './TextToSpeechButton'
+import { AiSummaryButton } from './AiSummaryButton'
 
 function getYouTubeEmbedUrl(url: string): string | null {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
@@ -81,10 +83,17 @@ export function LectureViewer({
       ) : null}
 
       {lecture.content && (
-        <div className="bg-white rounded-ruwad shadow-card p-6">
-          <h2 className="text-lg font-bold text-ruwad-navy mb-3">محتوى المحاضرة</h2>
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-lg font-bold text-ruwad-navy">محتوى المحاضرة</h2>
+            <TextToSpeechButton text={lecture.content} />
+          </div>
           <p className="text-ruwad-navy/80 whitespace-pre-wrap leading-relaxed">{lecture.content}</p>
         </div>
+      )}
+
+      {lecture.content && (
+        <AiSummaryButton lectureId={lecture.id} initialSummary={lecture.ai_summary} />
       )}
 
       <button
