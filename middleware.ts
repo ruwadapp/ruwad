@@ -43,6 +43,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // فرض الاشتراك — لكن مع استثناء صفحات "المعهد" حتى لا يُحجب حساب جديد عن الطريقة
+  // الوحيدة المجانية لكسب وصول (طلب الانضمام لمعهد مشترك)
+  const EXEMPT_FROM_SUBSCRIPTION = ['/institute', '/my-institute', '/org/dashboard']
+  const isExempt = EXEMPT_FROM_SUBSCRIPTION.some((r) => path.startsWith(r))
+
+  if (user && !isExempt) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
+    )
+
+    if (TRAINER_ROUTES.some((r) => path.startsWith(r))) {
+      const { data: hasAccess } = await supabase.rpc('has_active_access', { p_trainer_id: user.id })
+      if (!hasAccess) return NextResponse.redirect(new URL('/subscription-required', request.url))
+    }
+
+    if (INSTITUTE_ROUTES.some((r) => path.startsWith(r))) {
+      const { data: institute } = await supabase.from('institutes').select('id').eq('owner_id', user.id).single()
+      if (institute) {
+        const { data: hasAccess } = await supabase.rpc('institute_has_active_access', { p_institute_id: institute.id })
+        if (!hasAccess) return NextResponse.redirect(new URL('/subscription-required', request.url))
+      }
+    }
+  }
+
   return response
 }
 

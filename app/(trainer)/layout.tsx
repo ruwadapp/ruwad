@@ -10,9 +10,6 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (profile?.role !== 'trainer') redirect('/home')
 
-  const { data: hasAccess } = await supabase.rpc('has_active_access', { p_trainer_id: user.id })
-  if (!hasAccess) redirect('/subscription-required')
-
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">
       <Sidebar profile={profile} />
