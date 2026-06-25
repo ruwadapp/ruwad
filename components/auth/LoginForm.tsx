@@ -30,7 +30,12 @@ export function LoginForm() {
 
     // تنقّل كامل (Hard Navigation) لضمان وصول الكوكيز الجديدة مع الطلب التالي،
     // بدل router.push الذي قد يسابق حفظ الجلسة في الكوكيز
-    window.location.href = profile?.role === 'trainer' ? '/dashboard' : '/home'
+    const redirectMap: Record<string, string> = {
+      trainer: '/dashboard',
+      student: '/home',
+      institute_admin: '/org/dashboard',
+    }
+    window.location.href = redirectMap[profile?.role ?? 'student'] ?? '/home'
   }
 
   return (

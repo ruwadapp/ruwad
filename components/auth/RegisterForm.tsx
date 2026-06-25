@@ -9,12 +9,17 @@ export function RegisterForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<UserRole>('student')
+  const [instituteName, setInstituteName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
+    if (role === 'institute_admin' && !instituteName.trim()) {
+      setError('اسم المعهد مطلوب')
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -37,7 +42,16 @@ export function RegisterForm() {
       return
     }
 
-    window.location.href = role === 'trainer' ? '/dashboard' : '/home'
+    if (role === 'institute_admin' && data.user) {
+      await supabase.from('institutes').insert({ name: instituteName, owner_id: data.user.id })
+    }
+
+    const redirectMap: Record<UserRole, string> = {
+      trainer: '/dashboard',
+      student: '/home',
+      institute_admin: '/org/dashboard',
+    }
+    window.location.href = redirectMap[role]
   }
 
   return (
@@ -62,11 +76,11 @@ export function RegisterForm() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setRole('student')}
-              className={`rounded-ruwad-sm py-3 font-semibold transition border-2 ${
+              className={`rounded-ruwad-sm py-3 text-sm font-semibold transition border-2 ${
                 role === 'student'
                   ? 'bg-ruwad-blue text-white border-ruwad-blue'
                   : 'bg-white text-ruwad-navy border-ruwad-gray'
@@ -77,7 +91,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setRole('trainer')}
-              className={`rounded-ruwad-sm py-3 font-semibold transition border-2 ${
+              className={`rounded-ruwad-sm py-3 text-sm font-semibold transition border-2 ${
                 role === 'trainer'
                   ? 'bg-ruwad-blue text-white border-ruwad-blue'
                   : 'bg-white text-ruwad-navy border-ruwad-gray'
@@ -85,7 +99,32 @@ export function RegisterForm() {
             >
               مدرب
             </button>
+            <button
+              type="button"
+              onClick={() => setRole('institute_admin')}
+              className={`rounded-ruwad-sm py-3 text-sm font-semibold transition border-2 ${
+                role === 'institute_admin'
+                  ? 'bg-ruwad-blue text-white border-ruwad-blue'
+                  : 'bg-white text-ruwad-navy border-ruwad-gray'
+              }`}
+            >
+              معهد
+            </button>
           </div>
+
+          {role === 'institute_admin' && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="instituteName" className="text-sm font-medium text-ruwad-navy">اسم المعهد</label>
+              <input
+                id="instituteName"
+                required
+                value={instituteName}
+                onChange={(e) => setInstituteName(e.target.value)}
+                className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
+                placeholder="اسم معهدك التعليمي"
+              />
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="fullName" className="text-sm font-medium text-ruwad-navy">

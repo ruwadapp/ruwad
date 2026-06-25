@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -21,6 +21,7 @@ const trainerNav = [
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/badges', label: 'الشارات', icon: Award },
   { href: '/analytics', label: 'التحليلات', icon: BarChart3 },
+  { href: '/institute', label: 'المعهد', icon: Building2 },
 ]
 
 const studentNav = [
@@ -32,13 +33,25 @@ const studentNav = [
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },
   { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/progress', label: 'تقدّمي وشاراتي', icon: Award },
+  { href: '/my-institute', label: 'المعهد', icon: Building2 },
 ]
+
+const instituteNav = [
+  { href: '/org/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
+  { href: '/org/members', label: 'الأعضاء', icon: UserCog },
+]
+
+const ROLE_LABELS: Record<string, string> = {
+  trainer: 'مدرب',
+  student: 'طالب',
+  institute_admin: 'مدير معهد',
+}
 
 export function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
-  const nav = profile?.role === 'trainer' ? trainerNav : studentNav
+  const nav = profile?.role === 'trainer' ? trainerNav : profile?.role === 'institute_admin' ? instituteNav : studentNav
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -81,7 +94,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate">{profile?.full_name ?? '...'}</p>
-            <p className="text-xs text-white/50">{profile?.role === 'trainer' ? 'مدرب' : 'طالب'}</p>
+            <p className="text-xs text-white/50">{ROLE_LABELS[profile?.role ?? ''] ?? ''}</p>
           </div>
         </div>
         <button

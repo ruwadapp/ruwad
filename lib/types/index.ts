@@ -1,4 +1,4 @@
-export type UserRole = 'trainer' | 'student'
+export type UserRole = 'trainer' | 'student' | 'institute_admin'
 
 export interface Profile {
   id: string
@@ -8,6 +8,7 @@ export interface Profile {
   role: UserRole
   phone: string | null
   bio: string | null
+  user_code: string
   created_at: string
   updated_at: string
 }

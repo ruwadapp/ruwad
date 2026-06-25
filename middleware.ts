@@ -4,9 +4,10 @@ import { createServerClient } from '@supabase/ssr'
 
 const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
-  '/challenges', '/assignments', '/attendance', '/badges', '/analytics', '/presentations',
+  '/challenges', '/assignments', '/attendance', '/badges', '/analytics', '/presentations', '/institute',
 ]
-const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations']
+const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute']
+const INSTITUTE_ROUTES = ['/org']
 
 export async function middleware(request: NextRequest) {
   const { user, response } = await updateSession(request)
@@ -22,7 +23,10 @@ export async function middleware(request: NextRequest) {
       )
       const { data: profile } = await supabase
         .from('profiles').select('role').eq('id', user.id).single()
-      const redirect = profile?.role === 'trainer' ? '/dashboard' : '/home'
+      const redirectMap: Record<string, string> = {
+        trainer: '/dashboard', student: '/home', institute_admin: '/org/dashboard',
+      }
+      const redirect = redirectMap[profile?.role ?? 'student'] ?? '/home'
       return NextResponse.redirect(new URL(redirect, request.url))
     }
     return response
@@ -30,7 +34,8 @@ export async function middleware(request: NextRequest) {
 
   const isProtected =
     TRAINER_ROUTES.some((r) => path.startsWith(r)) ||
-    STUDENT_ROUTES.some((r) => path.startsWith(r))
+    STUDENT_ROUTES.some((r) => path.startsWith(r)) ||
+    INSTITUTE_ROUTES.some((r) => path.startsWith(r))
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
