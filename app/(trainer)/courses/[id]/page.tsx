@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CourseForm } from '@/components/trainer/CourseForm'
 import { LectureManager } from '@/components/trainer/LectureManager'
+import { CourseStudentPerformance } from '@/components/trainer/CourseStudentPerformance'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +35,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         </div>
         <CourseForm initialCourse={course} />
         <LectureManager courseId={id} lectures={lectures ?? []} />
+        <CourseStudentPerformance courseId={id} />
       </main>
     </>
   )

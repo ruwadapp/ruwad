@@ -12,12 +12,10 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: exam } = await supabase
-    .from('exams')
-    .select('*')
-    .eq('id', id)
-    .eq('trainer_id', user!.id)
-    .single()
+  const [{ data: exam }, { data: courses }] = await Promise.all([
+    supabase.from('exams').select('*').eq('id', id).eq('trainer_id', user!.id).single(),
+    supabase.from('courses').select('*').eq('trainer_id', user!.id),
+  ])
 
   if (!exam) notFound()
 
@@ -40,7 +38,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
             <BarChart3 size={18} /> عرض النتائج
           </Link>
         </div>
-        <ExamForm initialExam={exam} />
+        <ExamForm initialExam={exam} courses={courses ?? []} />
         <QuestionManager examId={id} questions={questions ?? []} />
       </main>
     </>

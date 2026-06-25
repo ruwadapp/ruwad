@@ -2,17 +2,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Exam } from '@/lib/types'
+import type { Exam, Course } from '@/lib/types'
 import { Copy, Check } from 'lucide-react'
 
 interface ExamFormProps {
   initialExam?: Exam
+  courses: Course[]
 }
 
-export function ExamForm({ initialExam }: ExamFormProps) {
+export function ExamForm({ initialExam, courses }: ExamFormProps) {
   const [title, setTitle] = useState(initialExam?.title ?? '')
   const [description, setDescription] = useState(initialExam?.description ?? '')
   const [instructions, setInstructions] = useState(initialExam?.instructions ?? '')
+  const [courseId, setCourseId] = useState(initialExam?.course_id ?? '')
   const [durationMinutes, setDurationMinutes] = useState<string>(
     initialExam?.duration_minutes?.toString() ?? ''
   )
@@ -42,6 +44,7 @@ export function ExamForm({ initialExam }: ExamFormProps) {
       title,
       description: description || null,
       instructions: instructions || null,
+      course_id: courseId || null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
       passing_marks: Math.min(100, Math.max(0, Number(passingMarks) || 0)),
       shuffle_questions: shuffleQuestions,
@@ -137,6 +140,19 @@ export function ExamForm({ initialExam }: ExamFormProps) {
           className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition resize-none"
           placeholder="مثال: يُمنع الخروج من الصفحة أثناء الامتحان"
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-ruwad-navy">الكورس (اختياري)</label>
+        <select
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+          className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition bg-white"
+        >
+          <option value="">بلا كورس محدد (امتحان عام)</option>
+          {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+        <p className="text-xs text-ruwad-navy/50">ربط الامتحان بكورس يتيح لك متابعة مستوى طلاب ذلك الكورس تحديداً.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

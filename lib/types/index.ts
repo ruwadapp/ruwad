@@ -318,6 +318,18 @@ export interface PresentationResponse {
   submitted_at: string
   student?: Profile
 }
+export interface Certificate {
+  id: string
+  student_id: string
+  course_id: string
+  trainer_id: string
+  score: number
+  certificate_code: string
+  issued_at: string
+  student?: Profile
+  course?: Course
+}
+
 export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary'
 
 export interface Badge {
