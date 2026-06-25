@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, CreditCard,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -44,7 +44,7 @@ const instituteNav = [
 
 const superAdminNav = [
   { href: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { href: '/admin/subscriptions', label: 'الاشتراكات', icon: CreditCard },
+  { href: '/admin/accounts', label: 'الحسابات', icon: UserCog },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
