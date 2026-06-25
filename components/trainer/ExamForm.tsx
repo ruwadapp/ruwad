@@ -43,7 +43,7 @@ export function ExamForm({ initialExam }: ExamFormProps) {
       description: description || null,
       instructions: instructions || null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
-      passing_marks: Number(passingMarks) || 0,
+      passing_marks: Math.min(100, Math.max(0, Number(passingMarks) || 0)),
       shuffle_questions: shuffleQuestions,
       show_results: showResults,
       allow_review: allowReview,
@@ -151,14 +151,16 @@ export function ExamForm({ initialExam }: ExamFormProps) {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-ruwad-navy">درجة النجاح</label>
+          <label className="text-sm font-medium text-ruwad-navy">نسبة النجاح المطلوبة (%)</label>
           <input
             type="number"
             min={0}
+            max={100}
             value={passingMarks}
             onChange={(e) => setPassingMarks(e.target.value)}
             className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
           />
+          <p className="text-xs text-ruwad-navy/50">مثال: 50 تعني أن الطالب ينجح إذا حصل على 50% فأكثر من إجمالي علامات الامتحان، بغض النظر عن عدد الأسئلة.</p>
         </div>
       </div>
 

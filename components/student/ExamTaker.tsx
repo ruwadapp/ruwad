@@ -42,7 +42,8 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
     const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000)
     const { score } = gradeExam(questions, answers)
     const percentage = exam.total_marks > 0 ? (score / exam.total_marks) * 100 : 0
-    const passed = score >= exam.passing_marks
+    // درجة النجاح تُقارَن كنسبة مئوية، لا كعلامة خام — تبقى صحيحة دائماً بغض النظر عن إجمالي علامات الامتحان
+    const passed = percentage >= exam.passing_marks
 
     await supabase
       .from('exam_submissions')
@@ -79,31 +80,37 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white rounded-ruwad shadow-card p-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex-1">
-          <div className="w-full bg-ruwad-gray/40 rounded-full h-2">
+      <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad p-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+        <div className="relative flex-1">
+          <div className="w-full bg-white/20 rounded-full h-2">
             <div
-              className="bg-ruwad-blue h-2 rounded-full transition-all"
+              className="bg-ruwad-lime h-2 rounded-full transition-all"
               style={{ width: `${(answeredCount / questions.length) * 100}%` }}
             />
           </div>
-          <p className="text-xs text-ruwad-navy/50 mt-1.5">
+          <p className="text-xs text-white/70 mt-1.5">
             {answeredCount} من {questions.length} مُجاب
           </p>
         </div>
         {timeLeft !== null && (
-          <div className="flex items-center gap-1.5 text-ruwad-navy font-bold mr-4">
-            <Clock size={18} className={timeLeft < 60 ? 'text-red-500' : 'text-ruwad-blue'} />
-            <span className={timeLeft < 60 ? 'text-red-500' : ''}>{formatTime(timeLeft)}</span>
+          <div className="relative flex items-center gap-1.5 text-white font-bold mr-4">
+            <Clock size={18} className={timeLeft < 60 ? 'text-red-300' : 'text-ruwad-lime'} />
+            <span className={timeLeft < 60 ? 'text-red-300' : ''}>{formatTime(timeLeft)}</span>
           </div>
         )}
       </div>
 
       {question && (
-        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4">
-          <p className="text-sm text-ruwad-navy/50">
-            سؤال {currentIndex + 1} من {questions.length} · {question.marks} درجة
-          </p>
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 border-r-4 border-ruwad-blue">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-full bg-ruwad-gradient text-white text-sm font-bold flex items-center justify-center shrink-0">
+              {currentIndex + 1}
+            </span>
+            <p className="text-sm text-ruwad-navy/50">
+              من {questions.length} · {question.marks} درجة
+            </p>
+          </div>
           <p className="text-lg font-medium text-ruwad-navy">{question.question_text}</p>
 
           {question.question_type === 'multiple_choice' && (
