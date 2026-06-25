@@ -21,7 +21,7 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
 
   const { data: submissions } = await supabase
     .from('exam_submissions')
-    .select('*, student:profiles(full_name, avatar_url)')
+    .select('*, student:profiles!student_id(full_name, avatar_url)')
     .eq('exam_id', id)
     .not('submitted_at', 'is', null)
     .order('score', { ascending: false })
@@ -34,28 +34,62 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
     ? Math.round((list.filter((s) => s.passed).length / list.length) * 100)
     : 0
 
+  const top3 = list.slice(0, 3)
+  const podiumOrder = top3.length === 3 ? [1, 0, 2] : top3.map((_, i) => i)
+  const podiumHeight = ['h-28', 'h-36', 'h-24']
+
   return (
     <>
       <Header title={`نتائج: ${exam.title}`} />
       <main className="p-6 flex flex-col gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-ruwad shadow-card p-6">
-            <p className="text-sm text-ruwad-navy/60">عدد المشاركين</p>
-            <p className="text-2xl font-bold text-ruwad-navy mt-1">{list.length}</p>
-          </div>
-          <div className="bg-white rounded-ruwad shadow-card p-6">
-            <p className="text-sm text-ruwad-navy/60">متوسط الدرجة</p>
-            <p className="text-2xl font-bold text-ruwad-navy mt-1">{avgPercentage}%</p>
-          </div>
-          <div className="bg-white rounded-ruwad shadow-card p-6">
-            <p className="text-sm text-ruwad-navy/60">نسبة النجاح</p>
-            <p className="text-2xl font-bold text-ruwad-navy mt-1">{passRate}%</p>
+        {/* شريط إحصاء بتدرّج وفقاعات ضوء — نفس روح صفحة الدخول */}
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-8">
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-ruwad-lime/20 rounded-full blur-3xl" />
+
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-5">
+              <p className="text-sm text-white/70">عدد المشاركين</p>
+              <p className="text-3xl font-bold text-white mt-1">{list.length}</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-5">
+              <p className="text-sm text-white/70">متوسط الدرجة</p>
+              <p className="text-3xl font-bold text-white mt-1">{avgPercentage}%</p>
+            </div>
+            <div className="bg-ruwad-lime rounded-ruwad-sm p-5">
+              <p className="text-sm text-ruwad-navy/70">نسبة النجاح</p>
+              <p className="text-3xl font-bold text-ruwad-navy mt-1">{passRate}%</p>
+            </div>
           </div>
         </div>
 
+        {/* منصّة التتويج لأفضل 3 طلاب */}
+        {top3.length > 0 && (
+          <div className="bg-white rounded-ruwad shadow-card p-8">
+            <div className="flex items-end justify-center gap-4">
+              {podiumOrder.map((rank) => {
+                const sub = top3[rank]
+                if (!sub) return null
+                return (
+                  <div key={sub.id} className="flex flex-col items-center gap-2 w-28">
+                    <span className="text-3xl">{MEDALS[rank]}</span>
+                    <p className="text-sm font-bold text-ruwad-navy text-center truncate w-full">{sub.student?.full_name ?? '—'}</p>
+                    <p className="text-xs text-ruwad-navy/50">{sub.percentage}%</p>
+                    <div
+                      className={`w-full rounded-t-ruwad-sm ${podiumHeight[rank]} ${
+                        rank === 0 ? 'bg-ruwad-lime' : 'bg-ruwad-blue/15'
+                      }`}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-ruwad shadow-card p-6">
           <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-            <Trophy size={20} className="text-ruwad-blue" /> الترتيب
+            <Trophy size={20} className="text-ruwad-blue" /> الترتيب الكامل
           </h2>
 
           {list.length === 0 ? (

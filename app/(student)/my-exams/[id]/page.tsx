@@ -37,44 +37,66 @@ export default async function TakeExamPage({ params }: { params: Promise<{ id: s
 
   // إذا تم التسليم — عرض النتيجة بدل خوض الامتحان من جديد
   if (submission?.submitted_at) {
+    const passed = submission.passed
     return (
       <>
         <Header title={exam.title} />
         <main className="p-6">
-          <div className="bg-white rounded-ruwad shadow-card p-8 flex flex-col items-center gap-4 text-center max-w-md mx-auto">
+          <div className="max-w-md mx-auto">
             {exam.show_results ? (
-              <>
-                {submission.passed ? (
-                  <CheckCircle2 size={48} className="text-ruwad-blue" />
+              <div
+                className={`relative overflow-hidden rounded-ruwad shadow-ruwad-lg p-10 flex flex-col items-center gap-3 text-center ${
+                  passed ? 'bg-ruwad-gradient' : 'bg-ruwad-navy'
+                }`}
+              >
+                {/* فقاعات ضوء معتّمة — نفس روح صفحة الدخول */}
+                <div className="absolute -top-14 -right-14 w-44 h-44 bg-white/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-ruwad-lime/20 rounded-full blur-3xl" />
+
+                {passed ? (
+                  <span className="relative text-6xl">🎉</span>
                 ) : (
-                  <XCircle size={48} className="text-red-500" />
+                  <XCircle size={56} className="relative text-white/70" />
                 )}
-                <h2 className="text-2xl font-bold text-ruwad-navy">
-                  {submission.score}/{submission.total_marks} ({submission.percentage}%)
+
+                <h2 className="relative text-4xl font-extrabold text-white mt-1">
+                  {submission.percentage}%
                 </h2>
+                <p className="relative text-white/70 text-sm">
+                  {submission.score} من {submission.total_marks} درجة
+                </p>
+
                 <span
-                  className={`text-sm font-semibold px-3 py-1.5 rounded-full ${
-                    submission.passed ? 'bg-ruwad-lime text-ruwad-navy' : 'bg-red-100 text-red-600'
+                  className={`relative text-sm font-bold px-4 py-1.5 rounded-full mt-1 ${
+                    passed ? 'bg-ruwad-lime text-ruwad-navy' : 'bg-white/15 text-white'
                   }`}
                 >
-                  {submission.passed ? 'ناجح' : 'غير ناجح'}
+                  {passed ? 'ناجح ✓' : 'غير ناجح'}
                 </span>
-              </>
+
+                {exam.allow_review && (
+                  <Link
+                    href={`/my-exams/${id}/review`}
+                    className="relative bg-white text-ruwad-navy px-6 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition mt-4"
+                  >
+                    مراجعة الإجابات
+                  </Link>
+                )}
+              </div>
             ) : (
-              <>
+              <div className="bg-white rounded-ruwad shadow-card p-8 flex flex-col items-center gap-4 text-center">
                 <CheckCircle2 size={48} className="text-ruwad-blue" />
                 <h2 className="text-xl font-bold text-ruwad-navy">تم تسليم إجابتك بنجاح</h2>
                 <p className="text-ruwad-navy/60 text-sm">ستظهر النتيجة لاحقاً من المدرب.</p>
-              </>
-            )}
-
-            {exam.allow_review && (
-              <Link
-                href={`/my-exams/${id}/review`}
-                className="bg-ruwad-blue text-white px-6 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition mt-2"
-              >
-                مراجعة الإجابات
-              </Link>
+                {exam.allow_review && (
+                  <Link
+                    href={`/my-exams/${id}/review`}
+                    className="bg-ruwad-blue text-white px-6 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition mt-2"
+                  >
+                    مراجعة الإجابات
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </main>
