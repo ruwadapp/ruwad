@@ -2,16 +2,13 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/shared/Sidebar'
 
-export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
+export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (profile?.role !== 'trainer') redirect('/home')
-
-  const { data: hasAccess } = await supabase.rpc('has_active_access', { p_trainer_id: user.id })
-  if (!hasAccess) redirect('/subscription-required')
+  if (profile?.role !== 'super_admin') redirect('/dashboard')
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">

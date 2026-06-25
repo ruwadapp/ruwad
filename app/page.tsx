@@ -14,7 +14,7 @@ export default async function HomePage() {
     .single()
 
   const redirectMap: Record<string, string> = {
-    trainer: '/dashboard', student: '/home', institute_admin: '/org/dashboard',
+    trainer: '/dashboard', student: '/home', institute_admin: '/org/dashboard', super_admin: '/admin/dashboard',
   }
   redirect(redirectMap[profile?.role ?? 'student'] ?? '/home')
 }

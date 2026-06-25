@@ -34,6 +34,7 @@ export function LoginForm() {
       trainer: '/dashboard',
       student: '/home',
       institute_admin: '/org/dashboard',
+      super_admin: '/admin/dashboard',
     }
     window.location.href = redirectMap[profile?.role ?? 'student'] ?? '/home'
   }

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, CreditCard,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -42,17 +42,27 @@ const instituteNav = [
   { href: '/org/members', label: 'الأعضاء', icon: UserCog },
 ]
 
+const superAdminNav = [
+  { href: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
+  { href: '/admin/subscriptions', label: 'الاشتراكات', icon: CreditCard },
+]
+
 const ROLE_LABELS: Record<string, string> = {
   trainer: 'مدرب',
   student: 'طالب',
   institute_admin: 'مدير معهد',
+  super_admin: 'مالك المنصة',
 }
 
 export function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
-  const nav = profile?.role === 'trainer' ? trainerNav : profile?.role === 'institute_admin' ? instituteNav : studentNav
+  const nav =
+    profile?.role === 'trainer' ? trainerNav :
+    profile?.role === 'institute_admin' ? instituteNav :
+    profile?.role === 'super_admin' ? superAdminNav :
+    studentNav
 
   async function handleLogout() {
     await supabase.auth.signOut()

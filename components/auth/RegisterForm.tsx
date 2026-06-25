@@ -50,6 +50,7 @@ export function RegisterForm() {
       trainer: '/dashboard',
       student: '/home',
       institute_admin: '/org/dashboard',
+      super_admin: '/admin/dashboard',
     }
     window.location.href = redirectMap[role]
   }

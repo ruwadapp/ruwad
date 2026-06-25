@@ -8,6 +8,7 @@ const TRAINER_ROUTES = [
 ]
 const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute']
 const INSTITUTE_ROUTES = ['/org']
+const SUPERADMIN_ROUTES = ['/admin']
 
 export async function middleware(request: NextRequest) {
   const { user, response } = await updateSession(request)
@@ -24,7 +25,7 @@ export async function middleware(request: NextRequest) {
       const { data: profile } = await supabase
         .from('profiles').select('role').eq('id', user.id).single()
       const redirectMap: Record<string, string> = {
-        trainer: '/dashboard', student: '/home', institute_admin: '/org/dashboard',
+        trainer: '/dashboard', student: '/home', institute_admin: '/org/dashboard', super_admin: '/admin/dashboard',
       }
       const redirect = redirectMap[profile?.role ?? 'student'] ?? '/home'
       return NextResponse.redirect(new URL(redirect, request.url))
@@ -35,7 +36,8 @@ export async function middleware(request: NextRequest) {
   const isProtected =
     TRAINER_ROUTES.some((r) => path.startsWith(r)) ||
     STUDENT_ROUTES.some((r) => path.startsWith(r)) ||
-    INSTITUTE_ROUTES.some((r) => path.startsWith(r))
+    INSTITUTE_ROUTES.some((r) => path.startsWith(r)) ||
+    SUPERADMIN_ROUTES.some((r) => path.startsWith(r))
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
