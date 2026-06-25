@@ -41,9 +41,9 @@ export function RegisterForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#F5F6FA] px-4">
+    <main className="min-h-screen flex items-center justify-center bg-[#F5F6FA] px-4 lg:w-1/2 lg:px-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 lg:hidden">
           <h1 className="text-3xl font-extrabold text-ruwad-navy">رُوّاد</h1>
           <p className="text-ruwad-navy/60 mt-1">ابدأ رحلتك التعليمية الآن</p>
         </div>
