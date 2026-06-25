@@ -41,11 +41,13 @@ export function RegisterForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#F5F6FA] px-4 lg:w-1/2 lg:px-12">
+    <main className="min-h-screen flex items-center justify-center bg-[#F5F6FA] px-4 py-8 w-full lg:w-1/2 lg:px-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8 lg:hidden">
-          <h1 className="text-3xl font-extrabold text-ruwad-navy">رُوّاد</h1>
-          <p className="text-ruwad-navy/60 mt-1">ابدأ رحلتك التعليمية الآن</p>
+        <div className="relative lg:hidden bg-ruwad-gradient rounded-ruwad p-6 mb-6 overflow-hidden text-center">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-ruwad-lime/20 rounded-full blur-2xl" />
+          <h1 className="relative text-3xl font-extrabold text-white">رُوّاد</h1>
+          <p className="relative text-white/80 mt-1 text-sm">ابدأ رحلتك التعليمية الآن</p>
         </div>
 
         <form
