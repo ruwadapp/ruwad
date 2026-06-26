@@ -67,28 +67,37 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
   }
 
   return (
-    <nav
-      className="md:hidden fixed bottom-3 right-3 left-3 z-40 bg-white/85 backdrop-blur-xl border border-white/40 rounded-[28px] shadow-ruwad-lg overflow-x-auto no-scrollbar"
-      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+    <div
+      className="md:hidden fixed bottom-3 right-3 left-3 z-40 rounded-[30px] p-[2.5px] shadow-ruwad-lg"
+      style={{
+        paddingBottom: 'max(2.5px, env(safe-area-inset-bottom))',
+        background: 'linear-gradient(120deg, #3A4EFB, #33A4FA, #E3FF3B, #3A4EFB)',
+      }}
     >
-      <div className="flex items-center gap-1 px-2 py-2 w-max min-w-full justify-around">
-        {fullNav.map((item) => {
-          const Icon = ICONS[item.icon]
-          const active = isActive(item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3.5 py-1.5 rounded-full transition-all shrink-0 ${
-                active ? 'bg-ruwad-blue text-white scale-105 shadow-ruwad' : 'text-ruwad-navy/50'
-              }`}
-            >
-              <Icon size={20} />
-              <span className="text-[10px] font-semibold leading-none whitespace-nowrap">{item.label}</span>
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+      <nav
+        className="bg-white/90 backdrop-blur-xl rounded-[28px] overflow-x-auto no-scrollbar"
+        style={{ scrollSnapType: 'x mandatory' }}
+      >
+        <div className="flex items-center gap-1 px-1.5 py-2">
+          {fullNav.map((item) => {
+            const Icon = ICONS[item.icon]
+            const active = isActive(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{ scrollSnapAlign: 'start' }}
+                className={`flex flex-col items-center justify-center gap-1 min-w-[20%] shrink-0 py-2 rounded-[20px] transition-all ${
+                  active ? 'bg-ruwad-blue text-white scale-105 shadow-ruwad' : 'text-ruwad-navy/50'
+                }`}
+              >
+                <Icon size={24} />
+                <span className="text-[10.5px] font-semibold leading-none whitespace-nowrap">{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+    </div>
   )
 }
