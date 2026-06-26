@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ChallengeQuestion } from '@/lib/types'
-import { Plus, Trash2, Zap, Pencil } from 'lucide-react'
+import { Plus, Trash2, Zap, Pencil, Timer } from 'lucide-react'
 
 type CQType = 'multiple_choice' | 'true_false' | 'short_answer'
 const TYPE_LABELS: Record<CQType, string> = {
@@ -23,6 +23,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
   const [correctTrueFalse, setCorrectTrueFalse] = useState('true')
   const [correctShortAnswer, setCorrectShortAnswer] = useState('')
   const [marks, setMarks] = useState('10')
+  const [timeLimit, setTimeLimit] = useState('20')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -35,7 +36,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
 
   function resetForm() {
     setText(''); setOptions(['', '', '', '']); setCorrectOption('A')
-    setCorrectTrueFalse('true'); setCorrectShortAnswer(''); setMarks('10')
+    setCorrectTrueFalse('true'); setCorrectShortAnswer(''); setMarks('10'); setTimeLimit('20')
     setFormOpen(false); setEditingId(null)
   }
 
@@ -44,6 +45,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
     setText(q.question_text)
     setType(q.question_type)
     setMarks(q.marks.toString())
+    setTimeLimit((q.time_limit_seconds ?? 20).toString())
     if (q.question_type === 'multiple_choice') {
       const letters = ['A', 'B', 'C', 'D']
       setOptions(letters.map((l) => q.options.find((o) => o.id === l)?.text ?? ''))
@@ -77,13 +79,16 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
       correctAnswer = correctShortAnswer || null
     }
 
+    const payload = {
+      question_text: text, question_type: type, options: questionOptions,
+      correct_answer: correctAnswer, marks: Number(marks) || 10,
+      time_limit_seconds: Number(timeLimit) || 20,
+    }
+
     if (editingId) {
       const { data, error: updateError } = await supabase
         .from('challenge_questions')
-        .update({
-          question_text: text, question_type: type, options: questionOptions,
-          correct_answer: correctAnswer, marks: Number(marks) || 10,
-        })
+        .update(payload)
         .eq('id', editingId)
         .select()
         .single()
@@ -100,11 +105,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
 
     const { data, error: insertError } = await supabase
       .from('challenge_questions')
-      .insert({
-        challenge_id: challengeId, question_text: text, question_type: type,
-        options: questionOptions, correct_answer: correctAnswer,
-        marks: Number(marks) || 10, order_index: items.length,
-      })
+      .insert({ challenge_id: challengeId, ...payload, order_index: items.length })
       .select()
       .single()
 
@@ -147,13 +148,18 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
         <form onSubmit={saveQuestion} className="flex flex-col gap-3 border-2 border-ruwad-lime/60 rounded-ruwad-sm p-4 mb-4">
           {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-3 py-2">{error}</div>}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <select value={type} onChange={(e) => setType(e.target.value as CQType)}
               className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 outline-none focus:border-ruwad-lime">
               {Object.entries(TYPE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
             </select>
             <input type="number" min={1} value={marks} onChange={(e) => setMarks(e.target.value)} placeholder="النقاط"
               className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 outline-none focus:border-ruwad-lime" />
+            <div className="relative">
+              <Timer size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ruwad-navy/40" />
+              <input type="number" min={5} max={120} value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="الوقت (ثانية)"
+                className="w-full border border-ruwad-gray rounded-ruwad-sm pr-9 pl-3 py-2 outline-none focus:border-ruwad-lime" />
+            </div>
           </div>
 
           <textarea required value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="نص السؤال"
@@ -202,7 +208,7 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
               <span className="w-6 h-6 rounded-full bg-ruwad-lime text-ruwad-navy text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{idx + 1}</span>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-ruwad-navy">{q.question_text}</p>
-                <p className="text-xs text-ruwad-navy/50 mt-1">{TYPE_LABELS[q.question_type]} · {q.marks} نقطة</p>
+                <p className="text-xs text-ruwad-navy/50 mt-1">{TYPE_LABELS[q.question_type]} · {q.marks} نقطة · {q.time_limit_seconds ?? 20} ثانية</p>
               </div>
               <button onClick={() => startEdit(q)} aria-label="تعديل السؤال" className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0">
                 <Pencil size={16} />

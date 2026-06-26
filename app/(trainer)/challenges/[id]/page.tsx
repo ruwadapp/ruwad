@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { ChallengeForm } from '@/components/trainer/ChallengeForm'
 import { ChallengeQuestionManager } from '@/components/trainer/ChallengeQuestionManager'
+import { StartChallengeSessionButton } from '@/components/trainer/StartChallengeSessionButton'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { Trophy } from 'lucide-react'
 
@@ -31,9 +32,10 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
       <main className="p-6 flex flex-col gap-6">
         <div className="flex justify-end gap-3">
           <DeleteButton table="challenges" id={id} redirectTo="/challenges" label="حذف التحدي" />
-          <Link href={`/challenges/${id}/results`} className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition flex items-center gap-2">
-            <Trophy size={18} /> عرض الترتيب
+          <Link href={`/challenges/${id}/results`} className="bg-white border-2 border-ruwad-gray text-ruwad-navy px-5 py-2.5 rounded-ruwad-sm font-semibold hover:bg-ruwad-gray/20 transition flex items-center gap-2">
+            <Trophy size={18} /> سجل النتائج
           </Link>
+          <StartChallengeSessionButton challengeId={id} hasQuestions={(questions?.length ?? 0) > 0} />
         </div>
         <ChallengeForm initialChallenge={challenge} courses={courses ?? []} />
         <ChallengeQuestionManager challengeId={id} questions={questions ?? []} />

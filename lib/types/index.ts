@@ -185,7 +185,41 @@ export interface ChallengeQuestion {
   options: QuestionOption[]
   correct_answer: string | string[] | null
   marks: number
+  time_limit_seconds: number
   order_index: number
+}
+
+export interface ChallengeSession {
+  id: string
+  challenge_id: string
+  trainer_id: string
+  session_code: string
+  status: 'lobby' | 'question' | 'leaderboard' | 'ended'
+  current_question_index: number
+  question_started_at: string | null
+  started_at: string
+  ended_at: string | null
+}
+
+export interface ChallengeSessionParticipant {
+  id: string
+  session_id: string
+  student_id: string
+  score: number
+  joined_at: string
+  student?: Profile
+}
+
+export interface ChallengeLiveAnswer {
+  id: string
+  session_id: string
+  question_id: string
+  student_id: string
+  option_id: string | null
+  is_correct: boolean
+  points_earned: number
+  time_taken_ms: number | null
+  answered_at: string
 }
 
 export interface ChallengeSubmission {
