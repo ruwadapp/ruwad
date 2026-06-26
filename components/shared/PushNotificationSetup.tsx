@@ -12,7 +12,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
-export function PushNotificationSetup() {
+export function PushNotificationSetup({ compact = false }: { compact?: boolean }) {
   const [supported, setSupported] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -66,10 +66,26 @@ export function PushNotificationSetup() {
   if (!supported || !VAPID_PUBLIC_KEY) return null
 
   if (subscribed) {
+    if (compact) return null
     return (
       <div className="flex items-center gap-1.5 text-xs text-white/50 px-2">
         <Check size={13} className="text-ruwad-lime" /> الإشعارات مفعّلة
       </div>
+    )
+  }
+
+  if (compact) {
+    return (
+      <button
+        onClick={enable}
+        disabled={loading}
+        aria-label="تفعيل إشعارات الجهاز"
+        title="تفعيل إشعارات الجهاز"
+        className="relative w-10 h-10 rounded-full bg-ruwad-gray/40 flex items-center justify-center hover:bg-ruwad-gray transition disabled:opacity-50"
+      >
+        <BellRing size={18} className={`text-ruwad-navy ${loading ? 'animate-pulse' : ''}`} />
+        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-ruwad-lime border-2 border-white" />
+      </button>
     )
   }
 

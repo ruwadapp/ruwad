@@ -50,3 +50,7 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* إخفاء شريط التمرير بصرياً مع بقاء السحب يعمل (لشريط التنقّل العائم في الموبايل) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

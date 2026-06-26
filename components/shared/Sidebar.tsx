@@ -8,7 +8,6 @@ import {
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
-import { PushNotificationSetup } from './PushNotificationSetup'
 
 const trainerNav = [
   { href: '/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
@@ -109,7 +108,6 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
             <p className="text-xs text-white/50">{ROLE_LABELS[profile?.role ?? ''] ?? ''}</p>
           </div>
         </div>
-        <PushNotificationSetup />
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2.5 rounded-ruwad-sm text-sm text-white/70 hover:bg-white/10 hover:text-white transition"
