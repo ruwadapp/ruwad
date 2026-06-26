@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/shared/Sidebar'
+import { MobileBottomNav } from '@/components/shared/MobileBottomNav'
 
 export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -13,7 +14,8 @@ export default async function SuperAdminLayout({ children }: { children: React.R
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">
       <Sidebar profile={profile} />
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex-1 min-w-0 pb-24 md:pb-0">{children}</div>
+      <MobileBottomNav profile={profile} />
     </div>
   )
 }
