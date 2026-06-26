@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { ChallengeQuestion, ChallengeSession } from '@/lib/types'
-import { Copy, Check, Users, Zap, Trophy, ArrowLeft } from 'lucide-react'
+import { Copy, Check, Users, Zap, Trophy, ArrowLeft, Link2 } from 'lucide-react'
 
 const SHAPE_COLORS = ['bg-red-500', 'bg-ruwad-blue', 'bg-amber-400', 'bg-ruwad-lime']
 const SHAPES = ['▲', '◆', '●', '■']
@@ -21,6 +21,7 @@ export function ChallengeHostLiveView({
   const [answeredCount, setAnsweredCount] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const supabase = createClient()
   const autoAdvanceRef = useRef(false)
 
@@ -87,6 +88,13 @@ export function ChallengeHostLiveView({
     navigator.clipboard.writeText(session.session_code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function copyLink() {
+    const url = `${window.location.origin}/my-challenges/join/${session.session_code}`
+    navigator.clipboard.writeText(url)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
   }
 
   async function startQuiz() {
@@ -164,6 +172,9 @@ export function ChallengeHostLiveView({
           <button onClick={copyCode} aria-label="نسخ">{copied ? <Check size={18} /> : <Copy size={18} />}</button>
         </div>
         <span className="flex items-center gap-1.5 text-sm"><Users size={16} className="text-ruwad-lime" /> {participants.length} منضم</span>
+        <button onClick={copyLink} className="flex items-center gap-1.5 text-sm font-semibold bg-white/10 px-3 py-1.5 rounded-ruwad-sm hover:bg-white/20 transition">
+          <Link2 size={15} /> {linkCopied ? 'تم النسخ ✓' : 'نسخ رابط الانضمام'}
+        </button>
       </div>
 
       {session.status === 'lobby' && (
