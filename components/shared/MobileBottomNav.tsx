@@ -71,7 +71,7 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
       className="md:hidden fixed bottom-3 right-3 left-3 z-40 rounded-[28px] p-[2px] shadow-ruwad-lg"
       style={{
         paddingBottom: 'max(2px, env(safe-area-inset-bottom))',
-        background: 'linear-gradient(120deg, #E3FF3B, #C9E62F, #E3FF3B)',
+        background: 'linear-gradient(120deg, #FFFFFF, #F0F0F0, #FFFFFF)',
       }}
     >
       <nav
