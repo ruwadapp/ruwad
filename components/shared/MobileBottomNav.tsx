@@ -1,12 +1,14 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
+import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
@@ -55,6 +57,7 @@ const superAdminNav: NavItem[] = [
 
 export function MobileBottomNav({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const fullNav =
     profile?.role === 'trainer' ? trainerNav :
@@ -62,42 +65,60 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
     profile?.role === 'super_admin' ? superAdminNav :
     studentNav
 
+  const showScanButton = profile?.role === 'student' || profile?.role === 'trainer'
+
   function isActive(href: string) {
     return pathname.startsWith(href)
   }
 
   return (
-    <div
-      className="md:hidden fixed bottom-3 right-3 left-3 z-40 rounded-[28px] p-[2px] shadow-ruwad-lg"
-      style={{
-        paddingBottom: 'max(2px, env(safe-area-inset-bottom))',
-        background: 'linear-gradient(120deg, #FFFFFF, #F0F0F0, #FFFFFF)',
-      }}
-    >
-      <nav
-        className="bg-white/90 backdrop-blur-xl rounded-[26px] overflow-x-auto no-scrollbar"
-        style={{ scrollSnapType: 'x mandatory' }}
+    <>
+      <div
+        className="md:hidden fixed bottom-3 right-3 left-3 z-40 rounded-[28px] p-[2px] shadow-ruwad-lg"
+        style={{
+          paddingBottom: 'max(2px, env(safe-area-inset-bottom))',
+          background: 'linear-gradient(120deg, #FFFFFF, #F0F0F0, #FFFFFF)',
+        }}
       >
-        <div className="flex items-center gap-1 px-1.5 py-1.5">
-          {fullNav.map((item) => {
-            const Icon = ICONS[item.icon]
-            const active = isActive(item.href)
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
+        <nav
+          className="bg-white/90 backdrop-blur-xl rounded-[26px] overflow-x-auto no-scrollbar"
+          style={{ scrollSnapType: 'x mandatory' }}
+        >
+          <div className="flex items-center gap-1 px-1.5 py-1.5">
+            {showScanButton && (
+              <button
+                onClick={() => setScannerOpen(true)}
                 style={{ scrollSnapAlign: 'start' }}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[20%] shrink-0 py-1.5 rounded-[18px] transition-all ${
-                  active ? 'bg-ruwad-blue text-white scale-105 shadow-ruwad' : 'text-ruwad-navy/50'
-                }`}
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[20%] shrink-0 py-1.5 rounded-[18px] transition-all text-ruwad-navy/50"
               >
-                <Icon size={20} />
-                <span className="text-[10px] font-semibold leading-none whitespace-nowrap">{item.label}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
-    </div>
+                <span className="w-7 h-7 -mt-0.5 rounded-full bg-ruwad-lime flex items-center justify-center">
+                  <ScanLine size={16} className="text-ruwad-navy" />
+                </span>
+                <span className="text-[10px] font-semibold leading-none whitespace-nowrap">إضافة</span>
+              </button>
+            )}
+            {fullNav.map((item) => {
+              const Icon = ICONS[item.icon]
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{ scrollSnapAlign: 'start' }}
+                  className={`flex flex-col items-center justify-center gap-0.5 min-w-[20%] shrink-0 py-1.5 rounded-[18px] transition-all ${
+                    active ? 'bg-ruwad-blue text-white scale-105 shadow-ruwad' : 'text-ruwad-navy/50'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span className="text-[10px] font-semibold leading-none whitespace-nowrap">{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
+      </div>
+
+      {scannerOpen && <QrScannerModal onClose={() => setScannerOpen(false)} />}
+    </>
   )
 }

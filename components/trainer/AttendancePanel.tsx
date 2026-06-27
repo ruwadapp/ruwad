@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { AttendanceSession, AttendanceRecord } from '@/lib/types'
 import { Copy, Check, Play, Square, UserCheck, UserX, CheckCheck } from 'lucide-react'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 export function AttendancePanel({
   session,
@@ -100,6 +101,7 @@ export function AttendancePanel({
             {copied ? <Check size={24} /> : <Copy size={24} />}
           </button>
         </div>
+        <CodeQrImage code={session.session_code} size={130} className="mt-1" />
         <div className="flex items-center gap-2 mt-2">
           <span className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-ruwad-lime' : 'bg-white/40'}`} />
           <span className="text-sm">{closed ? 'مغلقة' : isActive ? 'نشطة الآن' : 'لم تُفعَّل بعد'}</span>

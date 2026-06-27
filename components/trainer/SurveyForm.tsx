@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Survey } from '@/lib/types'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
 import { Copy, Check } from 'lucide-react'
 
 export function SurveyForm({ initialSurvey }: { initialSurvey?: Survey }) {
@@ -67,15 +68,16 @@ export function SurveyForm({ initialSurvey }: { initialSurvey?: Survey }) {
       {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
 
       {initialSurvey && (
-        <div className="flex items-center justify-between bg-ruwad-gray/20 rounded-ruwad-sm px-4 py-3">
+        <div className="flex items-center justify-between bg-ruwad-gray/20 rounded-ruwad-sm px-4 py-3 gap-4">
           <div>
             <p className="text-sm font-medium text-ruwad-navy">رابط مشاركة الاستبيان</p>
             <p className="text-xs text-ruwad-navy/50">/survey/{initialSurvey.share_token}</p>
+            <button type="button" onClick={copyShareLink} className="flex items-center gap-1.5 text-sm font-semibold text-ruwad-blue mt-2">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? 'تم النسخ' : 'نسخ الرابط'}
+            </button>
           </div>
-          <button type="button" onClick={copyShareLink} className="flex items-center gap-1.5 text-sm font-semibold text-ruwad-blue">
-            {copied ? <Check size={16} /> : <Copy size={16} />}
-            {copied ? 'تم النسخ' : 'نسخ الرابط'}
-          </button>
+          <CodeQrImage url={`${process.env.NEXT_PUBLIC_APP_URL || 'https://ruwadapp.vercel.app'}/survey/${initialSurvey.share_token}`} size={90} />
         </div>
       )}
 

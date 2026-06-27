@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Exam, Course } from '@/lib/types'
-import { Copy, Check } from 'lucide-react'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 interface ExamFormProps {
   initialExam?: Exam
@@ -25,7 +25,6 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
   const [showResults, setShowResults] = useState(initialExam?.show_results ?? true)
   const [allowReview, setAllowReview] = useState(initialExam?.allow_review ?? true)
   const [isActive, setIsActive] = useState(initialExam?.is_active ?? true)
-  const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -82,32 +81,18 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
     }
   }
 
-  function copyShareLink() {
-    if (!initialExam) return
-    const url = `${window.location.origin}/exam/${initialExam.share_token}`
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
     <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 max-w-2xl">
       {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
 
       {initialExam && (
-        <div className="flex items-center justify-between bg-ruwad-gray/20 rounded-ruwad-sm px-4 py-3">
+        <div className="flex items-center justify-between bg-ruwad-blue/5 rounded-ruwad-sm px-4 py-3 gap-4">
           <div>
-            <p className="text-sm font-medium text-ruwad-navy">رابط مشاركة الامتحان</p>
-            <p className="text-xs text-ruwad-navy/50">/exam/{initialExam.share_token}</p>
+            <p className="text-sm font-medium text-ruwad-navy">كود الانضمام لهذا الامتحان</p>
+            <p className="text-xs text-ruwad-navy/50">شارك هذا الكود أو رمز QR مع طلابك للدخول مباشرة</p>
+            <p className="text-2xl font-mono font-bold text-ruwad-blue tracking-widest mt-1">{initialExam.exam_code}</p>
           </div>
-          <button
-            type="button"
-            onClick={copyShareLink}
-            className="flex items-center gap-1.5 text-sm font-semibold text-ruwad-blue"
-          >
-            {copied ? <Check size={16} /> : <Copy size={16} />}
-            {copied ? 'تم النسخ' : 'نسخ الرابط'}
-          </button>
+          <CodeQrImage code={initialExam.exam_code} size={90} />
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Users, GraduationCap, BookOpen, Copy } from 'lucide-react'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
+import { Users, GraduationCap, BookOpen } from 'lucide-react'
 
 export default async function InstituteDashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -44,7 +45,7 @@ export default async function InstituteDashboardPage() {
             <p className="text-white/70 text-sm">معرّف المعهد (شاركه للانضمام)</p>
             <p className="relative text-3xl font-mono font-bold text-white tracking-widest mt-1">{institute.institute_code}</p>
           </div>
-          <Copy size={20} className="relative text-white/70" />
+          <CodeQrImage code={institute.institute_code} size={110} className="relative" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

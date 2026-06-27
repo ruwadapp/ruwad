@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { ChallengeQuestion, ChallengeSession } from '@/lib/types'
 import { Copy, Check, Users, Zap, Trophy, ArrowLeft, Link2 } from 'lucide-react'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 const SHAPE_COLORS = ['bg-red-500', 'bg-ruwad-blue', 'bg-amber-400', 'bg-ruwad-lime']
 const SHAPES = ['▲', '◆', '●', '■']
@@ -181,6 +182,7 @@ export function ChallengeHostLiveView({
         <div className="bg-white rounded-ruwad shadow-card p-10 flex flex-col items-center gap-6 text-center">
           <Zap size={48} className="text-ruwad-lime" />
           <h2 className="text-xl font-bold text-ruwad-navy">بانتظار انضمام الطلاب...</h2>
+          <CodeQrImage code={session.session_code} size={160} />
           <div className="flex flex-wrap gap-2 justify-center max-w-lg">
             {participants.map((p) => (
               <span key={p.student_id} className="bg-ruwad-lime/20 text-ruwad-navy text-sm font-semibold px-4 py-2 rounded-full">{p.full_name}</span>

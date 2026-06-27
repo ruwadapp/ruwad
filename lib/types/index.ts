@@ -98,6 +98,7 @@ export interface Exam {
   total_marks: number
   passing_marks: number
   share_token: string
+  exam_code: string
   is_active: boolean
   show_results: boolean
   allow_review: boolean

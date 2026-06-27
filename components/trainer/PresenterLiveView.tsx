@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { PresentationSlide, PresentationSession } from '@/lib/types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { ChevronRight, ChevronLeft, Copy, Check, Square, Users } from 'lucide-react'
+import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 export function PresenterLiveView({
   session: initialSession,
@@ -73,6 +74,7 @@ export function PresenterLiveView({
     <div className="flex flex-col gap-4">
       <div className="bg-ruwad-navy rounded-ruwad shadow-card p-4 flex items-center justify-between text-white flex-wrap gap-3">
         <div className="flex items-center gap-3">
+          <CodeQrImage code={session.session_code} size={48} />
           <span className="text-sm opacity-70">كود الانضمام</span>
           <span className="text-2xl font-mono font-bold tracking-widest">{session.session_code}</span>
           <button onClick={copyCode} aria-label="نسخ">{copied ? <Check size={18} /> : <Copy size={18} />}</button>
