@@ -35,7 +35,7 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
 
         <div className="bg-white rounded-ruwad shadow-card p-6">
           <h2 className="text-lg font-bold text-ruwad-navy mb-4">التسليمات ({submissions?.length ?? 0})</h2>
-          <SubmissionsGrader submissions={submissions ?? []} totalMarks={assignment.total_marks} />
+          <SubmissionsGrader submissions={submissions ?? []} totalMarks={assignment.total_marks} dueDate={assignment.due_date} />
         </div>
       </main>
     </>

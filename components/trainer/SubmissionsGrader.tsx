@@ -2,33 +2,71 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { AssignmentSubmission } from '@/lib/types'
-import { FileText, Save, CheckCircle2 } from 'lucide-react'
+import { FileText, Image as ImageIcon, File as FileIcon, Save, CheckCircle2, AlertTriangle, TrendingUp, Users } from 'lucide-react'
+import { SanitizedHtml } from '@/components/shared/SanitizedHtml'
+
+function iconFor(type: string) {
+  if (type?.startsWith('image/')) return ImageIcon
+  if (type === 'application/pdf') return FileText
+  return FileIcon
+}
 
 export function SubmissionsGrader({
   submissions,
   totalMarks,
+  dueDate,
 }: {
   submissions: AssignmentSubmission[]
   totalMarks: number
+  dueDate: string | null
 }) {
+  const graded = submissions.filter((s) => s.graded_at)
+  const avgScore = graded.length
+    ? Math.round((graded.reduce((sum, s) => sum + (s.score ?? 0), 0) / graded.length) * 10) / 10
+    : null
+
   return (
-    <div className="flex flex-col gap-3">
-      {submissions.length === 0 ? (
-        <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا توجد تسليمات بعد.</p>
-      ) : (
-        submissions.map((sub) => <SubmissionRow key={sub.id} submission={sub} totalMarks={totalMarks} />)
+    <div className="flex flex-col gap-4">
+      {submissions.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-ruwad-blue/5 rounded-ruwad-sm p-4 text-center">
+            <Users size={16} className="text-ruwad-blue mx-auto mb-1" />
+            <p className="text-lg font-bold text-ruwad-navy">{submissions.length}</p>
+            <p className="text-[11px] text-ruwad-navy/50">تسليم</p>
+          </div>
+          <div className="bg-ruwad-lime/15 rounded-ruwad-sm p-4 text-center">
+            <CheckCircle2 size={16} className="text-ruwad-navy mx-auto mb-1" />
+            <p className="text-lg font-bold text-ruwad-navy">{graded.length}</p>
+            <p className="text-[11px] text-ruwad-navy/50">مُصحَّح</p>
+          </div>
+          <div className="bg-ruwad-navy/5 rounded-ruwad-sm p-4 text-center">
+            <TrendingUp size={16} className="text-ruwad-navy mx-auto mb-1" />
+            <p className="text-lg font-bold text-ruwad-navy">{avgScore !== null ? avgScore : '—'}</p>
+            <p className="text-[11px] text-ruwad-navy/50">متوسط الدرجة</p>
+          </div>
+        </div>
       )}
+
+      <div className="flex flex-col gap-3">
+        {submissions.length === 0 ? (
+          <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا توجد تسليمات بعد.</p>
+        ) : (
+          submissions.map((sub) => <SubmissionRow key={sub.id} submission={sub} totalMarks={totalMarks} dueDate={dueDate} />)
+        )}
+      </div>
     </div>
   )
 }
 
-function SubmissionRow({ submission, totalMarks }: { submission: AssignmentSubmission; totalMarks: number }) {
+function SubmissionRow({ submission, totalMarks, dueDate }: { submission: AssignmentSubmission; totalMarks: number; dueDate: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const [score, setScore] = useState(submission.score?.toString() ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
   const [saving, setSaving] = useState(false)
   const [graded, setGraded] = useState(submission.score !== null)
   const supabase = createClient()
+
+  const isLate = dueDate && new Date(submission.submitted_at) > new Date(dueDate)
 
   async function saveGrade() {
     setSaving(true)
@@ -41,7 +79,7 @@ function SubmissionRow({ submission, totalMarks }: { submission: AssignmentSubmi
   }
 
   return (
-    <div className="border border-ruwad-gray/60 rounded-ruwad-sm overflow-hidden">
+    <div className={`border rounded-ruwad-sm overflow-hidden ${graded ? 'border-ruwad-lime/50' : 'border-ruwad-gray/60'}`}>
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center gap-3 p-4 text-right hover:bg-ruwad-gray/10 transition"
@@ -51,8 +89,9 @@ function SubmissionRow({ submission, totalMarks }: { submission: AssignmentSubmi
         </div>
         <div className="flex-1 text-right">
           <p className="font-medium text-ruwad-navy">{submission.student?.full_name ?? 'طالب'}</p>
-          <p className="text-xs text-ruwad-navy/50">
+          <p className="text-xs text-ruwad-navy/50 flex items-center gap-1.5">
             {new Date(submission.submitted_at).toLocaleDateString('ar')}
+            {isLate && <span className="flex items-center gap-1 text-amber-600 font-semibold"><AlertTriangle size={11} /> متأخر</span>}
           </p>
         </div>
         {graded ? (
@@ -69,18 +108,21 @@ function SubmissionRow({ submission, totalMarks }: { submission: AssignmentSubmi
       {expanded && (
         <div className="p-4 border-t border-ruwad-gray/40 flex flex-col gap-4">
           {submission.content && (
-            <div className="bg-ruwad-gray/20 rounded-ruwad-sm p-3">
+            <div className="bg-ruwad-gray/10 rounded-ruwad-sm p-3">
               <p className="text-xs text-ruwad-navy/50 mb-1">نص الإجابة:</p>
-              <p className="text-sm text-ruwad-navy whitespace-pre-wrap">{submission.content}</p>
+              <SanitizedHtml html={submission.content} />
             </div>
           )}
           {submission.file_urls && submission.file_urls.length > 0 && (
-            <div className="flex flex-col gap-1">
-              {submission.file_urls.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-ruwad-blue flex items-center gap-1.5">
-                  <FileText size={14} /> ملف مرفق {i + 1}
-                </a>
-              ))}
+            <div className="flex flex-col gap-1.5">
+              {submission.file_urls.map((f, i) => {
+                const Icon = iconFor(f.type)
+                return (
+                  <a key={i} href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-ruwad-sm bg-ruwad-gray/10 text-sm text-ruwad-navy hover:underline">
+                    <Icon size={15} className="text-ruwad-blue shrink-0" /> {f.name}
+                  </a>
+                )
+              })}
             </div>
           )}
 

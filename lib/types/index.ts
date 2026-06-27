@@ -256,7 +256,7 @@ export interface AssignmentSubmission {
   assignment_id: string
   student_id: string
   content: string | null
-  file_urls: string[]
+  file_urls: { name: string; url: string; type: string }[]
   score: number | null
   feedback: string | null
   submitted_at: string
