@@ -26,7 +26,7 @@ const trainerNav = [
 
 const studentNav = [
   { href: '/home', label: 'الرئيسية', icon: Home },
-  { href: '/my-courses', label: 'كورساتي', icon: GraduationCap },
+  { href: '/my-courses', label: 'التدريبات', icon: GraduationCap },
   { href: '/my-presentations', label: 'العروض التقديمية', icon: MonitorPlay },
   { href: '/my-exams', label: 'امتحاناتي', icon: FileText },
   { href: '/my-challenges', label: 'التحديات', icon: Trophy },

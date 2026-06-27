@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EnrollButton } from '@/components/student/EnrollButton'
 import { CourseCodeJoin } from '@/components/student/CourseCodeJoin'
-import { BookOpen, Clock, XCircle } from 'lucide-react'
+import { BookOpen, Clock, XCircle, GraduationCap, TrendingUp, Compass } from 'lucide-react'
 
 export default async function MyCoursesPage() {
   const supabase = await createServerSupabaseClient()
@@ -11,7 +11,7 @@ export default async function MyCoursesPage() {
 
   const { data: enrollments } = await supabase
     .from('enrollments')
-    .select('*, course:courses(*)')
+    .select('*, course:courses(*, lectures(count))')
     .eq('student_id', user!.id)
     .order('enrolled_at', { ascending: false })
 
@@ -23,33 +23,64 @@ export default async function MyCoursesPage() {
 
   const { data: availableCourses } = await supabase
     .from('courses')
-    .select('*')
+    .select('*, lectures(count), profiles:trainer_id(full_name)')
     .eq('status', 'published')
     .not('id', 'in', `(${requestedIds.length ? requestedIds.join(',') : '00000000-0000-0000-0000-000000000000'})`)
 
+  const completedCount = approved.filter((e) => (e.progress ?? 0) >= 100).length
+  const avgProgress = approved.length
+    ? Math.round(approved.reduce((sum, e) => sum + (e.progress ?? 0), 0) / approved.length)
+    : 0
+
   return (
     <>
-      <Header title="كورساتي" />
+      <Header title="التدريبات" />
       <main className="p-6 flex flex-col gap-8">
+        {/* ===== هيدر إحصائي ===== */}
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7">
+          <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
+          <h1 className="relative text-xl font-bold text-white">رحلتك التدريبية</h1>
+          <div className="relative grid grid-cols-3 gap-3 mt-5">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-3 text-center">
+              <GraduationCap size={18} className="text-white mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{approved.length}</p>
+              <p className="text-[11px] text-white/70">تدريب نشط</p>
+            </div>
+            <div className="bg-ruwad-lime rounded-ruwad-sm p-3 text-center">
+              <BookOpen size={18} className="text-ruwad-navy mx-auto mb-1" />
+              <p className="text-xl font-bold text-ruwad-navy">{completedCount}</p>
+              <p className="text-[11px] text-ruwad-navy/70">مكتمل</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-3 text-center">
+              <TrendingUp size={18} className="text-white mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{avgProgress}%</p>
+              <p className="text-[11px] text-white/70">متوسط التقدّم</p>
+            </div>
+          </div>
+        </div>
+
         <CourseCodeJoin />
 
+        {/* ===== التدريبات الحالية ===== */}
         <section>
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4">كورساتي الحالية</h2>
+          <h2 className="text-lg font-bold text-ruwad-navy mb-4">التدريبات الحالية</h2>
           {approved.length === 0 ? (
             <div className="bg-white rounded-ruwad shadow-card p-10 text-center">
               <BookOpen className="mx-auto text-ruwad-navy/30 mb-3" size={40} />
-              <p className="text-ruwad-navy/60">لم تنضمّ لأي كورس بعد.</p>
+              <p className="text-ruwad-navy/60">لم تنضمّ لأي تدريب بعد.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {approved.map((enrollment, idx) => {
                 const progress = enrollment.progress ?? 0
                 const isDone = progress >= 100
+                const lectureCount = enrollment.course?.lectures?.[0]?.count ?? 0
                 return (
                   <Link
                     key={enrollment.id}
                     href={`/my-courses/${enrollment.course_id}`}
-                    className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg transition border-t-4 ${
+                    className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all border-t-4 ${
                       isDone ? 'border-ruwad-lime' : ['border-ruwad-blue', 'border-ruwad-navy', 'border-ruwad-lime'][idx % 3]
                     }`}
                   >
@@ -57,6 +88,9 @@ export default async function MyCoursesPage() {
                       <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{enrollment.course?.title}</h3>
                       {isDone && <span className="text-xs font-bold bg-ruwad-lime text-ruwad-navy px-2.5 py-1 rounded-full shrink-0">مكتمل 🎉</span>}
                     </div>
+                    <p className="text-xs text-ruwad-navy/50 flex items-center gap-1">
+                      <BookOpen size={13} /> {lectureCount} محاضرة
+                    </p>
                     <div className="w-full bg-ruwad-gray/40 rounded-full h-2.5">
                       <div className={`h-2.5 rounded-full transition-all ${isDone ? 'bg-ruwad-lime' : 'bg-ruwad-blue'}`} style={{ width: `${progress}%` }} />
                     </div>
@@ -100,21 +134,37 @@ export default async function MyCoursesPage() {
           </section>
         )}
 
+        {/* ===== تدريبات متاحة للالتحاق ===== */}
         <section>
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4">كورسات متاحة للالتحاق</h2>
+          <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
+            <Compass size={20} className="text-ruwad-blue" /> تدريبات متاحة للالتحاق
+          </h2>
           {!availableCourses || availableCourses.length === 0 ? (
-            <p className="text-ruwad-navy/50 text-sm">لا توجد كورسات جديدة متاحة حالياً.</p>
+            <p className="text-ruwad-navy/50 text-sm">لا توجد تدريبات جديدة متاحة حالياً.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableCourses.map((course) => (
-                <div key={course.id} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
-                  <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{course.title}</h3>
-                  <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
-                    {course.description || 'بلا وصف'}
-                  </p>
-                  <EnrollButton courseId={course.id} />
-                </div>
-              ))}
+              {availableCourses.map((course, idx) => {
+                const trainerName = (course.profiles as unknown as { full_name?: string } | null)?.full_name
+                const lectureCount = course.lectures?.[0]?.count ?? 0
+                return (
+                  <div
+                    key={course.id}
+                    className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 border-t-4 ${
+                      ['border-ruwad-blue/40', 'border-ruwad-lime/60', 'border-ruwad-navy/30'][idx % 3]
+                    }`}
+                  >
+                    <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{course.title}</h3>
+                    <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
+                      {course.description || 'بلا وصف'}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-ruwad-navy/50">
+                      <span className="flex items-center gap-1"><BookOpen size={13} /> {lectureCount} محاضرة</span>
+                      {trainerName && <span>· {trainerName}</span>}
+                    </div>
+                    <EnrollButton courseId={course.id} />
+                  </div>
+                )
+              })}
             </div>
           )}
         </section>

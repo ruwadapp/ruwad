@@ -36,7 +36,7 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
                 <h2 className="font-bold text-ruwad-navy">تم رفض طلب التحاقك بهذا الكورس</h2>
               </>
             )}
-            <Link href="/my-courses" className="text-ruwad-blue text-sm font-semibold mt-2">رجوع لكورساتي</Link>
+            <Link href="/my-courses" className="text-ruwad-blue text-sm font-semibold mt-2">رجوع للتدريبات</Link>
           </div>
         </main>
       </>

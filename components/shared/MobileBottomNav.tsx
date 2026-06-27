@@ -34,7 +34,7 @@ const trainerNav: NavItem[] = [
 
 const studentNav: NavItem[] = [
   { href: '/home', label: 'الرئيسية', icon: 'Home' },
-  { href: '/my-courses', label: 'كورساتي', icon: 'GraduationCap' },
+  { href: '/my-courses', label: 'التدريبات', icon: 'GraduationCap' },
   { href: '/my-exams', label: 'امتحاناتي', icon: 'FileText' },
   { href: '/my-challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/my-presentations', label: 'العروض', icon: 'MonitorPlay' },

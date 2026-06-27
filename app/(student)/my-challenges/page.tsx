@@ -46,11 +46,11 @@ export default async function MyChallengesPage() {
     <>
       <Header title="التحديات" />
       <main className="p-6 flex flex-col gap-6">
-        {/* ===== تحديات كورساتي ===== */}
+        {/* ===== تحديات التدريبات ===== */}
         {courseChallenges && courseChallenges.length > 0 && (
           <div className="bg-white rounded-ruwad shadow-card p-6">
             <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-              <Zap size={20} className="text-ruwad-lime" /> تحديات كورساتي
+              <Zap size={20} className="text-ruwad-lime" /> تحديات التدريبات
             </h2>
             <div className="flex flex-col gap-2">
               {courseChallenges.map((c) => {
