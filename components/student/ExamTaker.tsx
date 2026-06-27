@@ -44,13 +44,17 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
     const percentage = exam.total_marks > 0 ? (score / exam.total_marks) * 100 : 0
     // درجة النجاح تُقارَن كنسبة مئوية، لا كعلامة خام — تبقى صحيحة دائماً بغض النظر عن إجمالي علامات الامتحان
     const passed = percentage >= exam.passing_marks
+    // إن وُجدت أسئلة مقالية، تبقى النتيجة معلَّقة (graded_at = NULL) حتى يصحّحها المدرب يدوياً
+    const hasEssay = questions.some((q) => q.question_type === 'essay')
+    const now = new Date().toISOString()
 
     await supabase
       .from('exam_submissions')
       .update({
         answers, score, total_marks: exam.total_marks,
-        percentage, passed, submitted_at: new Date().toISOString(),
+        percentage, passed, submitted_at: now,
         time_spent_seconds: timeSpent,
+        graded_at: hasEssay ? null : now,
       })
       .eq('id', submissionId)
 
@@ -112,6 +116,10 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
             </p>
           </div>
           <p className="text-lg font-medium text-ruwad-navy">{question.question_text}</p>
+          {question.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={question.image_url} alt="صورة السؤال" className="rounded-ruwad-sm max-h-72 w-auto object-contain border border-ruwad-gray/40" />
+          )}
 
           {question.question_type === 'multiple_choice' && (
             <div className="flex flex-col gap-2">

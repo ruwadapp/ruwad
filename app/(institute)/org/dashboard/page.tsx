@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CodeQrImage } from '@/components/shared/CodeQrImage'
-import { Users, GraduationCap, BookOpen } from 'lucide-react'
+import { Users, GraduationCap, BookOpen, FileText, Award } from 'lucide-react'
 
 export default async function InstituteDashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -31,9 +31,24 @@ export default async function InstituteDashboardPage() {
   const trainerIds = (members ?? []).filter((m) => m.member_role === 'trainer').map((m) => m.user_id)
   const studentCount = (members ?? []).filter((m) => m.member_role === 'student').length
 
-  const { count: coursesCount } = trainerIds.length
-    ? await supabase.from('courses').select('id', { count: 'exact', head: true }).in('trainer_id', trainerIds)
-    : { count: 0 }
+  const [{ count: coursesCount }, { data: exams }] = await Promise.all([
+    trainerIds.length
+      ? supabase.from('courses').select('id', { count: 'exact', head: true }).in('trainer_id', trainerIds)
+      : Promise.resolve({ count: 0 }),
+    trainerIds.length
+      ? supabase.from('exams').select('id').in('trainer_id', trainerIds)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  // ===== متوسط أداء الامتحانات على مستوى المعهد بالكامل =====
+  const examIds = (exams ?? []).map((e) => e.id)
+  const { data: examSubs } = examIds.length
+    ? await supabase.from('exam_submissions').select('percentage').in('exam_id', examIds).not('submitted_at', 'is', null)
+    : { data: [] }
+
+  const avgExamScore = examSubs && examSubs.length > 0
+    ? Math.round(examSubs.reduce((sum, s) => sum + (s.percentage ?? 0), 0) / examSubs.length)
+    : null
 
   return (
     <>
@@ -48,21 +63,31 @@ export default async function InstituteDashboardPage() {
           <CodeQrImage code={institute.institute_code} size={110} className="relative" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
             <Users size={20} className="text-ruwad-blue" />
-            <p className="text-sm text-ruwad-navy/60">المدربون</p>
+            <p className="text-xs text-ruwad-navy/60">المدربون</p>
             <p className="text-2xl font-bold text-ruwad-navy">{trainerIds.length}</p>
           </div>
-          <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-2">
+          <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
             <GraduationCap size={20} className="text-ruwad-blue" />
-            <p className="text-sm text-ruwad-navy/60">الطلاب</p>
+            <p className="text-xs text-ruwad-navy/60">الطلاب</p>
             <p className="text-2xl font-bold text-ruwad-navy">{studentCount}</p>
           </div>
-          <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-2">
+          <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
             <BookOpen size={20} className="text-ruwad-blue" />
-            <p className="text-sm text-ruwad-navy/60">الكورسات</p>
+            <p className="text-xs text-ruwad-navy/60">الكورسات</p>
             <p className="text-2xl font-bold text-ruwad-navy">{coursesCount ?? 0}</p>
+          </div>
+          <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
+            <FileText size={20} className="text-ruwad-blue" />
+            <p className="text-xs text-ruwad-navy/60">امتحانات المعهد</p>
+            <p className="text-2xl font-bold text-ruwad-navy">{exams?.length ?? 0}</p>
+          </div>
+          <div className="bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5 flex flex-col gap-2 text-white">
+            <Award size={20} />
+            <p className="text-xs opacity-80">متوسط أداء الامتحانات</p>
+            <p className="text-2xl font-bold">{avgExamScore !== null ? `${avgExamScore}%` : '—'}</p>
           </div>
         </div>
       </main>

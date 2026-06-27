@@ -25,6 +25,8 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
   const [showResults, setShowResults] = useState(initialExam?.show_results ?? true)
   const [allowReview, setAllowReview] = useState(initialExam?.allow_review ?? true)
   const [isActive, setIsActive] = useState(initialExam?.is_active ?? true)
+  const [startsAt, setStartsAt] = useState(initialExam?.starts_at ? initialExam.starts_at.slice(0, 16) : '')
+  const [endsAt, setEndsAt] = useState(initialExam?.ends_at ? initialExam.ends_at.slice(0, 16) : '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -50,6 +52,8 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
       show_results: showResults,
       allow_review: allowReview,
       is_active: isActive,
+      starts_at: startsAt ? new Date(startsAt).toISOString() : null,
+      ends_at: endsAt ? new Date(endsAt).toISOString() : null,
     }
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -164,6 +168,28 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
           <p className="text-xs text-ruwad-navy/50">مثال: 50 تعني أن الطالب ينجح إذا حصل على 50% فأكثر من إجمالي علامات الامتحان، بغض النظر عن عدد الأسئلة.</p>
         </div>
       </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-ruwad-navy">يبدأ في (اختياري)</label>
+          <input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-ruwad-navy">ينتهي في (اختياري)</label>
+          <input
+            type="datetime-local"
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+            className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
+          />
+        </div>
+      </div>
+      <p className="text-xs text-ruwad-navy/50 -mt-2">اتركهما فارغين ليبقى الامتحان متاحاً بلا قيود زمنية، أو حدّدهما لفرض نافذة زمنية حقيقية يُمنع الدخول خارجها.</p>
 
       <div className="flex flex-col gap-3 pt-2">
         {[

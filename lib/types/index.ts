@@ -121,6 +121,8 @@ export interface ExamSubmission {
   started_at: string
   submitted_at: string | null
   time_spent_seconds: number | null
+  essay_scores: Record<string, number>
+  graded_at: string | null
   student?: Profile
   exam?: Exam
 }

@@ -24,6 +24,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
   const [correctShortAnswer, setCorrectShortAnswer] = useState('')
   const [marks, setMarks] = useState('1')
   const [explanation, setExplanation] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -42,6 +43,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
     setCorrectShortAnswer('')
     setMarks('1')
     setExplanation('')
+    setImageUrl('')
     setType('multiple_choice')
     setFormOpen(false)
     setEditingId(null)
@@ -53,6 +55,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
     setType(q.question_type)
     setMarks(q.marks.toString())
     setExplanation(q.explanation ?? '')
+    setImageUrl(q.image_url ?? '')
     if (q.question_type === 'multiple_choice') {
       const letters = ['A', 'B', 'C', 'D']
       setOptions(letters.map((l) => q.options.find((o) => o.id === l)?.text ?? ''))
@@ -112,6 +115,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
           correct_answer: correctAnswer,
           marks: Number(marks) || 1,
           explanation: explanation || null,
+          image_url: imageUrl || null,
         })
         .eq('id', editingId)
         .select()
@@ -138,6 +142,7 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
         correct_answer: correctAnswer,
         marks: Number(marks) || 1,
         explanation: explanation || null,
+        image_url: imageUrl || null,
         order_index: items.length,
       })
       .select()
@@ -270,6 +275,13 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
           {type === 'essay' && (
             <p className="text-xs text-ruwad-navy/50">الأسئلة المقالية تحتاج تصحيحاً يدوياً من المدرب.</p>
           )}
+
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="رابط صورة للسؤال (اختياري)"
+            className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 outline-none focus:border-ruwad-blue text-sm"
+          />
 
           <input
             value={explanation}

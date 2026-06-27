@@ -32,6 +32,10 @@ export function ExamReview({ questions, submission }: { questions: Question[]; s
           <div key={q.id} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
             <p className="text-sm text-ruwad-navy/50">سؤال {idx + 1} · {q.marks} درجة</p>
             <p className="font-medium text-ruwad-navy">{q.question_text}</p>
+            {q.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={q.image_url} alt="صورة السؤال" className="rounded-ruwad-sm max-h-60 w-auto object-contain border border-ruwad-gray/40 my-2" />
+            )}
 
             {q.question_type === 'essay' ? (
               <div className="bg-ruwad-gray/20 rounded-ruwad-sm p-3">

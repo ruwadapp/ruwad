@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Trophy } from 'lucide-react'
+import { AnalyticsBarChart } from '@/components/trainer/AnalyticsBarChart'
+import { ResetAttemptButton } from '@/components/trainer/ResetAttemptButton'
+import { ExportResultsCsvButton } from '@/components/shared/ExportResultsCsvButton'
+import { Trophy, BarChart3 } from 'lucide-react'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
@@ -19,12 +22,15 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
 
   if (!exam) notFound()
 
-  const { data: submissions } = await supabase
-    .from('exam_submissions')
-    .select('*, student:profiles!student_id(full_name, avatar_url)')
-    .eq('exam_id', id)
-    .not('submitted_at', 'is', null)
-    .order('score', { ascending: false })
+  const [{ data: submissions }, { data: questions }] = await Promise.all([
+    supabase
+      .from('exam_submissions')
+      .select('*, student:profiles!student_id(full_name, avatar_url)')
+      .eq('exam_id', id)
+      .not('submitted_at', 'is', null)
+      .order('score', { ascending: false }),
+    supabase.from('questions').select('*').eq('exam_id', id).order('order_index', { ascending: true }),
+  ])
 
   const list = submissions ?? []
   const avgPercentage = list.length
@@ -38,11 +44,34 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
   const podiumOrder = top3.length === 3 ? [1, 0, 2] : top3.map((_, i) => i)
   const podiumHeight = ['h-28', 'h-36', 'h-24']
 
+  // ===== صعوبة كل سؤال (نسبة الإجابة الصحيحة) — للأسئلة القابلة للتصحيح الآلي فقط =====
+  const gradableQuestions = (questions ?? []).filter((q) => q.question_type !== 'essay')
+  const difficultyData = gradableQuestions.map((q, idx) => {
+    const answeredList = list.filter((s) => s.answers && s.answers[q.id] !== undefined)
+    const correctCount = answeredList.filter((s) => {
+      const studentAnswer = s.answers[q.id]
+      if (q.question_type === 'short_answer') {
+        return typeof studentAnswer === 'string' && typeof q.correct_answer === 'string'
+          && studentAnswer.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()
+      }
+      return studentAnswer === q.correct_answer
+    }).length
+    const pct = list.length ? Math.round((correctCount / list.length) * 100) : 0
+    return { label: `س${idx + 1}`, value: pct }
+  })
+
+  const exportRows = list.map((sub) => ({
+    name: sub.student?.full_name ?? '—',
+    score: sub.score ?? 0,
+    total: sub.total_marks ?? 0,
+    percentage: sub.percentage ?? 0,
+    passed: !!sub.passed,
+  }))
+
   return (
     <>
       <Header title={`نتائج: ${exam.title}`} />
       <main className="p-6 flex flex-col gap-6">
-        {/* شريط إحصاء بتدرّج وفقاعات ضوء — نفس روح صفحة الدخول */}
         <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-8">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-ruwad-lime/20 rounded-full blur-3xl" />
@@ -63,7 +92,6 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
           </div>
         </div>
 
-        {/* منصّة التتويج لأفضل 3 طلاب */}
         {top3.length > 0 && (
           <div className="bg-white rounded-ruwad shadow-card p-8">
             <div className="flex items-end justify-center gap-4">
@@ -87,10 +115,24 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
           </div>
         )}
 
+        {/* ===== تحليل صعوبة الأسئلة ===== */}
+        {difficultyData.length > 0 && (
+          <div className="bg-white rounded-ruwad shadow-card p-6">
+            <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
+              <BarChart3 size={20} className="text-ruwad-blue" /> نسبة الإجابة الصحيحة لكل سؤال
+            </h2>
+            <AnalyticsBarChart data={difficultyData} color="#3A4EFB" unit="%" />
+            <p className="text-xs text-ruwad-navy/40 mt-2">الأسئلة المقالية مستثناة (تحتاج تصحيحاً يدوياً).</p>
+          </div>
+        )}
+
         <div className="bg-white rounded-ruwad shadow-card p-6">
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-            <Trophy size={20} className="text-ruwad-blue" /> الترتيب الكامل
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-ruwad-navy flex items-center gap-2">
+              <Trophy size={20} className="text-ruwad-blue" /> الترتيب الكامل
+            </h2>
+            {list.length > 0 && <ExportResultsCsvButton rows={exportRows} fileName={`نتائج-${exam.title}`} />}
+          </div>
 
           {list.length === 0 ? (
             <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا توجد نتائج بعد.</p>
@@ -104,6 +146,7 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
                     <th className="py-2">الدرجة</th>
                     <th className="py-2">النسبة</th>
                     <th className="py-2">الحالة</th>
+                    <th className="py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -121,8 +164,11 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ id
                             sub.passed ? 'bg-ruwad-lime text-ruwad-navy' : 'bg-red-100 text-red-600'
                           }`}
                         >
-                          {sub.passed ? 'ناجح' : 'غير ناجح'}
+                          {!sub.graded_at ? 'بانتظار التصحيح' : sub.passed ? 'ناجح' : 'غير ناجح'}
                         </span>
+                      </td>
+                      <td className="py-3 text-left">
+                        <ResetAttemptButton submissionId={sub.id} studentName={sub.student?.full_name ?? 'الطالب'} />
                       </td>
                     </tr>
                   ))}
