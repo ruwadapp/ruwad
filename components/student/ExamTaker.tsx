@@ -105,6 +105,29 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
         )}
       </div>
 
+      {/* ===== ملاح سريع بين الأسئلة ===== */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+        {questions.map((q, idx) => {
+          const isAnswered = answers[q.id] !== undefined
+          const isCurrent = idx === currentIndex
+          return (
+            <button
+              key={q.id}
+              onClick={() => setCurrentIndex(idx)}
+              className={`w-8 h-8 rounded-full text-xs font-bold shrink-0 transition-all ${
+                isCurrent
+                  ? 'bg-ruwad-blue text-white scale-110 shadow-ruwad'
+                  : isAnswered
+                  ? 'bg-ruwad-lime text-ruwad-navy'
+                  : 'bg-white border-2 border-ruwad-gray text-ruwad-navy/50'
+              }`}
+            >
+              {idx + 1}
+            </button>
+          )
+        })}
+      </div>
+
       {question && (
         <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 border-r-4 border-ruwad-blue">
           <div className="flex items-center gap-3">
@@ -123,37 +146,44 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
 
           {question.question_type === 'multiple_choice' && (
             <div className="flex flex-col gap-2">
-              {question.options.map((opt) => (
-                <label
-                  key={opt.id}
-                  className={`flex items-center gap-3 p-3 rounded-ruwad-sm border-2 cursor-pointer transition ${
-                    answers[question.id] === opt.id ? 'border-ruwad-blue bg-ruwad-blue/5' : 'border-ruwad-gray/60'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={question.id}
-                    checked={answers[question.id] === opt.id}
-                    onChange={() => setAnswer(opt.id)}
-                    className="accent-ruwad-blue"
-                  />
-                  <span className="text-ruwad-navy">{opt.text}</span>
-                </label>
-              ))}
+              {question.options.map((opt, optIdx) => {
+                const letterColors = ['bg-red-500', 'bg-ruwad-blue', 'bg-amber-500', 'bg-ruwad-lime']
+                const selected = answers[question.id] === opt.id
+                return (
+                  <label
+                    key={opt.id}
+                    className={`flex items-center gap-3 p-3 rounded-ruwad-sm border-2 cursor-pointer transition ${
+                      selected ? 'border-ruwad-blue bg-ruwad-blue/5' : 'border-ruwad-gray/60 hover:border-ruwad-gray'
+                    }`}
+                  >
+                    <span className={`w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 ${letterColors[optIdx % 4]}`}>
+                      {String.fromCharCode(65 + optIdx)}
+                    </span>
+                    <input
+                      type="radio"
+                      name={question.id}
+                      checked={selected}
+                      onChange={() => setAnswer(opt.id)}
+                      className="accent-ruwad-blue"
+                    />
+                    <span className="text-ruwad-navy">{opt.text}</span>
+                  </label>
+                )
+              })}
             </div>
           )}
 
           {question.question_type === 'true_false' && (
             <div className="grid grid-cols-2 gap-3">
-              {[{ id: 'true', label: 'صحيح' }, { id: 'false', label: 'خطأ' }].map((opt) => (
+              {[{ id: 'true', label: 'صحيح', color: 'bg-ruwad-lime text-ruwad-navy border-ruwad-lime' }, { id: 'false', label: 'خطأ', color: 'bg-red-400 text-white border-red-400' }].map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => setAnswer(opt.id)}
-                  className={`py-3 rounded-ruwad-sm font-semibold border-2 transition ${
+                  className={`py-3 rounded-ruwad-sm font-bold border-2 transition ${
                     answers[question.id] === opt.id
-                      ? 'bg-ruwad-blue text-white border-ruwad-blue'
-                      : 'bg-white text-ruwad-navy border-ruwad-gray'
+                      ? opt.color
+                      : 'bg-white text-ruwad-navy border-ruwad-gray hover:border-ruwad-gray/80'
                   }`}
                 >
                   {opt.label}

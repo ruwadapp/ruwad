@@ -3,13 +3,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Question, QuestionType } from '@/lib/types'
-import { Plus, Trash2, Pencil } from 'lucide-react'
+import { Plus, Trash2, Pencil, ListChecks, ToggleLeft, Type, PenLine } from 'lucide-react'
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: 'اختيار من متعدد',
   true_false: 'صح أو خطأ',
   short_answer: 'إجابة قصيرة',
   essay: 'مقالي',
+}
+
+const TYPE_STYLE: Record<QuestionType, { icon: typeof ListChecks; color: string; bg: string; border: string }> = {
+  multiple_choice: { icon: ListChecks, color: 'text-ruwad-blue', bg: 'bg-ruwad-blue/5', border: 'border-ruwad-blue/30' },
+  true_false: { icon: ToggleLeft, color: 'text-ruwad-navy', bg: 'bg-ruwad-lime/15', border: 'border-ruwad-lime/50' },
+  short_answer: { icon: Type, color: 'text-ruwad-navy', bg: 'bg-ruwad-navy/5', border: 'border-ruwad-navy/20' },
+  essay: { icon: PenLine, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-300' },
 }
 
 export function QuestionManager({ examId, questions }: { examId: string; questions: Question[] }) {
@@ -313,33 +320,38 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
         <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا توجد أسئلة بعد.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {items.map((q, idx) => (
-            <div key={q.id} className="flex items-start gap-3 p-4 rounded-ruwad-sm border border-ruwad-gray/60">
-              <span className="w-6 h-6 rounded-full bg-ruwad-gray/40 text-ruwad-navy text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                {idx + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-ruwad-navy">{q.question_text}</p>
-                <p className="text-xs text-ruwad-navy/50 mt-1">
-                  {TYPE_LABELS[q.question_type]} · {q.marks} درجة
-                </p>
+          {items.map((q, idx) => {
+            const style = TYPE_STYLE[q.question_type]
+            const TypeIcon = style.icon
+            return (
+              <div key={q.id} className={`flex items-start gap-3 p-4 rounded-ruwad-sm border ${style.border} ${style.bg}`}>
+                <span className="w-6 h-6 rounded-full bg-white text-ruwad-navy text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  {idx + 1}
+                </span>
+                <TypeIcon size={18} className={`${style.color} shrink-0 mt-0.5`} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-ruwad-navy">{q.question_text}</p>
+                  <p className={`text-xs mt-1 font-semibold ${style.color}`}>
+                    {TYPE_LABELS[q.question_type]} · {q.marks} درجة
+                  </p>
+                </div>
+                <button
+                  onClick={() => startEdit(q)}
+                  aria-label="تعديل السؤال"
+                  className="text-ruwad-blue hover:bg-white p-2 rounded-ruwad-sm transition shrink-0"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => deleteQuestion(q.id)}
+                  aria-label="حذف السؤال"
+                  className="text-red-500 hover:bg-white p-2 rounded-ruwad-sm transition shrink-0"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
-              <button
-                onClick={() => startEdit(q)}
-                aria-label="تعديل السؤال"
-                className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0"
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                onClick={() => deleteQuestion(q.id)}
-                aria-label="حذف السؤال"
-                className="text-red-500 hover:bg-red-50 p-2 rounded-ruwad-sm transition shrink-0"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

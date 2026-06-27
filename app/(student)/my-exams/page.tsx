@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { FileText, CheckCircle2, Clock, Hourglass, PenLine } from 'lucide-react'
+import { FileText, CheckCircle2, Clock, Hourglass, PenLine, Award, Target } from 'lucide-react'
 
 export default async function MyExamsPage() {
   const supabase = await createServerSupabaseClient()
@@ -19,8 +19,7 @@ export default async function MyExamsPage() {
 
   const submittedExamIds = (submissions ?? []).map((s) => s.exam_id)
 
-  // ===== فقط امتحانات كورساتي، أو امتحانات سبق وخضتها (حتى لو أُلغي ربطها بالكورس لاحقاً) =====
-  const relevantIds = Array.from(new Set([...courseIds.length ? [] : [], ...submittedExamIds]))
+  const relevantIds = Array.from(new Set(submittedExamIds))
   const orFilter = courseIds.length
     ? `course_id.in.(${courseIds.join(',')}),id.in.(${relevantIds.length ? relevantIds.join(',') : '00000000-0000-0000-0000-000000000000'})`
     : `id.in.(${relevantIds.length ? relevantIds.join(',') : '00000000-0000-0000-0000-000000000000'})`
@@ -34,10 +33,41 @@ export default async function MyExamsPage() {
   const submissionMap = new Map((submissions ?? []).map((s) => [s.exam_id, s]))
   const now = new Date()
 
+  const completedSubs = (submissions ?? []).filter((s) => s.submitted_at && s.graded_at)
+  const avgScore = completedSubs.length
+    ? Math.round(completedSubs.reduce((sum, s) => sum + (s.percentage ?? 0), 0) / completedSubs.length)
+    : null
+  const passedCount = completedSubs.filter((s) => s.passed).length
+
+  const ACCENTS = ['border-ruwad-blue', 'border-ruwad-lime', 'border-ruwad-navy']
+
   return (
     <>
       <Header title="امتحاناتي" />
-      <main className="p-6 flex flex-col gap-4">
+      <main className="p-6 flex flex-col gap-6">
+        {/* ===== هيدر إحصائي متدرّج ===== */}
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7">
+          <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
+          <div className="relative grid grid-cols-3 gap-3">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+              <FileText size={18} className="text-white mx-auto mb-1" />
+              <p className="text-2xl font-bold text-white">{exams?.length ?? 0}</p>
+              <p className="text-[11px] text-white/70">امتحان</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+              <Target size={18} className="text-white mx-auto mb-1" />
+              <p className="text-2xl font-bold text-white">{passedCount}</p>
+              <p className="text-[11px] text-white/70">نجاح</p>
+            </div>
+            <div className="bg-ruwad-lime rounded-ruwad-sm p-4 text-center">
+              <Award size={18} className="text-ruwad-navy mx-auto mb-1" />
+              <p className="text-2xl font-bold text-ruwad-navy">{avgScore !== null ? `${avgScore}%` : '—'}</p>
+              <p className="text-[11px] text-ruwad-navy/70">متوسطي</p>
+            </div>
+          </div>
+        </div>
+
         {!exams || exams.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center">
             <FileText className="mx-auto text-ruwad-navy/30 mb-3" size={40} />
@@ -45,18 +75,21 @@ export default async function MyExamsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {exams.filter((e) => e.is_active || submissionMap.has(e.id)).map((exam) => {
+            {exams.filter((e) => e.is_active || submissionMap.has(e.id)).map((exam, idx) => {
               const submission = submissionMap.get(exam.id)
               const submitted = submission?.submitted_at
               const pendingGrading = submitted && !submission?.graded_at
               const notYetOpen = exam.starts_at && now < new Date(exam.starts_at)
               const closed = exam.ends_at && now > new Date(exam.ends_at)
+              const passed = submission?.passed
 
               return (
                 <Link
                   key={exam.id}
                   href={`/my-exams/${exam.id}`}
-                  className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition"
+                  className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all border-t-4 ${
+                    passed === true ? 'border-ruwad-lime' : passed === false ? 'border-red-300' : ACCENTS[idx % 3]
+                  }`}
                 >
                   <div className="flex items-start justify-between">
                     <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{exam.title}</h3>
