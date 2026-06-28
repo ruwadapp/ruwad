@@ -75,8 +75,8 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
     return pathname.startsWith(href)
   }
 
-  // يحسب موضع وعرض «خط السحب» بالاستناد إلى مقدار التمرير الأفقي الحالي للشريط،
-  // بحيث يتحرك بصرياً مع حركة سحب المستخدم ويُعلمه بأن هناك عناصر إضافية أفقياً
+  // يحسب موضع وعرض «خط السحب» بالاستناد إلى مقدار التمرير الأفقي الفعلي للشريط،
+  // فيتبع حركة السحب بدقة لحظة بلحظة (Chromium/المتصفحات الحديثة تستخدم scrollLeft سالباً في RTL)
   const updateThumb = useCallback(() => {
     const el = scrollRef.current
     if (!el) return
@@ -85,10 +85,7 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
     setCanScroll(true)
 
     const widthPct = Math.max(22, (el.clientWidth / el.scrollWidth) * 100)
-    // دعم اتجاهي قياس scrollLeft المختلفين بين المتصفحات في وضع RTL
-    const raw = el.scrollLeft
-    const normalized = raw < 0 ? (raw + maxScroll) / maxScroll : raw / maxScroll
-    const progress = Math.min(1, Math.max(0, normalized))
+    const progress = Math.min(1, Math.max(0, Math.abs(el.scrollLeft) / maxScroll))
     const offsetPct = progress * (100 - widthPct)
     setThumb({ widthPct, offsetPct })
   }, [])
@@ -165,7 +162,7 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
             <div className="px-4 pb-1.5 -mt-0.5">
               <div className="relative h-[3px] rounded-full bg-ruwad-navy/10 overflow-hidden">
                 <div
-                  className="absolute top-0 h-full rounded-full bg-gradient-to-l from-ruwad-blue to-ruwad-lime transition-[right] duration-150 ease-out"
+                  className="absolute top-0 h-full rounded-full bg-gradient-to-l from-ruwad-blue to-ruwad-lime"
                   style={{ width: `${thumb.widthPct}%`, right: `${thumb.offsetPct}%` }}
                 />
               </div>
