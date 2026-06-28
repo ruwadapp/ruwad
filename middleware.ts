@@ -40,7 +40,9 @@ export async function middleware(request: NextRequest) {
     SUPERADMIN_ROUTES.some((r) => path.startsWith(r))
 
   if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', path + (request.nextUrl.search || ''))
+    return NextResponse.redirect(loginUrl)
   }
 
   // بوابة موافقة واحدة وبسيطة: أي حساب (مدرّب/طالب/معهد) غير موافَق عليه من المالك يُحوَّل لصفحة الانتظار

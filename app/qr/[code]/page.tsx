@@ -7,16 +7,19 @@ export default async function QrResolverPage({ params }: { params: Promise<{ cod
   const { code } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/qr/${code}`)}`)
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   const role = profile?.role ?? 'student'
+  const fallback = role === 'trainer' ? '/dashboard' : '/home'
 
-  const { data: matches } = await supabase.rpc('resolve_qr_code', { p_code: code })
+  const { data: matches, error: rpcError } = await supabase.rpc('resolve_qr_code', { p_code: code })
   const match = matches?.[0]
 
-  if (!match) redirect(role === 'trainer' ? '/dashboard' : '/home')
+  if (rpcError || !match) redirect(fallback)
 
+  // أي خطأ غير متوقع من قاعدة البيانات هنا لا يجب أن يترك الطالب أمام شاشة خطأ مكسورة —
+  // فبدل تعطّل الصفحة، نتجاهل خطأ التسجيل الفردي ونكمل التوجيه للوجهة المناسبة على أي حال
   switch (match.entity_type) {
     case 'institute': {
       await supabase.from('institute_members').upsert(
@@ -59,6 +62,6 @@ export default async function QrResolverPage({ params }: { params: Promise<{ cod
       redirect('/my-attendance')
     }
     default:
-      redirect(role === 'trainer' ? '/dashboard' : '/home')
+      redirect(fallback)
   }
 }

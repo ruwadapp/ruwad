@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export function LoginForm() {
@@ -9,6 +10,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -36,7 +38,9 @@ export function LoginForm() {
       institute_admin: '/org/dashboard',
       super_admin: '/admin/dashboard',
     }
-    window.location.href = redirectMap[profile?.role ?? 'student'] ?? '/home'
+    const next = searchParams.get('next')
+    const isSafeRelativePath = !!next && next.startsWith('/') && !next.startsWith('//')
+    window.location.href = isSafeRelativePath ? next : (redirectMap[profile?.role ?? 'student'] ?? '/home')
   }
 
   return (
