@@ -22,16 +22,18 @@ export function CodeQrImage({ code, url, size = 120, className = '' }: CodeQrIma
         onClick={() => setFullscreen(true)}
         aria-label="تكبير رمز QR لتسهيل مسحه"
         title="اضغط للتكبير"
-        className={`relative shrink-0 rounded-ruwad-sm overflow-hidden ${className}`}
+        className={`relative shrink-0 inline-block ${className}`}
         style={{ width: size, height: size }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={qrSrc(size)} alt="رمز QR" width={size} height={size} className="bg-white w-full h-full block" />
+        <span className="absolute inset-0 rounded-ruwad-sm overflow-hidden block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qrSrc(size)} alt="رمز QR" width={size} height={size} className="bg-white w-full h-full block" />
+        </span>
         <span
-          className="absolute -bottom-1 -right-1 bg-ruwad-blue text-white rounded-full flex items-center justify-center shadow-ruwad ring-2 ring-white"
+          className="absolute -bottom-2 -right-2 bg-ruwad-blue text-white rounded-full flex items-center justify-center shadow-ruwad-lg ring-2 ring-white z-10"
           style={{ width: badgeSize, height: badgeSize }}
         >
-          <Maximize2 size={Math.round(badgeSize * 0.6)} />
+          <Maximize2 size={Math.round(badgeSize * 0.58)} />
         </span>
       </button>
 
