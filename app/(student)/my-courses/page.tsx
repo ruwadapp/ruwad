@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EnrollButton } from '@/components/student/EnrollButton'
 import { CourseCodeJoin } from '@/components/student/CourseCodeJoin'
-import { BookOpen, Clock, XCircle, GraduationCap, TrendingUp, Compass } from 'lucide-react'
+import { BookOpen, Clock, XCircle, GraduationCap, TrendingUp } from 'lucide-react'
 
 export default async function MyCoursesPage() {
   const supabase = await createServerSupabaseClient()
@@ -18,14 +17,6 @@ export default async function MyCoursesPage() {
   const approved = (enrollments ?? []).filter((e) => e.status === 'approved')
   const pending = (enrollments ?? []).filter((e) => e.status === 'pending')
   const rejected = (enrollments ?? []).filter((e) => e.status === 'rejected')
-
-  const requestedIds = (enrollments ?? []).map((e) => e.course_id)
-
-  const { data: availableCourses } = await supabase
-    .from('courses')
-    .select('*, lectures(count), profiles:trainer_id(full_name)')
-    .eq('status', 'published')
-    .not('id', 'in', `(${requestedIds.length ? requestedIds.join(',') : '00000000-0000-0000-0000-000000000000'})`)
 
   const completedCount = approved.filter((e) => (e.progress ?? 0) >= 100).length
   const avgProgress = approved.length
@@ -134,40 +125,16 @@ export default async function MyCoursesPage() {
           </section>
         )}
 
-        {/* ===== تدريبات متاحة للالتحاق ===== */}
-        <section>
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-            <Compass size={20} className="text-ruwad-blue" /> تدريبات متاحة للالتحاق
-          </h2>
-          {!availableCourses || availableCourses.length === 0 ? (
-            <p className="text-ruwad-navy/50 text-sm">لا توجد تدريبات جديدة متاحة حالياً.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableCourses.map((course, idx) => {
-                const trainerName = (course.profiles as unknown as { full_name?: string } | null)?.full_name
-                const lectureCount = course.lectures?.[0]?.count ?? 0
-                return (
-                  <div
-                    key={course.id}
-                    className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 border-t-4 ${
-                      ['border-ruwad-blue/40', 'border-ruwad-lime/60', 'border-ruwad-navy/30'][idx % 3]
-                    }`}
-                  >
-                    <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{course.title}</h3>
-                    <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
-                      {course.description || 'بلا وصف'}
-                    </p>
-                    <div className="flex items-center gap-3 text-xs text-ruwad-navy/50">
-                      <span className="flex items-center gap-1"><BookOpen size={13} /> {lectureCount} محاضرة</span>
-                      {trainerName && <span>· {trainerName}</span>}
-                    </div>
-                    <EnrollButton courseId={course.id} />
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
+        {/* ===== الانضمام عبر كود فقط ===== */}
+        <div className="bg-ruwad-navy/5 rounded-ruwad p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-ruwad-blue/10 flex items-center justify-center shrink-0">
+            <BookOpen size={20} className="text-ruwad-blue" />
+          </div>
+          <div>
+            <p className="font-semibold text-ruwad-navy text-sm">للانضمام لتدريب جديد</p>
+            <p className="text-xs text-ruwad-navy/60 mt-0.5">اطلب كود الانضمام أو رابط QR من مدربك مباشرة، أو استخدم زر "إضافة" في شريط التنقّل لمسح الكود.</p>
+          </div>
+        </div>
       </main>
     </>
   )
