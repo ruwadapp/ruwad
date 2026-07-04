@@ -54,12 +54,32 @@ export default async function QrResolverPage({ params }: { params: Promise<{ cod
       redirect(`/my-challenges/live/${match.entity_id}`)
     }
     case 'attendance_session': {
-      const { data: existingRecord } = await supabase
-        .from('attendance_records').select('id').eq('session_id', match.entity_id).eq('student_id', user.id).maybeSingle()
-      if (!existingRecord) {
-        await supabase.from('attendance_records').insert({ session_id: match.entity_id, student_id: user.id })
+      // نتحقق أن الجلسة نشطة فعلاً وإلا لا فائدة من التسجيل
+      const { data: session } = await supabase
+        .from('attendance_sessions')
+        .select('id, is_active')
+        .eq('id', match.entity_id)
+        .single()
+
+      if (!session?.is_active) {
+        redirect('/my-attendance?error=session_closed')
       }
-      redirect('/my-attendance')
+
+      const { data: existingRecord } = await supabase
+        .from('attendance_records')
+        .select('id')
+        .eq('session_id', match.entity_id)
+        .eq('student_id', user.id)
+        .maybeSingle()
+
+      if (!existingRecord) {
+        await supabase
+          .from('attendance_records')
+          .insert({ session_id: match.entity_id, student_id: user.id })
+      }
+
+      // نمرّر session_id لصفحة الحضور لتعرض حالة الطلب مباشرة
+      redirect(`/my-attendance?session=${match.entity_id}`)
     }
     default:
       redirect(fallback)
