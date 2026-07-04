@@ -12,7 +12,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
-export function PushNotificationSetup({ compact = false }: { compact?: boolean }) {
+export function PushNotificationSetup({ compact = false, variant = 'dark' }: { compact?: boolean; variant?: 'dark' | 'light' }) {
   const [supported, setSupported] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -67,6 +67,11 @@ export function PushNotificationSetup({ compact = false }: { compact?: boolean }
 
   if (subscribed) {
     if (compact) return null
+    if (variant === 'light') return (
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue">
+        <Check size={14} className="text-ruwad-blue" /> مفعّلة
+      </span>
+    )
     return (
       <div className="flex items-center gap-1.5 text-xs text-white/50 px-2">
         <Check size={13} className="text-ruwad-lime" /> الإشعارات مفعّلة
@@ -85,6 +90,19 @@ export function PushNotificationSetup({ compact = false }: { compact?: boolean }
       >
         <BellRing size={18} className={`text-ruwad-navy ${loading ? 'animate-pulse' : ''}`} />
         <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-ruwad-lime border-2 border-white" />
+      </button>
+    )
+  }
+
+  if (variant === 'light') {
+    return (
+      <button
+        onClick={enable}
+        disabled={loading}
+        className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue bg-ruwad-blue/10 hover:bg-ruwad-blue/20 px-3 py-2 rounded-ruwad-sm transition disabled:opacity-50"
+      >
+        {loading ? <BellOff size={14} className="animate-pulse" /> : <BellRing size={14} />}
+        {loading ? 'جارٍ التفعيل...' : 'تفعيل الإشعارات'}
       </button>
     )
   }
