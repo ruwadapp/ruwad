@@ -54,9 +54,9 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
   const STAT_BG = ['bg-ruwad-blue/5', 'bg-ruwad-lime/15', 'bg-ruwad-navy/5']
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-[#F5F6FA]" dir="rtl">
       {/* ===== هيدر متدرّج ===== */}
-      <div className="relative overflow-hidden bg-ruwad-gradient px-6 pt-10 pb-24 flex flex-col items-center gap-2 text-center">
+      <div className="relative overflow-hidden bg-ruwad-gradient px-6 pt-10 pb-16 flex flex-col items-center gap-2 text-center">
         <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
 
@@ -68,7 +68,7 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
           <RoleIcon size={12} /> {ROLE_LABELS[profile.role] ?? ''}
         </span>
 
-        <div className="relative z-10 flex items-center gap-2 mt-1">
+        <div className="relative z-10 flex items-center gap-2">
           {editing ? (
             <>
               <input
@@ -94,7 +94,8 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
         <p className="relative z-10 text-white/60 text-sm">{profile.email}</p>
       </div>
 
-      <div className="mx-4 sm:mx-6 -mt-12 flex flex-col gap-4 pb-24 md:pb-8">
+      {/* ===== البطاقات — تنزل مباشرة بعد الهيدر بدون طفو مشكل ===== */}
+      <div className="mx-4 sm:mx-6 flex flex-col gap-4 py-5 pb-28 md:pb-8">
         {stats.length > 0 && (
           <div className="bg-white rounded-ruwad shadow-ruwad-lg p-6 grid grid-cols-3 gap-4">
             {stats.map((s, i) => (
@@ -119,7 +120,7 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
 
           <div className="flex items-center justify-between py-3 border-b border-ruwad-gray/40">
             <span className="text-sm text-ruwad-navy/60">البريد الإلكتروني</span>
-            <span className="text-sm font-medium text-ruwad-navy">{profile.email}</span>
+            <span className="text-sm font-medium text-ruwad-navy truncate max-w-[55%] text-left">{profile.email}</span>
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-ruwad-gray/40">
