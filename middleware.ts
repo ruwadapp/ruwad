@@ -6,7 +6,7 @@ const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
   '/challenges', '/assignments', '/attendance', '/badges', '/analytics', '/presentations', '/institute',
 ]
-const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute']
+const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute', '/profile']
 const INSTITUTE_ROUTES = ['/org']
 const SUPERADMIN_ROUTES = ['/admin']
 

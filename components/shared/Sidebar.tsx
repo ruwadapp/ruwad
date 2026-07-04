@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
-  Trophy, FileCheck, CalendarCheck, BarChart3, LogOut,
+  Trophy, FileCheck, CalendarCheck, BarChart3, LogOut, Pencil,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
@@ -98,16 +98,20 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
         })}
       </nav>
 
-      <div className="border-t border-white/10 pt-4 mt-4 flex flex-col gap-3">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-9 h-9 rounded-full bg-ruwad-blue flex items-center justify-center font-bold text-sm">
+      <div className="border-t border-white/10 pt-4 mt-4 flex flex-col gap-2">
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 px-2 py-2 rounded-ruwad-sm hover:bg-white/10 transition group"
+        >
+          <div className="w-9 h-9 rounded-full bg-ruwad-blue flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-ruwad-lime/50 transition">
             {profile?.full_name?.charAt(0) ?? '؟'}
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate">{profile?.full_name ?? '...'}</p>
             <p className="text-xs text-white/50">{ROLE_LABELS[profile?.role ?? ''] ?? ''}</p>
           </div>
-        </div>
+          <Pencil size={14} className="text-white/30 group-hover:text-ruwad-lime transition shrink-0" />
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2.5 rounded-ruwad-sm text-sm text-white/70 hover:bg-white/10 hover:text-white transition"

@@ -1,0 +1,149 @@
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import type { Profile } from '@/lib/types'
+import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield } from 'lucide-react'
+
+const ROLE_LABELS: Record<string, string> = {
+  trainer: 'مدرب',
+  student: 'طالب',
+  institute_admin: 'مدير معهد',
+  super_admin: 'مالك المنصة',
+}
+
+const ROLE_STYLES: Record<string, { bg: string; chipBg: string; chipText: string; icon: typeof User }> = {
+  trainer:        { bg: 'bg-ruwad-blue', chipBg: 'bg-ruwad-blue/10', chipText: 'text-ruwad-blue', icon: BookOpen  },
+  student:        { bg: 'bg-ruwad-lime', chipBg: 'bg-ruwad-lime/30', chipText: 'text-ruwad-navy', icon: Award     },
+  institute_admin:{ bg: 'bg-ruwad-navy', chipBg: 'bg-ruwad-navy/10', chipText: 'text-ruwad-navy', icon: Building2 },
+  super_admin:    { bg: 'bg-red-500',    chipBg: 'bg-red-50',         chipText: 'text-red-500',    icon: Shield    },
+}
+
+interface Stat { label: string; value: string | number }
+
+export function ProfileClient({ profile, stats }: { profile: Profile; stats: Stat[] }) {
+  const [editing, setEditing]     = useState(false)
+  const [name, setName]           = useState(profile.full_name)
+  const [savedName, setSavedName] = useState(profile.full_name)
+  const [saving, setSaving]       = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const style    = ROLE_STYLES[profile.role] ?? ROLE_STYLES.student
+  const RoleIcon = style.icon
+  const initials = savedName?.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() ?? '؟'
+
+  async function saveName() {
+    if (!name.trim()) { setError('الاسم لا يمكن أن يكون فارغاً'); return }
+    if (name.trim() === savedName) { setEditing(false); return }
+    setSaving(true); setError(null)
+    const { error: e } = await supabase.from('profiles').update({ full_name: name.trim() }).eq('id', profile.id)
+    if (e) { setError('حدث خطأ أثناء الحفظ'); setSaving(false); return }
+    setSavedName(name.trim()); setEditing(false); setSaving(false); router.refresh()
+  }
+
+  function cancelEdit() { setName(savedName); setEditing(false); setError(null) }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  const STAT_BG = ['bg-ruwad-blue/5', 'bg-ruwad-lime/15', 'bg-ruwad-navy/5']
+
+  return (
+    <div className="min-h-screen bg-[#F5F6FA] flex flex-col" dir="rtl">
+      {/* ===== هيدر متدرّج ===== */}
+      <div className="relative overflow-hidden bg-ruwad-gradient px-6 pt-10 pb-24 flex flex-col items-center gap-2 text-center">
+        <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
+
+        <div className={`relative z-10 w-20 h-20 rounded-full ${style.bg} flex items-center justify-center text-3xl font-extrabold text-white shadow-ruwad-lg ring-4 ring-white/20`}>
+          {initials}
+        </div>
+
+        <span className="relative z-10 text-xs font-bold px-3 py-1 rounded-full bg-white/20 text-white flex items-center gap-1.5 mt-1">
+          <RoleIcon size={12} /> {ROLE_LABELS[profile.role] ?? ''}
+        </span>
+
+        <div className="relative z-10 flex items-center gap-2 mt-1">
+          {editing ? (
+            <>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') cancelEdit() }}
+                autoFocus
+                className="bg-white/20 backdrop-blur text-white border border-white/40 rounded-ruwad-sm px-4 py-2 text-xl font-bold text-center outline-none focus:ring-2 focus:ring-white/40 w-64"
+              />
+              <button onClick={saveName} disabled={saving} className="text-white hover:text-ruwad-lime transition p-1"><Check size={22} /></button>
+              <button onClick={cancelEdit} className="text-white/60 hover:text-white transition p-1"><X size={20} /></button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-extrabold text-white">{savedName}</h1>
+              <button onClick={() => setEditing(true)} className="text-white/60 hover:text-ruwad-lime transition p-1" aria-label="تعديل الاسم">
+                <Pencil size={16} />
+              </button>
+            </>
+          )}
+        </div>
+        {error && <p className="relative z-10 text-red-300 text-xs">{error}</p>}
+        <p className="relative z-10 text-white/60 text-sm">{profile.email}</p>
+      </div>
+
+      <div className="mx-4 sm:mx-6 -mt-12 flex flex-col gap-4 pb-24 md:pb-8">
+        {stats.length > 0 && (
+          <div className="bg-white rounded-ruwad shadow-ruwad-lg p-6 grid grid-cols-3 gap-4">
+            {stats.map((s, i) => (
+              <div key={i} className={`flex flex-col items-center gap-1 p-4 rounded-ruwad-sm ${STAT_BG[i % 3]}`}>
+                <p className="text-2xl font-bold text-ruwad-navy">{s.value}</p>
+                <p className="text-xs text-ruwad-navy/60 text-center">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-1">
+          <h2 className="text-xs font-bold text-ruwad-navy/50 mb-3 uppercase tracking-wider">معلومات الحساب</h2>
+
+          <div className="flex items-center justify-between py-3 border-b border-ruwad-gray/40">
+            <span className="text-sm text-ruwad-navy/60">الاسم الكامل</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-ruwad-navy">{savedName}</span>
+              <button onClick={() => setEditing(true)} className={`${style.chipText} hover:opacity-70 transition`}><Pencil size={13} /></button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b border-ruwad-gray/40">
+            <span className="text-sm text-ruwad-navy/60">البريد الإلكتروني</span>
+            <span className="text-sm font-medium text-ruwad-navy">{profile.email}</span>
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b border-ruwad-gray/40">
+            <span className="text-sm text-ruwad-navy/60">الدور</span>
+            <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${style.chipBg} ${style.chipText}`}>
+              <RoleIcon size={12} /> {ROLE_LABELS[profile.role] ?? ''}
+            </span>
+          </div>
+
+          {profile.user_code && (
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-ruwad-navy/60">كودك الشخصي</span>
+              <span className="font-mono font-bold text-ruwad-blue tracking-widest">{profile.user_code}</span>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full bg-white rounded-ruwad shadow-card p-4 flex items-center justify-center gap-2 text-red-500 font-semibold hover:bg-red-50 transition"
+        >
+          <LogOut size={18} /> تسجيل الخروج
+        </button>
+      </div>
+    </div>
+  )
+}
