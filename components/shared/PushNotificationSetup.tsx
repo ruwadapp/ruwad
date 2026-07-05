@@ -37,21 +37,27 @@ export function PushNotificationSetup({ compact = false, variant = 'dark' }: { c
     )
   }
 
-  useEffect(() => {
+  async function checkStatus() {
     const isSupported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
     setSupported(isSupported)
     if (!isSupported) return
 
-    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+    // نعتمد دائماً على القيمة الحيّة الآن من المتصفح، لا على حالة محفوظة سابقاً —
+    // فقد يكون المستخدم غيّر الإذن يدوياً من إعدادات المتصفح وعاد لهذه الصفحة دون تحميلها من جديد
+    const currentPermission = typeof Notification !== 'undefined' ? Notification.permission : 'default'
+    if (currentPermission === 'denied') {
       setDenied(true)
+      setSubscribed(false)
       return
     }
+    setDenied(false)
 
-    navigator.serviceWorker.register('/sw.js').then(async (reg) => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
       const existing = await reg.pushManager.getSubscription()
-      if (existing && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      if (existing && currentPermission === 'granted') {
         // الاشتراك المخزّن محلياً قد يكون منتهي الصلاحية على مستوى خدمة الإشعارات (FCM/APNs)
-        // دون أن يعرف المتصفح بذلك — فنجدّده بصمت في كل تحميل صفحة لضمان بقاء نقطة الاتصال صالحة
+        // دون أن يعرف المتصفح بذلك — فنجدّده بصمت لضمان بقاء نقطة الاتصال صالحة
         try {
           await existing.unsubscribe()
           const fresh = await reg.pushManager.subscribe({
@@ -62,12 +68,29 @@ export function PushNotificationSetup({ compact = false, variant = 'dark' }: { c
           setSubscribed(true)
         } catch (err) {
           console.error('Push renewal error:', err)
-          setSubscribed(true) // نُبقي الحالة كمفعّلة بصرياً حتى لا نُحرج المستخدم بطلب إذن جديد لغير سبب واضح
+          setSubscribed(true)
         }
       } else {
-        setSubscribed(!!existing)
+        setSubscribed(!!existing && currentPermission === 'granted')
       }
-    }).catch(() => {})
+    } catch (err) {
+      console.error('Push status check error:', err)
+    }
+  }
+
+  useEffect(() => {
+    checkStatus()
+    // نعيد فحص الحالة تلقائياً عندما يعود المستخدم إلى هذا التبويب —
+    // مثلاً بعد تعديل إذن الإشعارات يدوياً من إعدادات المتصفح ثم الرجوع دون إعادة تحميل الصفحة
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') checkStatus()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('focus', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', handleVisibility)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -75,20 +98,24 @@ export function PushNotificationSetup({ compact = false, variant = 'dark' }: { c
     if (!VAPID_PUBLIC_KEY) return
     setLoading(true)
     try {
+      // نطلب الإذن من جديد دوماً — إن كان قد أُعيد ضبطه من إعدادات المتصفح سيُظهر المتصفح نافذة الموافقة الآن
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
         setDenied(permission === 'denied')
         setLoading(false)
         return
       }
+      setDenied(false)
 
       const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) await existing.unsubscribe()
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
       await saveSubscription(sub)
-      setDenied(false)
       setSubscribed(true)
     } catch (err) {
       console.error('Push subscription error:', err)
@@ -98,11 +125,35 @@ export function PushNotificationSetup({ compact = false, variant = 'dark' }: { c
 
   if (!supported || !VAPID_PUBLIC_KEY) return null
 
-  if (denied && !compact) {
+  if (denied) {
+    if (compact) {
+      return (
+        <button
+          onClick={enable}
+          disabled={loading}
+          aria-label="إعادة محاولة تفعيل الإشعارات"
+          title="الإشعارات محظورة — اضغط لإعادة المحاولة بعد تفعيلها من إعدادات المتصفح"
+          className="relative w-10 h-10 rounded-full bg-red-50 flex items-center justify-center hover:bg-red-100 transition disabled:opacity-50"
+        >
+          <BellOff size={18} className="text-red-500" />
+        </button>
+      )
+    }
     return (
-      <p className={`text-xs ${variant === 'light' ? 'text-red-500' : 'text-white/50'} max-w-[220px] leading-relaxed`}>
-        الإشعارات محظورة من إعدادات المتصفح لهذا الموقع. لتفعيلها: افتح إعدادات الموقع (أيقونة 🔒 بجانب الرابط) وفعّل الإشعارات يدوياً، ثم أعد تحميل الصفحة.
-      </p>
+      <div className="flex flex-col gap-2 max-w-[260px]">
+        <p className={`text-xs ${variant === 'light' ? 'text-red-500' : 'text-white/60'} leading-relaxed`}>
+          الإشعارات محظورة من إعدادات المتصفح لهذا الموقع. افتح إعدادات الموقع (أيقونة 🔒 أو ⓘ بجانب الرابط) ← الإشعارات ← سماح، ثم اضغط "إعادة المحاولة" هنا (لا حاجة لإعادة تحميل الصفحة).
+        </p>
+        <button
+          onClick={enable}
+          disabled={loading}
+          className={`self-start flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-ruwad-sm transition disabled:opacity-50 ${
+            variant === 'light' ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/10 text-white hover:bg-white/20'
+          }`}
+        >
+          <BellRing size={13} className={loading ? 'animate-pulse' : ''} /> {loading ? 'جارٍ الفحص...' : 'إعادة المحاولة'}
+        </button>
+      </div>
     )
   }
 
