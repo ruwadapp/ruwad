@@ -47,23 +47,12 @@ export function LectureViewer({
 
   async function markComplete() {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    await supabase.from('lecture_progress').upsert(
-      { student_id: user.id, lecture_id: lecture.id, completed: true, completed_at: new Date().toISOString() },
-      { onConflict: 'student_id,lecture_id' }
-    )
-
-    const newCompletedCount = new Set([...completedIds, lecture.id]).size
-    const progress = allLectures.length > 0 ? Math.round((newCompletedCount / allLectures.length) * 100) : 0
-
-    await supabase
-      .from('enrollments')
-      .update({ progress, completed_at: progress >= 100 ? new Date().toISOString() : null })
-      .eq('student_id', user.id)
-      .eq('course_id', courseId)
-
+    const { error } = await supabase.rpc('mark_lecture_complete', { p_lecture_id: lecture.id })
+    if (error) {
+      console.error('mark_lecture_complete error:', error)
+      setLoading(false)
+      return
+    }
     setCompleted(true)
     setLoading(false)
     router.refresh()
