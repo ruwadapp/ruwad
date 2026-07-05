@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, BookOpen, FileText, Zap, FileCheck, UserPlus, Award, ShieldCheck, CheckCheck } from 'lucide-react'
+import { Bell, BookOpen, FileText, Zap, FileCheck, UserPlus, Award, ShieldCheck, CheckCheck, Megaphone } from 'lucide-react'
 
 interface Notification {
   id: string
@@ -12,6 +12,7 @@ interface Notification {
   reference_id: string | null
   is_read: boolean
   created_at: string
+  tone?: 'urgent' | 'important' | null
 }
 
 const TYPE_ICON: Record<string, { icon: typeof Bell; color: string }> = {
@@ -24,7 +25,14 @@ const TYPE_ICON: Record<string, { icon: typeof Bell; color: string }> = {
   certificate: { icon: ShieldCheck, color: 'bg-ruwad-lime/30 text-ruwad-navy' },
   course: { icon: BookOpen, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   attendance: { icon: CheckCheck, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
+  announcement: { icon: Megaphone, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   general: { icon: Bell, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
+}
+
+// درجة الأهمية تطغى على لون الأيقونة الافتراضي حسب النوع — أحمر=عاجل، أصفر/ليموني=مهم
+const TONE_COLOR: Record<string, string> = {
+  urgent: 'bg-red-500/15 text-red-500',
+  important: 'bg-ruwad-lime/40 text-ruwad-navy',
 }
 
 function timeAgo(dateStr: string): string {
@@ -98,6 +106,7 @@ export function NotificationBell() {
       case 'assignment': return isTrainer ? `/assignments/${n.reference_id}` : '/my-assignments'
       case 'enrollment': return isTrainer ? '/students' : '/my-courses'
       case 'badge': case 'certificate': return '/progress'
+      case 'announcement': return isTrainer ? '/dashboard' : '/home'
       default: return isTrainer ? '/dashboard' : '/home'
     }
   }
@@ -143,6 +152,7 @@ export function NotificationBell() {
             ) : (
               notifications.map((n) => {
                 const { icon: Icon, color } = TYPE_ICON[n.type] ?? TYPE_ICON.general
+                const toneColor = n.tone ? TONE_COLOR[n.tone] : null
                 return (
                   <button
                     key={n.id}
@@ -151,12 +161,14 @@ export function NotificationBell() {
                       !n.is_read ? 'bg-ruwad-blue/5' : ''
                     }`}
                   >
-                    <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${color}`}>
+                    <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${toneColor ?? color}`}>
                       <Icon size={16} />
                     </span>
                     <span className="flex-1 min-w-0">
                       <span className="flex items-center gap-1.5">
                         <span className="font-semibold text-sm text-ruwad-navy">{n.title}</span>
+                        {n.tone === 'urgent' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">عاجل</span>}
+                        {n.tone === 'important' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-ruwad-lime text-ruwad-navy">مهم</span>}
                         {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-ruwad-blue shrink-0" />}
                       </span>
                       <p className="text-xs text-ruwad-navy/60 mt-0.5 line-clamp-2">{n.message}</p>

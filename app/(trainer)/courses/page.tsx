@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { DeleteButton } from '@/components/shared/DeleteButton'
-import { Plus, BookOpen, Users, Pencil } from 'lucide-react'
+import { EntityCard } from '@/components/shared/EntityCard'
+import { Plus, BookOpen, Users } from 'lucide-react'
 
 export default async function CoursesPage() {
   const supabase = await createServerSupabaseClient()
@@ -34,48 +34,27 @@ export default async function CoursesPage() {
             <p className="text-ruwad-navy/60">لا توجد كورسات حتى الآن. أنشئ أول كورس لك.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {courses.map((course, idx) => (
-              <div
+              <EntityCard
                 key={course.id}
-                className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad transition border-t-4 ${
-                  ['border-ruwad-blue', 'border-ruwad-lime', 'border-ruwad-navy'][idx % 3]
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{course.title}</h3>
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-                      course.status === 'published'
-                        ? 'bg-ruwad-lime text-ruwad-navy'
-                        : 'bg-ruwad-gray/50 text-ruwad-navy/60'
-                    }`}
-                  >
-                    {course.status === 'published' ? 'منشور' : 'مسودة'}
-                  </span>
-                </div>
-                <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
-                  {course.description || 'بلا وصف'}
-                </p>
-                <div className="flex items-center gap-4 text-sm text-ruwad-navy/50">
-                  <span className="flex items-center gap-1.5">
-                    <BookOpen size={16} /> {course.lectures?.[0]?.count ?? 0} محاضرة
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Users size={16} /> {course.enrollments?.[0]?.count ?? 0} طالب
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
-                  <Link
-                    href={`/courses/${course.id}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition"
-                  >
-                    <Pencil size={15} /> تعديل
-                  </Link>
-                  <DeleteButton table="courses" id={course.id} label="حذف" confirmText="حذف الكورس سيحذف معه كل محاضراته وتسجيلات الطلاب فيه نهائياً. متابعة؟" />
-                </div>
-              </div>
+                href={`/courses/${course.id}`}
+                gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                title={course.title}
+                description={course.description}
+                badge={{
+                  text: course.status === 'published' ? 'منشور' : course.status === 'archived' ? 'منتهي 🏁' : 'مسودة',
+                  active: course.status === 'published',
+                }}
+                stats={[
+                  { icon: BookOpen, label: `${course.lectures?.[0]?.count ?? 0} محاضرة` },
+                  { icon: Users, label: `${course.enrollments?.[0]?.count ?? 0} طالب` },
+                ]}
+                shareCode={course.course_code}
+                deleteTable="courses"
+                deleteId={course.id}
+                deleteConfirmText="حذف الكورس سيحذف معه كل محاضراته وتسجيلات الطلاب فيه نهائياً. متابعة؟"
+              />
             ))}
           </div>
         )}

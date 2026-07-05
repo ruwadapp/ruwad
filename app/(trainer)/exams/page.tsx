@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { DeleteButton } from '@/components/shared/DeleteButton'
-import { Plus, FileText, Users, Pencil, BarChart3, Zap, Award } from 'lucide-react'
+import { EntityCard } from '@/components/shared/EntityCard'
+import { Plus, FileText, Users, Zap, Award } from 'lucide-react'
 
 export default async function ExamsPage() {
   const supabase = await createServerSupabaseClient()
@@ -25,11 +25,6 @@ export default async function ExamsPage() {
     ? Math.round((allSubs ?? []).reduce((sum, s) => sum + (s.percentage ?? 0), 0) / totalParticipants)
     : null
 
-  const ACCENTS = [
-    { border: 'border-ruwad-blue', icon: 'text-ruwad-blue', bg: 'bg-ruwad-blue/5' },
-    { border: 'border-ruwad-lime', icon: 'text-ruwad-navy', bg: 'bg-ruwad-lime/10' },
-    { border: 'border-ruwad-navy', icon: 'text-ruwad-navy', bg: 'bg-ruwad-navy/5' },
-  ]
 
   return (
     <>
@@ -72,45 +67,25 @@ export default async function ExamsPage() {
             <p className="text-ruwad-navy/60">لا توجد امتحانات حتى الآن.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {exams.map((exam, idx) => {
-              const accent = ACCENTS[idx % 3]
-              return (
-                <div key={exam.id} className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all border-t-4 ${accent.border}`}>
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{exam.title}</h3>
-                    <span
-                      className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-                        exam.is_active ? 'bg-ruwad-lime text-ruwad-navy' : 'bg-ruwad-gray/50 text-ruwad-navy/60'
-                      }`}
-                    >
-                      {exam.is_active ? 'نشط' : 'متوقف'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">
-                    {exam.description || 'بلا وصف'}
-                  </p>
-                  <div className={`flex items-center gap-4 text-sm text-ruwad-navy/60 rounded-ruwad-sm px-3 py-2 ${accent.bg}`}>
-                    <span className="flex items-center gap-1.5">
-                      <FileText size={16} className={accent.icon} /> {exam.questions?.[0]?.count ?? 0} سؤال
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Users size={16} className={accent.icon} /> {exam.exam_submissions?.[0]?.count ?? 0} مشارك
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-1 pt-3 border-t border-ruwad-gray/40">
-                    <Link href={`/exams/${exam.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">
-                      <Pencil size={15} /> تعديل
-                    </Link>
-                    <Link href={`/exams/${exam.id}/results`} className="flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-navy hover:bg-ruwad-gray/30 px-3 py-2 rounded-ruwad-sm transition">
-                      <BarChart3 size={15} />
-                    </Link>
-                    <DeleteButton table="exams" id={exam.id} label="حذف" confirmText="حذف الامتحان سيحذف معه كل أسئلته ونتائج الطلاب فيه نهائياً. متابعة؟" />
-                  </div>
-                </div>
-              )
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {exams.map((exam, idx) => (
+              <EntityCard
+                key={exam.id}
+                href={`/exams/${exam.id}`}
+                gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                title={exam.title}
+                description={exam.description}
+                badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}
+                stats={[
+                  { icon: FileText, label: `${exam.questions?.[0]?.count ?? 0} سؤال` },
+                  { icon: Users, label: `${exam.exam_submissions?.[0]?.count ?? 0} مشارك` },
+                ]}
+                shareCode={exam.exam_code}
+                deleteTable="exams"
+                deleteId={exam.id}
+                deleteConfirmText="حذف الامتحان سيحذف معه كل أسئلته ونتائج الطلاب فيه نهائياً. متابعة؟"
+              />
+            ))}
           </div>
         )}
       </main>

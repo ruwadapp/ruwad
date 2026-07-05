@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut, Pencil,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -20,6 +20,7 @@ const trainerNav = [
   { href: '/assignments', label: 'الوظائف', icon: FileCheck },
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/badges', label: 'الشارات', icon: Award },
+  { href: '/notifications/send', label: 'إرسال إشعار', icon: Megaphone },
   { href: '/analytics', label: 'التحليلات', icon: BarChart3 },
   { href: '/institute', label: 'المعهد', icon: Building2 },
 ]

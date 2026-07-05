@@ -3,9 +3,13 @@ self.addEventListener('push', (event) => {
   try { data = event.data.json() } catch { data = { title: 'رُوّاد', body: event.data ? event.data.text() : '' } }
 
   const title = data.title || 'رُوّاد'
+  const ICONS = {
+    urgent: '/icons/icon-alert-red-192.png',
+    important: '/icons/icon-alert-yellow-192.png',
+  }
   const options = {
     body: data.body || '',
-    icon: '/icons/icon-192.png',
+    icon: ICONS[data.tone] || '/icons/icon-192.png',
     badge: '/icons/icon-48.png',
     dir: 'rtl',
     lang: 'ar',

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Award, GraduationCap, X } from 'lucide-react'
+import { Award, GraduationCap, X, CalendarCheck, FileCheck, FileText } from 'lucide-react'
 
 interface StudentRow {
   student_id: string
@@ -12,11 +12,21 @@ interface StudentRow {
   assignmentAvg: number | null
   assignmentCount: number
   attendanceRate: number | null
+  overallScore: number
   certificateId: string | null
 }
 
+const MEDALS = ['🥇', '🥈', '🥉']
+const RANK_ROW_STYLE = [
+  'bg-gradient-to-l from-amber-50 to-white border-amber-200',
+  'bg-gradient-to-l from-slate-50 to-white border-slate-200',
+  'bg-gradient-to-l from-orange-50 to-white border-orange-200',
+]
+
 export function CourseStudentPerformance({ courseId }: { courseId: string }) {
   const [rows, setRows] = useState<StudentRow[]>([])
+  const [totalExams, setTotalExams] = useState(0)
+  const [totalAssignments, setTotalAssignments] = useState(0)
   const [loading, setLoading] = useState(true)
   const [issuingFor, setIssuingFor] = useState<StudentRow | null>(null)
   const [scoreInput, setScoreInput] = useState('')
@@ -37,6 +47,8 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
 
     const examIds = (exams ?? []).map((e) => e.id)
     const assignmentIds = (assignments ?? []).map((a) => a.id)
+    setTotalExams(examIds.length)
+    setTotalAssignments(assignmentIds.length)
 
     const [{ data: examSubs }, { data: assignmentSubs }] = await Promise.all([
       examIds.length
@@ -71,6 +83,9 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
           )
         : null
 
+      const scores = [examAvg, assignmentAvg].filter((v): v is number => v !== null)
+      const overallScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+
       return {
         student_id: e.student_id,
         full_name: studentName,
@@ -79,9 +94,10 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
         assignmentAvg,
         assignmentCount: myAssignments.length,
         attendanceRate: attendanceMap.get(e.student_id) ?? null,
+        overallScore,
         certificateId: certMap.get(e.student_id) ?? null,
       }
-    })
+    }).sort((a, b) => b.overallScore - a.overallScore)
 
     setRows(result)
     setLoading(false)
@@ -90,9 +106,7 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
   useEffect(() => { load() }, [load])
 
   function openIssueModal(row: StudentRow) {
-    const scores = [row.examAvg, row.assignmentAvg].filter((v): v is number => v !== null)
-    const suggested = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-    setScoreInput(String(suggested))
+    setScoreInput(String(row.overallScore))
     setIssuingFor(row)
   }
 
@@ -126,11 +140,35 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
 
   if (loading) return <p className="text-ruwad-navy/50 text-sm py-6 text-center">جارٍ التحميل...</p>
 
+  const avgOverall = rows.length ? Math.round(rows.reduce((s, r) => s + r.overallScore, 0) / rows.length) : 0
+  const withAttendance = rows.filter((r) => r.attendanceRate !== null)
+  const avgAttendance = withAttendance.length
+    ? Math.round(withAttendance.reduce((s, r) => s + (r.attendanceRate ?? 0), 0) / withAttendance.length)
+    : null
+
   return (
-    <div className="bg-white rounded-ruwad shadow-card p-6">
-      <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-        <GraduationCap size={20} className="text-ruwad-blue" /> مستوى الطلاب في هذا الكورس
-      </h2>
+    <div id="course-summary" className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-5">
+      <div className="relative overflow-hidden rounded-ruwad p-5 flex items-center justify-between flex-wrap gap-4" style={{ backgroundImage: 'linear-gradient(135deg, #3A4EFB 0%, #33A4FA 100%)' }}>
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+        <div className="relative flex items-center gap-2 text-white">
+          <GraduationCap size={22} />
+          <h2 className="text-lg font-bold">ملخص الكورس — أداء الطلاب</h2>
+        </div>
+        <div className="relative flex items-center gap-3 flex-wrap">
+          <div className="bg-white/15 backdrop-blur rounded-ruwad-sm px-4 py-2 text-center">
+            <p className="text-xl font-bold text-white">{rows.length}</p>
+            <p className="text-[11px] text-white/70">طالب</p>
+          </div>
+          <div className="bg-white/15 backdrop-blur rounded-ruwad-sm px-4 py-2 text-center">
+            <p className="text-xl font-bold text-white">{avgOverall}%</p>
+            <p className="text-[11px] text-white/70">متوسط النتائج</p>
+          </div>
+          <div className="bg-ruwad-lime rounded-ruwad-sm px-4 py-2 text-center">
+            <p className="text-xl font-bold text-ruwad-navy">{avgAttendance !== null ? `${avgAttendance}%` : '—'}</p>
+            <p className="text-[11px] text-ruwad-navy/70">متوسط الحضور</p>
+          </div>
+        </div>
+      </div>
 
       {rows.length === 0 ? (
         <p className="text-ruwad-navy/50 text-sm py-6 text-center">لا يوجد طلاب مقبولون في هذا الكورس بعد.</p>
@@ -139,27 +177,38 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-right text-ruwad-navy/50 border-b border-ruwad-gray/60">
-                <th className="py-2">الطالب</th>
-                <th className="py-2">متوسط الامتحانات</th>
-                <th className="py-2">متوسط الواجبات</th>
-                <th className="py-2">نسبة الحضور</th>
-                <th className="py-2"></th>
+                <th className="py-2 px-2">الترتيب</th>
+                <th className="py-2 px-2">الطالب</th>
+                <th className="py-2 px-2">النتيجة الإجمالية</th>
+                <th className="py-2 px-2"><span className="flex items-center gap-1"><CalendarCheck size={13} /> الحضور</span></th>
+                <th className="py-2 px-2"><span className="flex items-center gap-1"><FileCheck size={13} /> الواجبات</span></th>
+                <th className="py-2 px-2"><span className="flex items-center gap-1"><FileText size={13} /> الامتحانات</span></th>
+                <th className="py-2 px-2"></th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.student_id} className="border-b border-ruwad-gray/30">
-                  <td className="py-3 text-ruwad-navy font-medium">{r.full_name}</td>
-                  <td className="py-3 text-ruwad-navy">{r.examAvg !== null ? `${r.examAvg}% (${r.examCount})` : '—'}</td>
-                  <td className="py-3 text-ruwad-navy">{r.assignmentAvg !== null ? `${r.assignmentAvg}% (${r.assignmentCount})` : '—'}</td>
-                  <td className="py-3 text-ruwad-navy">{r.attendanceRate !== null ? `${r.attendanceRate}%` : '—'}</td>
-                  <td className="py-3 text-left">
+              {rows.map((r, idx) => (
+                <tr key={r.student_id} className={`border-b ${idx < 3 ? RANK_ROW_STYLE[idx] : 'border-ruwad-gray/30'}`}>
+                  <td className="py-3 px-2 font-bold text-ruwad-navy">
+                    {idx < 3 ? <span className="text-lg">{MEDALS[idx]}</span> : <span className="text-ruwad-navy/50">#{idx + 1}</span>}
+                  </td>
+                  <td className="py-3 px-2 text-ruwad-navy font-medium">{r.full_name}</td>
+                  <td className="py-3 px-2">
+                    <span className={`font-bold px-2.5 py-1 rounded-full text-xs ${
+                      r.overallScore >= 85 ? 'bg-ruwad-lime/40 text-ruwad-navy' :
+                      r.overallScore >= 50 ? 'bg-ruwad-blue/10 text-ruwad-blue' : 'bg-red-50 text-red-500'
+                    }`}>{r.overallScore}%</span>
+                  </td>
+                  <td className="py-3 px-2 text-ruwad-navy">{r.attendanceRate !== null ? `${r.attendanceRate}%` : '—'}</td>
+                  <td className="py-3 px-2 text-ruwad-navy">{r.assignmentCount} / {totalAssignments}</td>
+                  <td className="py-3 px-2 text-ruwad-navy">{r.examCount} / {totalExams}</td>
+                  <td className="py-3 px-2 text-left">
                     {r.certificateId ? (
-                      <Link href={`/certificates/${r.certificateId}`} className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue">
-                        <Award size={14} /> عرض الشهادة
+                      <Link href={`/certificates/${r.certificateId}`} className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue whitespace-nowrap">
+                        <Award size={14} /> الشهادة
                       </Link>
                     ) : (
-                      <button onClick={() => openIssueModal(r)} className="flex items-center gap-1.5 text-xs font-semibold bg-ruwad-lime text-ruwad-navy px-3 py-1.5 rounded-full hover:opacity-80 transition">
+                      <button onClick={() => openIssueModal(r)} className="flex items-center gap-1.5 text-xs font-semibold bg-ruwad-lime text-ruwad-navy px-3 py-1.5 rounded-full hover:opacity-80 transition whitespace-nowrap">
                         <Award size={14} /> إصدار شهادة
                       </button>
                     )}
@@ -184,7 +233,7 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
                 type="number" min={0} max={100} value={scoreInput} onChange={(e) => setScoreInput(e.target.value)}
                 className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
               />
-              <p className="text-xs text-ruwad-navy/50">مقترحة تلقائياً من متوسط الامتحانات والواجبات، ويمكنك تعديلها حسب تقديرك.</p>
+              <p className="text-xs text-ruwad-navy/50">مقترحة تلقائياً من النتيجة الإجمالية، ويمكنك تعديلها حسب تقديرك.</p>
             </div>
             <button onClick={issueCertificate} disabled={saving} className="bg-ruwad-blue text-white px-6 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition disabled:opacity-50">
               {saving ? 'جارٍ الإصدار...' : 'إصدار الشهادة'}

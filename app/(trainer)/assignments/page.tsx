@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { DeleteButton } from '@/components/shared/DeleteButton'
-import { Plus, FileCheck, Users, Pencil, Clock, CheckCircle2 } from 'lucide-react'
+import { EntityCard } from '@/components/shared/EntityCard'
+import { Plus, FileCheck, Users, Clock } from 'lucide-react'
 
 export default async function AssignmentsPage() {
   const supabase = await createServerSupabaseClient()
@@ -20,7 +20,6 @@ export default async function AssignmentsPage() {
     : { data: [] }
 
   const totalSubmissions = (assignments ?? []).reduce((sum, a) => sum + (a.assignment_submissions?.[0]?.count ?? 0), 0)
-  const ACCENTS = ['border-ruwad-blue', 'border-ruwad-lime', 'border-ruwad-navy']
 
   return (
     <>
@@ -63,31 +62,25 @@ export default async function AssignmentsPage() {
             <p className="text-ruwad-navy/60">لا توجد واجبات حتى الآن.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {assignments.map((a, idx) => {
               const subCount = a.assignment_submissions?.[0]?.count ?? 0
               return (
-                <div key={a.id} className={`bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all border-t-4 ${ACCENTS[idx % 3]}`}>
-                  <h3 className="font-bold text-ruwad-navy text-lg line-clamp-1">{a.title}</h3>
-                  <p className="text-sm text-ruwad-navy/60 line-clamp-2 min-h-[2.5rem]">{a.description || 'بلا وصف'}</p>
-                  <div className="flex items-center justify-between text-sm text-ruwad-navy/50 bg-ruwad-gray/10 rounded-ruwad-sm px-3 py-2">
-                    <span className="flex items-center gap-1.5">
-                      <Users size={16} className="text-ruwad-blue" /> {subCount} تسليم
-                    </span>
-                    {a.due_date && (
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={14} /> {new Date(a.due_date).toLocaleDateString('ar')}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-1 pt-3 border-t border-ruwad-gray/40">
-                    <Link href={`/assignments/${a.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">
-                      <Pencil size={15} /> تعديل / تصحيح
-                    </Link>
-                    <DeleteButton table="assignments" id={a.id} label="حذف" confirmText="حذف الواجب سيحذف معه كل تسليمات الطلاب فيه نهائياً. متابعة؟" />
-                  </div>
-                </div>
+                <EntityCard
+                  key={a.id}
+                  href={`/assignments/${a.id}`}
+                  gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                  title={a.title}
+                  description={a.description}
+                  stats={[
+                    { icon: Users, label: `${subCount} تسليم` },
+                    ...(a.due_date ? [{ icon: Clock, label: new Date(a.due_date).toLocaleDateString('ar') }] : []),
+                  ]}
+                  shareCode={a.assignment_code}
+                  deleteTable="assignments"
+                  deleteId={a.id}
+                  deleteConfirmText="حذف الواجب سيحذف معه كل تسليمات الطلاب فيه نهائياً. متابعة؟"
+                />
               )
             })}
           </div>

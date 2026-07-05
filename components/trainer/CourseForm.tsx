@@ -12,8 +12,8 @@ interface CourseFormProps {
 export function CourseForm({ initialCourse }: CourseFormProps) {
   const [title, setTitle] = useState(initialCourse?.title ?? '')
   const [description, setDescription] = useState(initialCourse?.description ?? '')
-  const [status, setStatus] = useState<'draft' | 'published'>(
-    (initialCourse?.status as 'draft' | 'published') ?? 'draft'
+  const [status, setStatus] = useState<'draft' | 'published' | 'archived'>(
+    (initialCourse?.status as 'draft' | 'published' | 'archived') ?? 'draft'
   )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -45,6 +45,11 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
       }
       router.push(`/courses/${initialCourse.id}`)
       router.refresh()
+      if (status === 'archived') {
+        setTimeout(() => {
+          document.getElementById('course-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 400)
+      }
     } else {
       const { data, error: insertError } = await supabase
         .from('courses')
@@ -102,7 +107,7 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-ruwad-navy">الحالة</label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button
             type="button"
             onClick={() => setStatus('draft')}
@@ -121,8 +126,21 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
           >
             منشور
           </button>
+          <button
+            type="button"
+            onClick={() => setStatus('archived')}
+            className={`rounded-ruwad-sm py-2.5 font-medium text-sm transition border-2 ${
+              status === 'archived' ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy border-ruwad-gray'
+            }`}
+          >
+            🏁 إنهاء الكورس
+          </button>
         </div>
-        <p className="text-xs text-ruwad-navy/50">الكورس المنشور يظهر للطلاب ويمكنهم التسجيل فيه.</p>
+        <p className="text-xs text-ruwad-navy/50">
+          {status === 'archived'
+            ? 'عند الحفظ ستنتقل مباشرة إلى ملخص الكورس النهائي أدناه — ترتيب الطلاب، الحضور، والنتائج.'
+            : 'الكورس المنشور يظهر للطلاب ويمكنهم التسجيل فيه.'}
+        </p>
       </div>
 
       <button

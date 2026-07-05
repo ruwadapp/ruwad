@@ -13,6 +13,7 @@ function destinationFor(type: string, referenceId: string | null, role: string):
     case 'assignment': return isTrainer ? `/assignments/${referenceId}` : '/my-assignments'
     case 'enrollment': return isTrainer ? '/students' : '/my-courses'
     case 'badge': case 'certificate': return '/progress'
+    case 'announcement': return isTrainer ? '/dashboard' : '/home'
     default: return isTrainer ? '/dashboard' : '/home'
   }
 }
@@ -33,13 +34,13 @@ export async function POST(req: NextRequest) {
     process.env.VAPID_PRIVATE_KEY
   )
 
-  const { subscriptions, title, body, type, reference_id, role } = await req.json()
+  const { subscriptions, title, body, type, reference_id, role, tone } = await req.json()
   if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
     return NextResponse.json({ sent: 0 })
   }
 
   const url = destinationFor(type, reference_id, role ?? 'student')
-  const payload = JSON.stringify({ title, body, url })
+  const payload = JSON.stringify({ title, body, url, tone })
 
   const supabaseAdmin =
     process.env.SUPABASE_SERVICE_ROLE_KEY

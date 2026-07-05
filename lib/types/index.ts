@@ -299,10 +299,11 @@ export interface Notification {
   user_id: string
   title: string
   message: string
-  type: 'exam' | 'assignment' | 'attendance' | 'challenge' | 'course' | 'general'
+  type: 'exam' | 'assignment' | 'attendance' | 'challenge' | 'course' | 'general' | 'announcement' | 'enrollment' | 'badge' | 'certificate' | 'lecture'
   reference_id: string | null
   is_read: boolean
   created_at: string
+  tone: 'urgent' | 'important' | null
 }
 
 // ======= PRESENTATIONS (Mentimeter-style) =======
