@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Question, QuestionType } from '@/lib/types'
-import { Plus, Trash2, Pencil, ListChecks, ToggleLeft, Type, PenLine } from 'lucide-react'
+import { Plus, Trash2, Pencil, ListChecks, ToggleLeft, Type, PenLine, Upload } from 'lucide-react'
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: 'اختيار من متعدد',
@@ -34,12 +34,156 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
   const [imageUrl, setImageUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importSummary, setImportSummary] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
   async function syncExamTotalMarks(newQuestions: Question[]) {
     const total = newQuestions.reduce((sum, q) => sum + q.marks, 0)
     await supabase.from('exams').update({ total_marks: total }).eq('id', examId)
+  }
+
+  // ===== استيراد أسئلة الاختيار من متعدد عبر JSON أو CSV =====
+  // لا يؤثر على بقية أنواع الأسئلة (صح/خطأ، إجابة قصيرة، مقالي) — يضيف فقط أسئلة اختيار من متعدد جديدة
+  type ImportedRow = {
+    text: string
+    options: { id: string; text: string }[]
+    correct: string
+    marks: number
+    explanation: string | null
+  }
+
+  const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
+
+  function parseCsvLine(line: string): string[] {
+    const cells: string[] = []
+    let cur = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++ }
+        else if (ch === '"') { inQuotes = false }
+        else { cur += ch }
+      } else {
+        if (ch === '"') inQuotes = true
+        else if (ch === ',') { cells.push(cur); cur = '' }
+        else cur += ch
+      }
+    }
+    cells.push(cur)
+    return cells.map((c) => c.trim())
+  }
+
+  function parseCsv(content: string): ImportedRow[] {
+    const lines = content.split(/\r?\n/).filter((l) => l.trim() !== '')
+    if (lines.length < 2) throw new Error('الملف لا يحتوي بيانات كافية')
+    const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
+    const idx = (name: string) => header.indexOf(name)
+    const qIdx = idx('question') !== -1 ? idx('question') : idx('question_text')
+    if (qIdx === -1) throw new Error('يجب أن يحتوي الملف على عمود "question"')
+    const correctIdx = idx('correct') !== -1 ? idx('correct') : idx('correct_answer')
+    const marksIdx = idx('marks')
+    const explanationIdx = idx('explanation')
+    const optionIdxs = LETTERS
+      .map((l, i) => idx(`option_${l.toLowerCase()}`) !== -1 ? idx(`option_${l.toLowerCase()}`) : idx(`option${i + 1}`))
+      .filter((i) => i !== -1)
+
+    return lines.slice(1).map((line, rowNum) => {
+      const cells = parseCsvLine(line)
+      const text = cells[qIdx]?.trim() ?? ''
+      if (!text) throw new Error(`السطر ${rowNum + 2}: نص السؤال مفقود`)
+      const options = optionIdxs
+        .map((oi, i) => ({ id: LETTERS[i], text: (cells[oi] ?? '').trim() }))
+        .filter((o) => o.text !== '')
+      if (options.length < 2) throw new Error(`السطر ${rowNum + 2}: يجب توفير خيارين على الأقل`)
+      const rawCorrect = (correctIdx !== -1 ? cells[correctIdx] : '')?.trim().toUpperCase() ?? ''
+      const correct = options.find((o) => o.id === rawCorrect)
+        ? rawCorrect
+        : options.find((o) => o.text.toLowerCase() === rawCorrect.toLowerCase())?.id ?? ''
+      if (!correct) throw new Error(`السطر ${rowNum + 2}: الإجابة الصحيحة "${rawCorrect}" غير مطابقة لأي خيار`)
+      const marks = marksIdx !== -1 && cells[marksIdx] ? Number(cells[marksIdx]) : 1
+      const explanation = explanationIdx !== -1 ? (cells[explanationIdx]?.trim() || null) : null
+      return { text, options, correct, marks: Number.isFinite(marks) && marks > 0 ? marks : 1, explanation }
+    })
+  }
+
+  function parseJson(content: string): ImportedRow[] {
+    let raw: unknown
+    try { raw = JSON.parse(content) } catch { throw new Error('الملف ليس JSON صالحاً') }
+    const arr = Array.isArray(raw) ? raw : (raw as { questions?: unknown[] })?.questions
+    if (!Array.isArray(arr)) throw new Error('يجب أن يكون الملف مصفوفة أسئلة أو يحتوي على مفتاح "questions"')
+
+    return arr.map((item, rowNum) => {
+      const obj = item as Record<string, unknown>
+      const text = String(obj.question ?? obj.question_text ?? '').trim()
+      if (!text) throw new Error(`العنصر ${rowNum + 1}: نص السؤال مفقود`)
+
+      let options: { id: string; text: string }[] = []
+      const rawOptions = obj.options
+      if (Array.isArray(rawOptions)) {
+        options = rawOptions.map((o, i) => {
+          if (typeof o === 'string') return { id: LETTERS[i], text: o.trim() }
+          const oo = o as { id?: string; text?: string }
+          return { id: (oo.id ?? LETTERS[i]).toString().toUpperCase(), text: String(oo.text ?? '').trim() }
+        }).filter((o) => o.text !== '')
+      } else if (rawOptions && typeof rawOptions === 'object') {
+        options = Object.entries(rawOptions as Record<string, string>)
+          .map(([id, text]) => ({ id: id.toUpperCase(), text: String(text).trim() }))
+          .filter((o) => o.text !== '')
+      }
+      if (options.length < 2) throw new Error(`العنصر ${rowNum + 1}: يجب توفير خيارين على الأقل`)
+
+      const rawCorrect = String(obj.correct ?? obj.correct_answer ?? '').trim().toUpperCase()
+      const correct = options.find((o) => o.id === rawCorrect)
+        ? rawCorrect
+        : options.find((o) => o.text.toLowerCase() === rawCorrect.toLowerCase())?.id ?? ''
+      if (!correct) throw new Error(`العنصر ${rowNum + 1}: الإجابة الصحيحة غير مطابقة لأي خيار`)
+
+      const marksNum = Number(obj.marks)
+      const explanation = obj.explanation ? String(obj.explanation).trim() : null
+      return { text, options, correct, marks: Number.isFinite(marksNum) && marksNum > 0 ? marksNum : 1, explanation }
+    })
+  }
+
+  async function handleImportFile(file: File) {
+    setImportError(null)
+    setImportSummary(null)
+    setImporting(true)
+    try {
+      const content = await file.text()
+      const isJson = file.name.toLowerCase().endsWith('.json')
+      const rows = isJson ? parseJson(content) : parseCsv(content)
+      if (rows.length === 0) throw new Error('لم يتم العثور على أسئلة في الملف')
+
+      const payload = rows.map((r, i) => ({
+        exam_id: examId,
+        question_text: r.text,
+        question_type: 'multiple_choice' as QuestionType,
+        options: r.options,
+        correct_answer: r.correct,
+        marks: r.marks,
+        explanation: r.explanation,
+        order_index: items.length + i,
+      }))
+
+      const { data, error: insertError } = await supabase.from('questions').insert(payload).select()
+      if (insertError || !data) throw new Error('حدث خطأ أثناء حفظ الأسئلة في قاعدة البيانات')
+
+      const updated = [...items, ...data]
+      setItems(updated)
+      await syncExamTotalMarks(updated)
+      setImportSummary(`تم استيراد ${data.length} سؤال اختيار من متعدد بنجاح ✓`)
+      router.refresh()
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'حدث خطأ غير متوقع أثناء الاستيراد')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   function resetForm() {
@@ -182,19 +326,49 @@ export function QuestionManager({ examId, questions }: { examId: string; questio
 
   return (
     <div className="bg-white rounded-ruwad shadow-card p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 className="text-lg font-bold text-ruwad-navy">
           الأسئلة <span className="text-sm text-ruwad-navy/50 font-normal">({items.reduce((s, q) => s + q.marks, 0)} درجة)</span>
         </h2>
-        {!formOpen && (
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.csv,application/json,text/csv"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }}
+          />
           <button
-            onClick={() => setFormOpen(true)}
-            className="bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition flex items-center gap-1.5"
+            type="button"
+            disabled={importing}
+            onClick={() => fileInputRef.current?.click()}
+            className="border border-ruwad-blue text-ruwad-blue px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:bg-ruwad-blue/5 transition flex items-center gap-1.5 disabled:opacity-50"
           >
-            <Plus size={16} /> سؤال جديد
+            <Upload size={16} /> {importing ? 'جارٍ الاستيراد...' : 'استيراد من JSON / CSV'}
           </button>
-        )}
+          {!formOpen && (
+            <button
+              onClick={() => setFormOpen(true)}
+              className="bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition flex items-center gap-1.5"
+            >
+              <Plus size={16} /> سؤال جديد
+            </button>
+          )}
+        </div>
       </div>
+
+      <div className="text-xs text-ruwad-navy/50 -mt-2 mb-3 flex items-start gap-1.5">
+        <span>الاستيراد يضيف فقط أسئلة اختيار من متعدد ولا يؤثر على الأنواع الأخرى.</span>
+      </div>
+
+      {importError && (
+        <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3 mb-4 flex items-start gap-2">
+          <span>{importError}</span>
+        </div>
+      )}
+      {importSummary && (
+        <div className="bg-ruwad-lime/15 text-ruwad-navy text-sm rounded-ruwad-sm px-4 py-3 mb-4">{importSummary}</div>
+      )}
 
       {formOpen && (
         <form onSubmit={saveQuestion} className="flex flex-col gap-3 border border-ruwad-gray/60 rounded-ruwad-sm p-4 mb-4">

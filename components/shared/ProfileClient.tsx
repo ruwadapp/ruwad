@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
-import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield } from 'lucide-react'
+import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight } from 'lucide-react'
 import { PushNotificationSetup } from './PushNotificationSetup'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -35,6 +35,19 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
   const RoleIcon = style.icon
   const initials = savedName?.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() ?? '؟'
 
+  const HOME_ROUTES: Record<string, string> = {
+    trainer: '/dashboard',
+    student: '/home',
+    institute_admin: '/org',
+    super_admin: '/admin',
+  }
+  const homeHref = HOME_ROUTES[profile.role] ?? '/'
+
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back()
+    else router.push(homeHref)
+  }
+
   async function saveName() {
     if (!name.trim()) { setError('الاسم لا يمكن أن يكون فارغاً'); return }
     if (name.trim() === savedName) { setEditing(false); return }
@@ -60,6 +73,14 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
       <div className="relative overflow-hidden bg-ruwad-gradient px-6 pt-10 pb-16 flex flex-col items-center gap-2 text-center">
         <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
+
+        <button
+          onClick={handleBack}
+          aria-label="رجوع"
+          className="absolute z-20 top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur flex items-center justify-center text-white transition"
+        >
+          <ArrowRight size={20} />
+        </button>
 
         <div className={`relative z-10 w-20 h-20 rounded-full ${style.bg} flex items-center justify-center text-3xl font-extrabold text-white shadow-ruwad-lg ring-4 ring-white/20`}>
           {initials}

@@ -6,6 +6,7 @@ import type { Assignment, Course } from '@/lib/types'
 import { RichTextEditor } from './RichTextEditor'
 import { FileUploadZone, type UploadedFile } from '@/components/shared/FileUploadZone'
 import { Paperclip, Calendar, Award, BookOpen } from 'lucide-react'
+import { ShareCodeBlock } from '@/components/shared/ShareCodeBlock'
 
 export function AssignmentForm({ courses, initialAssignment }: { courses: Course[]; initialAssignment?: Assignment }) {
   const [title, setTitle] = useState(initialAssignment?.title ?? '')
@@ -62,6 +63,14 @@ export function AssignmentForm({ courses, initialAssignment }: { courses: Course
   return (
     <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-5 max-w-2xl">
       {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
+
+      {initialAssignment && (
+        <ShareCodeBlock
+          code={initialAssignment.assignment_code}
+          title="كود الوصول لهذا الواجب"
+          description="شارك هذا الكود أو رمز QR أو الرابط مع طلابك للوصول مباشرة للواجب"
+        />
+      )}
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-ruwad-navy">عنوان الواجب</label>

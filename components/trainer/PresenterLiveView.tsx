@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { PresentationSlide, PresentationSession } from '@/lib/types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { ChevronRight, ChevronLeft, Copy, Check, Square, Users } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Copy, Check, Square, Users, Link2 } from 'lucide-react'
 import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 export function PresenterLiveView({
@@ -17,6 +17,7 @@ export function PresenterLiveView({
   const [responses, setResponses] = useState<{ slide_id: string; answer: { optionId?: string; text?: string } }[]>([])
   const [participantCount, setParticipantCount] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const supabase = createClient()
 
   const currentSlide = slides[session.current_slide_index]
@@ -68,6 +69,13 @@ export function PresenterLiveView({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function copyLink() {
+    const url = `${window.location.origin}/qr/${session.session_code}`
+    navigator.clipboard.writeText(url)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
   const slideResponses = responses.filter((r) => r.slide_id === currentSlide?.id)
 
   return (
@@ -81,6 +89,9 @@ export function PresenterLiveView({
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-sm"><Users size={16} className="text-ruwad-lime" /> {participantCount} منضم</span>
+          <button onClick={copyLink} className="flex items-center gap-1.5 text-sm font-semibold bg-white/10 px-3 py-1.5 rounded-ruwad-sm hover:bg-white/20 transition">
+            <Link2 size={15} /> {linkCopied ? 'تم النسخ ✓' : 'نسخ رابط الانضمام'}
+          </button>
           {session.is_active ? (
             <button onClick={endSession} className="flex items-center gap-1.5 bg-red-500 px-4 py-2 rounded-ruwad-sm text-sm font-semibold hover:opacity-90 transition">
               <Square size={14} /> إنهاء الجلسة

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { AttendanceSession, AttendanceRecord } from '@/lib/types'
-import { Copy, Check, Play, Square, UserCheck, UserX, CheckCheck } from 'lucide-react'
+import { Copy, Check, Play, Square, UserCheck, UserX, CheckCheck, Link2 } from 'lucide-react'
 import { CodeQrImage } from '@/components/shared/CodeQrImage'
 
 export function AttendancePanel({
@@ -17,6 +17,7 @@ export function AttendancePanel({
   const [closed, setClosed] = useState(!!session.closed_at)
   const [records, setRecords] = useState<AttendanceRecord[]>(initialRecords)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -87,6 +88,13 @@ export function AttendancePanel({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function copyLink() {
+    const url = `${window.location.origin}/qr/${session.session_code}`
+    navigator.clipboard.writeText(url)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
   const pending = records.filter((r) => r.status === 'pending')
   const approved = records.filter((r) => r.status === 'approved')
   const rejected = records.filter((r) => r.status === 'rejected')
@@ -102,6 +110,9 @@ export function AttendancePanel({
           </button>
         </div>
         <CodeQrImage code={session.session_code} size={130} className="mt-1" />
+        <button onClick={copyLink} className="flex items-center gap-1.5 text-sm font-semibold bg-white/15 px-4 py-2 rounded-full hover:bg-white/25 transition mt-1">
+          <Link2 size={15} /> {linkCopied ? 'تم النسخ ✓' : 'نسخ رابط تسجيل الحضور'}
+        </button>
         <div className="flex items-center gap-2 mt-2">
           <span className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-ruwad-lime' : 'bg-white/40'}`} />
           <span className="text-sm">{closed ? 'مغلقة' : isActive ? 'نشطة الآن' : 'لم تُفعَّل بعد'}</span>

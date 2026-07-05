@@ -249,6 +249,7 @@ export interface Assignment {
   due_date: string | null
   is_active: boolean
   created_at: string
+  assignment_code: string
 }
 
 export interface AssignmentSubmission {

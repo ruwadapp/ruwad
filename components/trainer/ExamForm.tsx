@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Exam, Course } from '@/lib/types'
-import { CodeQrImage } from '@/components/shared/CodeQrImage'
+import { ShareCodeBlock } from '@/components/shared/ShareCodeBlock'
 
 interface ExamFormProps {
   initialExam?: Exam
@@ -90,14 +90,11 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
       {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
 
       {initialExam && (
-        <div className="flex items-center justify-between bg-ruwad-blue/5 rounded-ruwad-sm px-4 py-3 gap-4">
-          <div>
-            <p className="text-sm font-medium text-ruwad-navy">كود الانضمام لهذا الامتحان</p>
-            <p className="text-xs text-ruwad-navy/50">شارك هذا الكود أو رمز QR مع طلابك للدخول مباشرة</p>
-            <p className="text-2xl font-mono font-bold text-ruwad-blue tracking-widest mt-1">{initialExam.exam_code}</p>
-          </div>
-          <CodeQrImage code={initialExam.exam_code} size={90} />
-        </div>
+        <ShareCodeBlock
+          code={initialExam.exam_code}
+          title="كود الانضمام لهذا الامتحان"
+          description="شارك هذا الكود أو رمز QR أو الرابط مع طلابك للدخول مباشرة"
+        />
       )}
 
       <div className="flex flex-col gap-1.5">

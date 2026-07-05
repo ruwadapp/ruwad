@@ -39,6 +39,9 @@ export default async function QrResolverPage({ params }: { params: Promise<{ cod
     case 'exam': {
       redirect(`/my-exams/${match.entity_id}`)
     }
+    case 'assignment': {
+      redirect(`/my-assignments/${match.entity_id}`)
+    }
     case 'presentation_session': {
       await supabase.from('presentation_participants').upsert(
         { session_id: match.entity_id, student_id: user.id },

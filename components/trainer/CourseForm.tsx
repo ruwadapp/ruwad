@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Course } from '@/lib/types'
-import { CodeQrImage } from '@/components/shared/CodeQrImage'
+import { ShareCodeBlock } from '@/components/shared/ShareCodeBlock'
 
 interface CourseFormProps {
   initialCourse?: Course
@@ -69,14 +69,11 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
       )}
 
       {initialCourse && (
-        <div className="flex items-center justify-between bg-ruwad-blue/5 rounded-ruwad-sm px-4 py-3 gap-4">
-          <div>
-            <p className="text-sm font-medium text-ruwad-navy">كود الانضمام لهذا الكورس</p>
-            <p className="text-xs text-ruwad-navy/50">شارك هذا الكود مع طلابك ليطلبوا الالتحاق</p>
-            <p className="text-2xl font-mono font-bold text-ruwad-blue tracking-widest mt-1">{initialCourse.course_code}</p>
-          </div>
-          <CodeQrImage code={initialCourse.course_code} size={90} />
-        </div>
+        <ShareCodeBlock
+          code={initialCourse.course_code}
+          title="كود الانضمام لهذا الكورس"
+          description="شارك هذا الكود أو رمز QR أو الرابط مع طلابك ليطلبوا الالتحاق"
+        />
       )}
 
       <div className="flex flex-col gap-1.5">
