@@ -33,7 +33,7 @@ export function AuthHero() {
 
           <div className="absolute bottom-0 right-10 w-48 bg-ruwad-lime rounded-ruwad shadow-ruwad-lg p-4 -rotate-2">
             <p className="text-xs text-ruwad-navy/70 mb-1">تحدٍ جديد ⚡</p>
-            <p className="font-bold text-ruwad-navy text-sm">حدّاهم الآن</p>
+            <p className="font-bold text-ruwad-navy text-sm">تحدّاهم الآن</p>
           </div>
         </div>
       </div>

@@ -22,7 +22,7 @@ export default async function ChallengesPage() {
           <div className="flex items-center gap-3">
             <Trophy size={32} className="text-ruwad-navy" />
             <div>
-              <h2 className="font-bold text-ruwad-navy text-lg">حدّاهم!</h2>
+              <h2 className="font-bold text-ruwad-navy text-lg">تحدّاهم!</h2>
               <p className="text-sm text-ruwad-navy/70">حفّز طلابك بتحديات تنافسية مع ترتيب فوري</p>
             </div>
           </div>
