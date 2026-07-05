@@ -81,9 +81,14 @@ export function LoginForm() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-ruwad-navy">
-              كلمة المرور
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium text-ruwad-navy">
+                كلمة المرور
+              </label>
+              <Link href="/forgot-password" className="text-xs font-semibold text-ruwad-blue hover:underline">
+                نسيت كلمة المرور؟
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
