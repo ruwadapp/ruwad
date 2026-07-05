@@ -54,24 +54,31 @@ export function PushNotificationSetup({ compact = false, variant = 'dark' }: { c
 
     try {
       const reg = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
       const existing = await reg.pushManager.getSubscription()
-      if (existing && currentPermission === 'granted') {
-        // الاشتراك المخزّن محلياً قد يكون منتهي الصلاحية على مستوى خدمة الإشعارات (FCM/APNs)
-        // دون أن يعرف المتصفح بذلك — فنجدّده بصمت لضمان بقاء نقطة الاتصال صالحة
-        try {
-          await existing.unsubscribe()
-          const fresh = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-          })
-          await saveSubscription(fresh)
+
+      if (currentPermission === 'granted') {
+        if (existing) {
+          // يوجد اشتراك محلي صالح — نتأكد فقط أنه مسجّل في قاعدة البيانات (دون إلغائه/تدميره)
+          await saveSubscription(existing)
           setSubscribed(true)
-        } catch (err) {
-          console.error('Push renewal error:', err)
-          setSubscribed(true)
+        } else {
+          // الإذن ممنوح لكن لا يوجد اشتراك (قد يكون أُبطل على مستوى الخدمة) — نُنشئ اشتراكاً جديداً بصمت
+          try {
+            const fresh = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            })
+            await saveSubscription(fresh)
+            setSubscribed(true)
+          } catch (err) {
+            console.error('Push auto-subscribe error:', err)
+            setSubscribed(false)
+          }
         }
       } else {
-        setSubscribed(!!existing && currentPermission === 'granted')
+        // الإذن لم يُطلب بعد (default) — نُظهر زر التفعيل
+        setSubscribed(false)
       }
     } catch (err) {
       console.error('Push status check error:', err)
