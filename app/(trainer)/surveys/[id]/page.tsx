@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { SurveyForm } from '@/components/trainer/SurveyForm'
 import { SurveyQuestionManager } from '@/components/trainer/SurveyQuestionManager'
+import { SurveyExportButton } from '@/components/trainer/SurveyExportButton'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { BarChart3 } from 'lucide-react'
 
@@ -31,6 +32,7 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
       <Header title={survey.title} />
       <main className="p-6 flex flex-col gap-6">
         <div className="flex justify-end gap-3">
+          <SurveyExportButton survey={survey} questions={questions ?? []} sections={sections ?? []} />
           <DeleteButton table="surveys" id={id} redirectTo="/surveys" label="حذف الاستبيان" />
           <Link
             href={`/surveys/${id}/results`}

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
+import { SurveyImportButton } from '@/components/trainer/SurveyImportButton'
 import { Plus, ClipboardList, MessageSquare, Pencil, BarChart3 } from 'lucide-react'
 
 export default async function SurveysPage() {
@@ -18,7 +19,8 @@ export default async function SurveysPage() {
     <>
       <Header title="الاستبيانات" />
       <main className="p-6 flex flex-col gap-6">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <SurveyImportButton />
           <Link
             href="/surveys/new"
             className="bg-ruwad-blue text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad flex items-center gap-2"
