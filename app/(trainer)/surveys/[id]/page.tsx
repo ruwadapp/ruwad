@@ -21,11 +21,10 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
 
   if (!survey) notFound()
 
-  const { data: questions } = await supabase
-    .from('survey_questions')
-    .select('*')
-    .eq('survey_id', id)
-    .order('order_index', { ascending: true })
+  const [{ data: questions }, { data: sections }] = await Promise.all([
+    supabase.from('survey_questions').select('*').eq('survey_id', id).order('order_index', { ascending: true }),
+    supabase.from('survey_sections').select('*').eq('survey_id', id).order('order_index', { ascending: true }),
+  ])
 
   return (
     <>
@@ -41,7 +40,7 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
           </Link>
         </div>
         <SurveyForm initialSurvey={survey} />
-        <SurveyQuestionManager surveyId={id} questions={questions ?? []} />
+        <SurveyQuestionManager surveyId={id} questions={questions ?? []} initialSections={sections ?? []} />
       </main>
     </>
   )

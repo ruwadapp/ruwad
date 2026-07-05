@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { SurveyResultsCharts } from '@/components/trainer/SurveyResultsCharts'
+import { SurveyResultsView } from '@/components/trainer/SurveyResultsView'
 import type { SurveyQuestion } from '@/lib/types'
 
 export default async function SurveyResultsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,16 +18,11 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
 
   if (!survey) notFound()
 
-  const { data: questions } = await supabase
-    .from('survey_questions')
-    .select('*')
-    .eq('survey_id', id)
-    .order('order_index', { ascending: true })
-
-  const { data: responses } = await supabase
-    .from('survey_responses')
-    .select('*')
-    .eq('survey_id', id)
+  const [{ data: questions }, { data: sections }, { data: responses }] = await Promise.all([
+    supabase.from('survey_questions').select('*').eq('survey_id', id).order('order_index', { ascending: true }),
+    supabase.from('survey_sections').select('*').eq('survey_id', id).order('order_index', { ascending: true }),
+    supabase.from('survey_responses').select('*, respondent:profiles!respondent_id(full_name)').eq('survey_id', id).order('submitted_at', { ascending: false }),
+  ])
 
   const totalResponses = responses?.length ?? 0
 
@@ -42,7 +37,7 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
         return { label: String(val), count: nums.filter((n) => n === val).length }
       })
       const average = nums.length ? nums.reduce((s, n) => s + n, 0) / nums.length : 0
-      return { id: q.id, text: q.question_text, type: q.question_type, average, distribution }
+      return { id: q.id, text: q.question_text, type: q.question_type, average, distribution, answeredCount: allAnswers.length, max }
     }
 
     if (q.question_type === 'multiple_choice') {
@@ -50,7 +45,7 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
         label: opt,
         count: allAnswers.filter((a) => a === opt).length,
       }))
-      return { id: q.id, text: q.question_text, type: q.question_type, distribution }
+      return { id: q.id, text: q.question_text, type: q.question_type, distribution, answeredCount: allAnswers.length }
     }
 
     if (q.question_type === 'checkbox') {
@@ -58,7 +53,7 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
         label: opt,
         count: allAnswers.filter((a) => Array.isArray(a) && a.includes(opt)).length,
       }))
-      return { id: q.id, text: q.question_text, type: q.question_type, distribution }
+      return { id: q.id, text: q.question_text, type: q.question_type, distribution, answeredCount: allAnswers.length }
     }
 
     if (q.question_type === 'yes_no') {
@@ -66,14 +61,24 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
         label: opt,
         count: allAnswers.filter((a) => a === opt).length,
       }))
-      return { id: q.id, text: q.question_text, type: q.question_type, distribution }
+      return { id: q.id, text: q.question_text, type: q.question_type, distribution, answeredCount: allAnswers.length }
     }
 
-    // text
+    if (q.question_type === 'text' && q.text_format === 'number') {
+      const nums = allAnswers.map((a) => Number(a)).filter((n) => !isNaN(n))
+      const average = nums.length ? nums.reduce((s, n) => s + n, 0) / nums.length : 0
+      const min = nums.length ? Math.min(...nums) : 0
+      const max = nums.length ? Math.max(...nums) : 0
+      return { id: q.id, text: q.question_text, type: q.question_type, textFormat: 'number', average, min, max, answeredCount: allAnswers.length, textAnswers: allAnswers.map(String) }
+    }
+
+    // text (free) أو date
     return {
       id: q.id,
       text: q.question_text,
       type: q.question_type,
+      textFormat: q.text_format ?? 'text',
+      answeredCount: allAnswers.length,
       textAnswers: allAnswers as string[],
     }
   })
@@ -82,7 +87,7 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
     <>
       <Header title={`نتائج: ${survey.title}`} />
       <main className="p-6 flex flex-col gap-6">
-        <div className="bg-white rounded-ruwad shadow-card p-6 flex items-center justify-between">
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="text-sm text-ruwad-navy/60">إجمالي الردود</p>
             <p className="text-2xl font-bold text-ruwad-navy">{totalResponses}</p>
@@ -99,7 +104,14 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
             لا توجد ردود بعد. شارك رابط الاستبيان للحصول على ردود.
           </div>
         ) : (
-          <SurveyResultsCharts stats={stats} totalResponses={totalResponses} />
+          <SurveyResultsView
+            stats={stats}
+            totalResponses={totalResponses}
+            questions={questions ?? []}
+            sections={sections ?? []}
+            responses={responses ?? []}
+            isAnonymous={survey.is_anonymous}
+          />
         )}
       </main>
     </>

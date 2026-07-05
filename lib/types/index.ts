@@ -130,6 +130,13 @@ export interface ExamSubmission {
 // ======= SURVEYS =======
 export type SurveyQuestionType = 'rating' | 'multiple_choice' | 'checkbox' | 'text' | 'yes_no' | 'scale'
 
+export interface SurveySection {
+  id: string
+  survey_id: string
+  title: string
+  order_index: number
+}
+
 export interface SurveyQuestion {
   id: string
   survey_id: string
@@ -138,6 +145,10 @@ export interface SurveyQuestion {
   options: string[]
   is_required: boolean
   order_index: number
+  section_id: string | null
+  condition_question_id: string | null
+  condition_value: string | null
+  text_format: 'text' | 'number' | 'date' | null
 }
 
 export interface Survey {
@@ -152,6 +163,7 @@ export interface Survey {
   created_at: string
   ends_at: string | null
   questions?: SurveyQuestion[]
+  sections?: SurveySection[]
 }
 
 export interface SurveyResponse {

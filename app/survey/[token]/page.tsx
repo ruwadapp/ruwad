@@ -17,15 +17,14 @@ export default async function PublicSurveyPage({ params }: { params: Promise<{ t
 
   if (!survey) notFound()
 
-  const { data: questions } = await supabase
-    .from('survey_questions')
-    .select('*')
-    .eq('survey_id', survey.id)
-    .order('order_index', { ascending: true })
+  const [{ data: questions }, { data: sections }] = await Promise.all([
+    supabase.from('survey_questions').select('*').eq('survey_id', survey.id).order('order_index', { ascending: true }),
+    supabase.from('survey_sections').select('*').eq('survey_id', survey.id).order('order_index', { ascending: true }),
+  ])
 
   return (
     <main className="min-h-screen bg-[#F5F6FA] p-6" dir="rtl">
-      <SurveyResponseForm survey={survey} questions={questions ?? []} />
+      <SurveyResponseForm survey={survey} questions={questions ?? []} sections={sections ?? []} />
     </main>
   )
 }
