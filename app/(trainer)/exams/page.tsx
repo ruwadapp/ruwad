@@ -72,7 +72,7 @@ export default async function ExamsPage() {
               <EntityCard
                 key={exam.id}
                 href={`/exams/${exam.id}`}
-                gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                gradient={(['blue', 'navy', 'lime', 'blueReverse'] as const)[idx % 4]}
                 title={exam.title}
                 description={exam.description}
                 badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}

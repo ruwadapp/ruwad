@@ -39,7 +39,7 @@ export default async function CoursesPage() {
               <EntityCard
                 key={course.id}
                 href={`/courses/${course.id}`}
-                gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                gradient={(['blue', 'navy', 'lime', 'blueReverse'] as const)[idx % 4]}
                 title={course.title}
                 description={course.description}
                 badge={{

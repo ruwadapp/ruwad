@@ -4,9 +4,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, Link2, Check, FileText, Users, BookOpen, Clock, type LucideIcon } from 'lucide-react'
 
-export type EntityCardGradient = 'blue' | 'navy' | 'lime' | 'sky'
+// حصراً التدرّجان المعتمدان رسمياً في الهوية البصرية (--gradient-primary و --gradient-dark)،
+// بالإضافة لِلَون الليموني كخلفية صلبة (بلا مزج مع الأزرق) — لأن مزج الأزرق بالليموني في تدرّج واحد
+// يُولّد درجات وسيطة مخضّرة غير موجودة في لوحة الهوية إطلاقاً، وهو ما تمنعه قواعد التصميم صراحة
+// (الليموني "لمسة" وليس تدرّجاً). لا نخترع أي مزيج ألوان خارج ما هو معتمد رسمياً.
+export type EntityCardGradient = 'blue' | 'navy' | 'lime' | 'blueReverse'
 
 const GRADIENTS: Record<EntityCardGradient, { bg: string; text: string; subtext: string; chip: string; chipText: string; iconBg: string; actionHover: string }> = {
+  // التدرّج الأساسي المعتمد: --gradient-primary
   blue: {
     bg: 'linear-gradient(135deg, #3A4EFB 0%, #33A4FA 100%)',
     text: 'text-white',
@@ -16,17 +21,9 @@ const GRADIENTS: Record<EntityCardGradient, { bg: string; text: string; subtext:
     iconBg: 'bg-white/15',
     actionHover: 'hover:bg-white/20',
   },
-  navy: {
-    bg: 'linear-gradient(135deg, #252943 0%, #3A4EFB 100%)',
-    text: 'text-white',
-    subtext: 'text-white/70',
-    chip: 'bg-white/15',
-    chipText: 'text-white',
-    iconBg: 'bg-white/10',
-    actionHover: 'hover:bg-white/15',
-  },
-  sky: {
-    bg: 'linear-gradient(135deg, #33A4FA 0%, #3A4EFB 60%, #252943 100%)',
+  // نفس التدرّج الأساسي بالاتجاه المعكوس — للتنويع البصري دون إدخال أي لون جديد
+  blueReverse: {
+    bg: 'linear-gradient(135deg, #33A4FA 0%, #3A4EFB 100%)',
     text: 'text-white',
     subtext: 'text-white/75',
     chip: 'bg-white/20',
@@ -34,14 +31,25 @@ const GRADIENTS: Record<EntityCardGradient, { bg: string; text: string; subtext:
     iconBg: 'bg-white/15',
     actionHover: 'hover:bg-white/20',
   },
+  // التدرّج الداكن المعتمد: --gradient-dark
+  navy: {
+    bg: 'linear-gradient(180deg, #252943 0%, #1a1e33 100%)',
+    text: 'text-white',
+    subtext: 'text-white/60',
+    chip: 'bg-white/15',
+    chipText: 'text-white',
+    iconBg: 'bg-white/10',
+    actionHover: 'hover:bg-white/15',
+  },
+  // لون الليموني كخلفية صلبة واحدة (Accent) بلا تدرّج — كما تنص الهوية: الليموني "لمسة" لا مزيج
   lime: {
-    bg: 'linear-gradient(135deg, #33A4FA 0%, #E3FF3B 100%)',
+    bg: '#E3FF3B',
     text: 'text-ruwad-navy',
     subtext: 'text-ruwad-navy/70',
     chip: 'bg-ruwad-navy/10',
     chipText: 'text-ruwad-navy',
-    iconBg: 'bg-white/40',
-    actionHover: 'hover:bg-white/40',
+    iconBg: 'bg-white/50',
+    actionHover: 'hover:bg-white/50',
   },
 }
 
@@ -119,7 +127,7 @@ export function EntityCard({
       tabIndex={0}
       onClick={goToContent}
       onKeyDown={handleKeyDown}
-      style={{ backgroundImage: style.bg }}
+      style={{ background: style.bg }}
       className="relative overflow-hidden rounded-ruwad shadow-card hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all cursor-pointer p-4 flex flex-col gap-2.5 min-h-0"
     >
       <div className="absolute -top-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />

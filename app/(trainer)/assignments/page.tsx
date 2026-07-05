@@ -69,7 +69,7 @@ export default async function AssignmentsPage() {
                 <EntityCard
                   key={a.id}
                   href={`/assignments/${a.id}`}
-                  gradient={(['blue', 'sky', 'navy', 'lime'] as const)[idx % 4]}
+                  gradient={(['blue', 'navy', 'lime', 'blueReverse'] as const)[idx % 4]}
                   title={a.title}
                   description={a.description}
                   stats={[
