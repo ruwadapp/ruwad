@@ -54,3 +54,23 @@ textarea:focus-visible {
 /* إخفاء شريط التمرير بصرياً مع بقاء السحب يعمل (لشريط التنقّل العائم في الموبايل) */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== أنيميشن صفحة الاستبيان العامة ===== */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-16px, 20px) scale(1.08); }
+}
+.animate-blob-float {
+  animation: blobFloat 12s ease-in-out infinite;
+}
+.animate-blob-float-slow {
+  animation: blobFloat 18s ease-in-out infinite reverse;
+}

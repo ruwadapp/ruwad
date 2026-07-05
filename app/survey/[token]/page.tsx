@@ -23,8 +23,16 @@ export default async function PublicSurveyPage({ params }: { params: Promise<{ t
   ])
 
   return (
-    <main className="min-h-screen bg-[#F5F6FA] p-6" dir="rtl">
-      <SurveyResponseForm survey={survey} questions={questions ?? []} sections={sections ?? []} />
+    <main className="relative min-h-screen overflow-hidden bg-[#F5F6FA]" dir="rtl">
+      {/* خلفية متدرجة وفقاعات ضوء متحركة بألوان الهوية فقط */}
+      <div className="fixed inset-0 -z-10" style={{ backgroundImage: 'linear-gradient(180deg, #252943 0%, #1a1e33 38%, #F5F6FA 38%)' }} />
+      <div className="fixed -top-20 -right-24 w-96 h-96 bg-ruwad-blue/30 rounded-full blur-3xl animate-blob-float -z-10" />
+      <div className="fixed top-10 -left-20 w-80 h-80 bg-ruwad-lime/15 rounded-full blur-3xl animate-blob-float-slow -z-10" />
+      <div className="fixed top-60 right-1/3 w-64 h-64 bg-ruwad-blue-light/25 rounded-full blur-3xl animate-blob-float -z-10" />
+
+      <div className="relative p-4 sm:p-6">
+        <SurveyResponseForm survey={survey} questions={questions ?? []} sections={sections ?? []} />
+      </div>
     </main>
   )
 }
