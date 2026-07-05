@@ -4,9 +4,9 @@ import { createServerClient } from '@supabase/ssr'
 
 const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
-  '/challenges', '/assignments', '/attendance', '/badges', '/analytics', '/presentations', '/institute',
+  '/challenges', '/assignments', '/attendance', '/badges', '/analytics', '/presentations', '/institute', '/posts',
 ]
-const STUDENT_ROUTES = ['/home', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute', '/profile']
+const STUDENT_ROUTES = ['/home', '/rawaq', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute', '/profile', '/my-badges', '/my-certificates']
 const INSTITUTE_ROUTES = ['/org']
 const SUPERADMIN_ROUTES = ['/admin']
 

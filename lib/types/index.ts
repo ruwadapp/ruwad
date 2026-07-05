@@ -419,3 +419,23 @@ export interface BadgeApproval {
   badge?: Badge
   student?: { full_name: string }
 }
+
+// ======= الرواق (متابعة المدربين ومنشوراتهم) =======
+export type PostCardType = 'course' | 'exam' | 'assignment' | 'challenge' | 'survey'
+
+export interface TrainerFollow {
+  id: string
+  student_id: string
+  trainer_id: string
+  created_at: string
+}
+
+export interface TrainerPost {
+  id: string
+  trainer_id: string
+  content: string
+  card_type: PostCardType | null
+  card_ref_id: string | null
+  created_at: string
+  trainer?: { full_name: string; avatar_url: string | null; bio: string | null }
+}
