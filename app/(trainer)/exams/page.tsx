@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EntityCard } from '@/components/shared/EntityCard'
-import { Plus, FileText, Users, Zap, Award } from 'lucide-react'
+import { Plus, FileText, Zap, Award } from 'lucide-react'
 
 export default async function ExamsPage() {
   const supabase = await createServerSupabaseClient()
@@ -77,8 +77,8 @@ export default async function ExamsPage() {
                 description={exam.description}
                 badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}
                 stats={[
-                  { icon: FileText, label: `${exam.questions?.[0]?.count ?? 0} سؤال` },
-                  { icon: Users, label: `${exam.exam_submissions?.[0]?.count ?? 0} مشارك` },
+                  { icon: 'file', label: `${exam.questions?.[0]?.count ?? 0} سؤال` },
+                  { icon: 'users', label: `${exam.exam_submissions?.[0]?.count ?? 0} مشارك` },
                 ]}
                 shareCode={exam.exam_code}
                 deleteTable="exams"

@@ -17,7 +17,7 @@ export function AttendanceCheckIn() {
   useEffect(() => {
     if (!recordId) return
     const channel = supabase
-      .channel(`attendance_record:${recordId}`)
+      .channel(`attendance_record:${recordId}:${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'attendance_records', filter: `id=eq.${recordId}` },

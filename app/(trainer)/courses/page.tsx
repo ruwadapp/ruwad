@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EntityCard } from '@/components/shared/EntityCard'
-import { Plus, BookOpen, Users } from 'lucide-react'
+import { Plus, BookOpen } from 'lucide-react'
 
 export default async function CoursesPage() {
   const supabase = await createServerSupabaseClient()
@@ -47,8 +47,8 @@ export default async function CoursesPage() {
                   active: course.status === 'published',
                 }}
                 stats={[
-                  { icon: BookOpen, label: `${course.lectures?.[0]?.count ?? 0} محاضرة` },
-                  { icon: Users, label: `${course.enrollments?.[0]?.count ?? 0} طالب` },
+                  { icon: 'book', label: `${course.lectures?.[0]?.count ?? 0} محاضرة` },
+                  { icon: 'users', label: `${course.enrollments?.[0]?.count ?? 0} طالب` },
                 ]}
                 shareCode={course.course_code}
                 deleteTable="courses"

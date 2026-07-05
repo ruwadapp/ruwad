@@ -46,7 +46,7 @@ export function StudentLiveView({
 
   useEffect(() => {
     const channel = supabase
-      .channel(`present-student:${session.id}`)
+      .channel(`present-student:${session.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'presentation_sessions', filter: `id=eq.${session.id}` }, (payload) => {
         setSession(payload.new as PresentationSession)
       })

@@ -68,16 +68,24 @@ export function NotificationBell() {
   useEffect(() => {
     load()
     let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
+      if (!user || cancelled) return
+      // اسم قناة فريد لكل تركيب يمنع خطأ "cannot add postgres_changes callbacks after subscribe()"
+      // الذي يحدث عند إعادة استخدام قناة تحمل نفس الاسم وسبق أن استُدعي عليها subscribe()
       channel = supabase
-        .channel(`notifications:${user.id}`)
+        .channel(`notifications:${user.id}:${Math.random().toString(36).slice(2)}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev])
         })
         .subscribe()
     })
-    return () => { if (channel) supabase.removeChannel(channel) }
+
+    return () => {
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [load, supabase])
 
   useEffect(() => {

@@ -58,7 +58,7 @@ export function ChallengeHostLiveView({
     loadAnsweredCount()
 
     const channel = supabase
-      .channel(`challenge-host:${session.id}`)
+      .channel(`challenge-host:${session.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_session_participants', filter: `session_id=eq.${session.id}` }, () => loadParticipants())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'challenge_live_answers', filter: `session_id=eq.${session.id}` }, () => loadAnsweredCount())
       .subscribe()

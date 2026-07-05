@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Pencil, Trash2, Link2, Check, type LucideIcon } from 'lucide-react'
+import { Pencil, Trash2, Link2, Check, FileText, Users, BookOpen, Clock, type LucideIcon } from 'lucide-react'
 
 export type EntityCardGradient = 'blue' | 'navy' | 'lime' | 'sky'
 
@@ -45,7 +45,17 @@ const GRADIENTS: Record<EntityCardGradient, { bg: string; text: string; subtext:
   },
 }
 
-interface StatItem { icon: LucideIcon; label: string }
+// نمرّر اسم الأيقونة كنص (لا كمكوّن دالة) لأن تمرير الدوال من Server Component إلى Client Component ممنوع في Next.js
+export type StatIconName = 'file' | 'users' | 'book' | 'clock'
+
+const STAT_ICONS: Record<StatIconName, LucideIcon> = {
+  file: FileText,
+  users: Users,
+  book: BookOpen,
+  clock: Clock,
+}
+
+interface StatItem { icon: StatIconName; label: string }
 
 interface EntityCardProps {
   href: string
@@ -130,7 +140,7 @@ export function EntityCard({
       {stats.length > 0 && (
         <div className="relative flex items-center gap-3 flex-wrap">
           {stats.map((s, i) => {
-            const Icon = s.icon
+            const Icon = STAT_ICONS[s.icon]
             return (
               <span key={i} className={`flex items-center gap-1 text-xs ${style.subtext}`}>
                 <Icon size={13} /> {s.label}

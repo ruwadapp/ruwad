@@ -73,8 +73,8 @@ export default async function AssignmentsPage() {
                   title={a.title}
                   description={a.description}
                   stats={[
-                    { icon: Users, label: `${subCount} تسليم` },
-                    ...(a.due_date ? [{ icon: Clock, label: new Date(a.due_date).toLocaleDateString('ar') }] : []),
+                    { icon: 'users', label: `${subCount} تسليم` },
+                    ...(a.due_date ? [{ icon: 'clock' as const, label: new Date(a.due_date).toLocaleDateString('ar') }] : []),
                   ]}
                   shareCode={a.assignment_code}
                   deleteTable="assignments"

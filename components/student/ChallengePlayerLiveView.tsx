@@ -65,7 +65,7 @@ export function ChallengePlayerLiveView({ session: initialSession }: { session: 
 
   useEffect(() => {
     const channel = supabase
-      .channel(`challenge-player:${session.id}`)
+      .channel(`challenge-player:${session.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'challenge_sessions', filter: `id=eq.${session.id}` }, (payload) => {
         setSession(payload.new as ChallengeSession)
       })

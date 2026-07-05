@@ -48,7 +48,7 @@ export function EnrollmentRequests({ courses, initial }: { courses: CourseLite[]
   useEffect(() => {
     if (courseIds.length === 0) return
     const channel = supabase
-      .channel('enrollments-requests')
+      .channel(`enrollments-requests:${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'enrollments' },

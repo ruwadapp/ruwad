@@ -43,7 +43,7 @@ export function PresenterLiveView({
     loadParticipants()
 
     const channel = supabase
-      .channel(`present-host:${session.id}`)
+      .channel(`present-host:${session.id}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'presentation_responses', filter: `session_id=eq.${session.id}` }, () => loadResponses())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'presentation_participants', filter: `session_id=eq.${session.id}` }, () => loadParticipants())
       .subscribe()

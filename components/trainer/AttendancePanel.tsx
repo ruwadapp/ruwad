@@ -28,7 +28,7 @@ export function AttendancePanel({
 
   useEffect(() => {
     const channel = supabase
-      .channel(`attendance:${session.id}`)
+      .channel(`attendance:${session.id}:${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'attendance_records', filter: `session_id=eq.${session.id}` },
