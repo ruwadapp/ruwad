@@ -102,7 +102,7 @@ export function SurveyResponseForm({
   }
 
   const TopBrandBar = (
-    <div className="flex items-center justify-between max-w-2xl mx-auto mb-5 px-1">
+    <div className="flex items-center justify-between max-w-2xl mx-auto mb-5 px-3 py-2.5 rounded-full bg-ruwad-navy shadow-card">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-ruwad-sm bg-ruwad-lime flex items-center justify-center font-extrabold text-ruwad-navy text-sm shrink-0">ر</div>
         <span className="text-white font-bold tracking-tight">رُوّاد</span>
@@ -340,9 +340,9 @@ export function SurveyResponseForm({
           {loading ? 'جارٍ الإرسال...' : 'إرسال الردّ'}
         </button>
 
-        <p className="text-center text-xs text-white/70">
-          مدعوم بواسطة <span className="font-bold text-white">رُوّاد</span> — منصة تعليمية متكاملة ·{' '}
-          <Link href="/register" className="underline hover:text-ruwad-lime transition">أنشئ استبيانك الخاص</Link>
+        <p className="text-center text-xs text-ruwad-navy/50">
+          مدعوم بواسطة <span className="font-bold text-ruwad-navy">رُوّاد</span> — منصة تعليمية متكاملة ·{' '}
+          <Link href="/register" className="underline text-ruwad-blue hover:text-ruwad-navy transition">أنشئ استبيانك الخاص</Link>
         </p>
       </form>
     </div>
