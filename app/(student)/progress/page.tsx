@@ -1,19 +1,8 @@
-import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { BadgeCard } from '@/components/shared/BadgeCard'
-import { BadgeShareCard } from '@/components/student/BadgeShareCard'
+import { StudentProgressTabs } from '@/components/student/StudentProgressTabs'
 import { ExamProgressChart } from '@/components/student/ExamProgressChart'
-import type { Badge, BadgeRarity } from '@/lib/types'
-import { Award, BookOpen, FileText, CalendarCheck, Trophy, FileCheck, ShieldCheck } from 'lucide-react'
-
-const RARITY_ORDER: BadgeRarity[] = ['legendary', 'epic', 'rare', 'common']
-const RARITY_TITLES: Record<BadgeRarity, string> = {
-  legendary: '🏆 فريدة',
-  epic: '💎 أسطورية',
-  rare: '⭐ نادرة',
-  common: '🔰 عادية',
-}
+import { Award, BookOpen, FileText, CalendarCheck, Trophy, FileCheck } from 'lucide-react'
 
 export default async function ProgressPage() {
   const supabase = await createServerSupabaseClient()
@@ -21,19 +10,14 @@ export default async function ProgressPage() {
   const uid = user!.id
 
   const [
-    { data: profile },
-    { data: allBadges },
-    { data: earned },
     { data: examSubmissions },
     { data: enrollments },
     { data: challengeSubmissions },
     { data: assignmentSubmissions },
     { data: attendanceStatsArr },
-    { data: certificates },
+    { data: earnedCount },
+    { data: allBadgesCount },
   ] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', uid).single(),
-    supabase.from('badges').select('*').order('condition_value', { ascending: true }),
-    supabase.from('student_badges').select('badge_id').eq('student_id', uid),
     supabase.from('exam_submissions')
       .select('*, exam:exams(title, total_marks)')
       .eq('student_id', uid).not('submitted_at', 'is', null)
@@ -42,19 +26,9 @@ export default async function ProgressPage() {
     supabase.from('challenge_submissions').select('*, challenge:challenges(title)').eq('student_id', uid),
     supabase.from('assignment_submissions').select('*, assignment:assignments(title, total_marks)').eq('student_id', uid),
     supabase.rpc('get_student_attendance_stats', { p_student_id: uid }),
-    supabase.from('certificates').select('*, course:courses(title)').eq('student_id', uid).order('issued_at', { ascending: false }),
+    supabase.from('student_badges').select('id', { count: 'exact', head: true }).eq('student_id', uid),
+    supabase.from('badges').select('id', { count: 'exact', head: true }),
   ])
-
-  const earnedIds = new Set((earned ?? []).map((e) => e.badge_id))
-  const limitedBadgeIds = (allBadges ?? []).filter((b) => b.max_winners).map((b) => b.id)
-  const countsMap = new Map<string, number>()
-  if (limitedBadgeIds.length > 0) {
-    const { data: counts } = await supabase.from('student_badges').select('badge_id').in('badge_id', limitedBadgeIds)
-    for (const row of counts ?? []) countsMap.set(row.badge_id, (countsMap.get(row.badge_id) ?? 0) + 1)
-  }
-
-  const grouped: Record<BadgeRarity, Badge[]> = { legendary: [], epic: [], rare: [], common: [] }
-  for (const badge of allBadges ?? []) grouped[badge.rarity as BadgeRarity].push(badge)
 
   const attendance = attendanceStatsArr?.[0] as { total_sessions: number; attended: number; attendance_rate: number } | undefined
   const examChartData = (examSubmissions ?? []).map((s, i) => ({
@@ -70,8 +44,10 @@ export default async function ProgressPage() {
 
   return (
     <>
-      <Header title="تقدّمي والشارات" />
-      <main className="p-6 flex flex-col gap-8">
+      <Header title="تقدّمي" />
+      <main className="p-6 flex flex-col gap-6">
+        <StudentProgressTabs />
+
         {/* ===== ملخّص سريع ===== */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
@@ -92,7 +68,7 @@ export default async function ProgressPage() {
           <div className="bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5 flex flex-col gap-2 text-white">
             <Award size={20} />
             <p className="text-xs opacity-80">الشارات</p>
-            <p className="text-2xl font-bold">{earnedIds.size} / {allBadges?.length ?? 0}</p>
+            <p className="text-2xl font-bold">{earnedCount?.length ?? 0} / {allBadgesCount?.length ?? 0}</p>
           </div>
         </div>
 
@@ -164,50 +140,6 @@ export default async function ProgressPage() {
             )}
           </section>
         </div>
-
-        {/* ===== شهاداتي ===== */}
-        {certificates && certificates.length > 0 && (
-          <section className="bg-white rounded-ruwad shadow-card p-6">
-            <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-              <ShieldCheck size={20} className="text-ruwad-blue" /> شهاداتي
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {certificates.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/certificates/${c.id}`}
-                  className="flex items-center justify-between gap-3 p-4 rounded-ruwad-sm border-2 border-ruwad-lime bg-ruwad-lime/10 hover:bg-ruwad-lime/20 transition"
-                >
-                  <div>
-                    <p className="font-bold text-ruwad-navy">{c.course?.title}</p>
-                    <p className="text-xs text-ruwad-navy/50">{new Date(c.issued_at).toLocaleDateString('ar')}</p>
-                  </div>
-                  <span className="text-lg font-bold text-ruwad-navy">{Number(c.score)}%</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ===== الشارات ===== */}
-        {RARITY_ORDER.map((rarity) => (
-          grouped[rarity].length > 0 && (
-            <section key={rarity}>
-              <h2 className="text-lg font-bold text-ruwad-navy mb-4">{RARITY_TITLES[rarity]}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {grouped[rarity].map((badge) => {
-                  const earnedThis = earnedIds.has(badge.id)
-                  return (
-                    <div key={badge.id} className="flex flex-col gap-2">
-                      <BadgeCard badge={badge} earned={earnedThis} earnedCount={countsMap.get(badge.id)} />
-                      {earnedThis && <BadgeShareCard badge={badge} studentName={profile?.full_name ?? 'طالب رُوّاد'} />}
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          )
-        ))}
       </main>
     </>
   )

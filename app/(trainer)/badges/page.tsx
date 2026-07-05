@@ -2,17 +2,21 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { BadgeCard } from '@/components/shared/BadgeCard'
 import { CreateBadgeForm } from '@/components/trainer/CreateBadgeForm'
+import { BadgeApprovalsPanel } from '@/components/trainer/BadgeApprovalsPanel'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function TrainerBadgesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: badges } = await supabase
-    .from('badges')
-    .select('*')
-    .or(`trainer_id.is.null,trainer_id.eq.${user!.id}`)
-    .order('rarity', { ascending: false })
+  const [{ data: badges }, { data: approvals }] = await Promise.all([
+    supabase.from('badges').select('*').or(`trainer_id.is.null,trainer_id.eq.${user!.id}`).order('rarity', { ascending: false }),
+    supabase.from('badge_approvals')
+      .select('*, badge:badges(*), student:profiles!student_id(full_name)')
+      .eq('trainer_id', user!.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+  ])
 
   const platformBadges = (badges ?? []).filter((b) => !b.trainer_id)
   const customBadges = (badges ?? []).filter((b) => b.trainer_id)
@@ -21,8 +25,10 @@ export default async function TrainerBadgesPage() {
     <>
       <Header title="الشارات والإنجازات" />
       <main className="p-6 flex flex-col gap-8">
+        <BadgeApprovalsPanel approvals={approvals ?? []} />
+
         <p className="text-sm text-ruwad-navy/60 max-w-2xl">
-          شارات المنصة العامة تُمنح تلقائياً لكل الطلاب عند تحقيق الشرط (مثل التحاق أول كورس، أو نسبة حضور مرتفعة).
+          يستحق الطلاب الشارات تلقائياً عند تحقيق الشرط (مثل التحاق أول كورس، أو نسبة حضور مرتفعة)، لكنها تبقى معلّقة بانتظار موافقتك قبل أن تظهر لهم.
           يمكنك أيضاً إنشاء شارات خاصة بطلابك فقط.
         </p>
 

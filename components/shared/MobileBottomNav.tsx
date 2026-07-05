@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, UserCircle2,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, UserCircle2, ShieldCheck,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog,
+  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -40,7 +40,9 @@ const studentNav: NavItem[] = [
   { href: '/my-presentations', label: 'العروض', icon: 'MonitorPlay' },
   { href: '/my-assignments', label: 'واجباتي', icon: 'ListChecks' },
   { href: '/my-attendance', label: 'الحضور', icon: 'CalendarCheck' },
-  { href: '/progress', label: 'تقدّمي', icon: 'Award' },
+  { href: '/progress', label: 'تقدّمي', icon: 'BarChart3' },
+  { href: '/my-badges', label: 'شاراتي', icon: 'Award' },
+  { href: '/my-certificates', label: 'شهاداتي', icon: 'ShieldCheck' },
   { href: '/my-institute', label: 'المعهد', icon: 'Building2' },
 ]
 

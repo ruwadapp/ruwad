@@ -12,7 +12,8 @@ function destinationFor(type: string, referenceId: string | null, role: string):
     case 'challenge': return isTrainer ? `/challenges/${referenceId}` : '/my-challenges'
     case 'assignment': return isTrainer ? `/assignments/${referenceId}` : '/my-assignments'
     case 'enrollment': return isTrainer ? '/students' : '/my-courses'
-    case 'badge': case 'certificate': return '/progress'
+    case 'badge': return isTrainer ? '/badges' : '/my-badges'
+    case 'certificate': return isTrainer ? '/students' : '/my-certificates'
     case 'announcement': return isTrainer ? '/dashboard' : '/home'
     default: return isTrainer ? '/dashboard' : '/home'
   }

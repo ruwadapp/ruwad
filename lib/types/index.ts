@@ -394,3 +394,16 @@ export interface StudentBadge {
   earned_at: string
   badge?: Badge
 }
+
+export interface BadgeApproval {
+  id: string
+  student_id: string
+  badge_id: string
+  trainer_id: string
+  metric_value: number | null
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  decided_at: string | null
+  badge?: Badge
+  student?: { full_name: string }
+}

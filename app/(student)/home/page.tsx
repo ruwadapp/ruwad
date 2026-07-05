@@ -187,7 +187,7 @@ export default async function StudentHomePage() {
         {/* ===== آخر إنجاز + إجراءات سريعة ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {recentBadge ? (
-            <Link href="/progress" className="bg-ruwad-lime/20 rounded-ruwad shadow-card p-5 flex items-center gap-3 hover:shadow-ruwad transition">
+            <Link href="/my-badges" className="bg-ruwad-lime/20 rounded-ruwad shadow-card p-5 flex items-center gap-3 hover:shadow-ruwad transition">
               <span className="text-3xl">{(recentBadge.badge as unknown as { icon?: string })?.icon ?? '🏆'}</span>
               <div>
                 <p className="text-xs text-ruwad-navy/50">آخر إنجاز</p>
@@ -195,7 +195,7 @@ export default async function StudentHomePage() {
               </div>
             </Link>
           ) : (
-            <Link href="/progress" className="bg-ruwad-gray/20 rounded-ruwad shadow-card p-5 flex items-center gap-3 hover:shadow-card transition">
+            <Link href="/my-badges" className="bg-ruwad-gray/20 rounded-ruwad shadow-card p-5 flex items-center gap-3 hover:shadow-card transition">
               <Award size={28} className="text-ruwad-navy/30" />
               <div>
                 <p className="text-xs text-ruwad-navy/50">لا توجد شارات بعد</p>
