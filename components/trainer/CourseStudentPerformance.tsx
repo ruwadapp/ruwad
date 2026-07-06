@@ -2,10 +2,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Award, GraduationCap, X, CalendarCheck, FileCheck, FileText } from 'lucide-react'
+import { Award, GraduationCap, X, CalendarCheck, FileCheck, FileText, UserMinus } from 'lucide-react'
 
 interface StudentRow {
   student_id: string
+  enrollment_id: string
   full_name: string
   examAvg: number | null
   examCount: number
@@ -38,7 +39,7 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
 
     const [{ data: enrollments }, { data: exams }, { data: assignments }, { data: certs }, { data: attendanceStats }] =
       await Promise.all([
-        supabase.from('enrollments').select('student_id, student:profiles!student_id(full_name)').eq('course_id', courseId).eq('status', 'approved'),
+        supabase.from('enrollments').select('id, student_id, student:profiles!student_id(full_name)').eq('course_id', courseId).eq('status', 'approved'),
         supabase.from('exams').select('id').eq('course_id', courseId),
         supabase.from('assignments').select('id, total_marks').eq('course_id', courseId),
         supabase.from('certificates').select('id, student_id').eq('course_id', courseId),
@@ -88,6 +89,7 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
 
       return {
         student_id: e.student_id,
+        enrollment_id: e.id,
         full_name: studentName,
         examAvg,
         examCount: myExams.length,
@@ -108,6 +110,12 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
   function openIssueModal(row: StudentRow) {
     setScoreInput(String(row.overallScore))
     setIssuingFor(row)
+  }
+
+  async function removeStudent(row: StudentRow) {
+    if (!confirm(`إزالة "${row.full_name}" من هذا الكورس؟ سيفقد الوصول لمحتواه فوراً (يمكنه إعادة طلب الالتحاق لاحقاً).`)) return
+    const { error } = await supabase.from('enrollments').delete().eq('id', row.enrollment_id)
+    if (!error) setRows((prev) => prev.filter((r) => r.enrollment_id !== row.enrollment_id))
   }
 
   async function issueCertificate() {
@@ -203,15 +211,25 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
                   <td className="py-3 px-2 text-ruwad-navy">{r.assignmentCount} / {totalAssignments}</td>
                   <td className="py-3 px-2 text-ruwad-navy">{r.examCount} / {totalExams}</td>
                   <td className="py-3 px-2 text-left">
-                    {r.certificateId ? (
-                      <Link href={`/certificates/${r.certificateId}`} className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue whitespace-nowrap">
-                        <Award size={14} /> الشهادة
-                      </Link>
-                    ) : (
-                      <button onClick={() => openIssueModal(r)} className="flex items-center gap-1.5 text-xs font-semibold bg-ruwad-lime text-ruwad-navy px-3 py-1.5 rounded-full hover:opacity-80 transition whitespace-nowrap">
-                        <Award size={14} /> إصدار شهادة
+                    <div className="flex items-center justify-end gap-2">
+                      {r.certificateId ? (
+                        <Link href={`/certificates/${r.certificateId}`} className="flex items-center gap-1.5 text-xs font-semibold text-ruwad-blue whitespace-nowrap">
+                          <Award size={14} /> الشهادة
+                        </Link>
+                      ) : (
+                        <button onClick={() => openIssueModal(r)} className="flex items-center gap-1.5 text-xs font-semibold bg-ruwad-lime text-ruwad-navy px-3 py-1.5 rounded-full hover:opacity-80 transition whitespace-nowrap">
+                          <Award size={14} /> إصدار شهادة
+                        </button>
+                      )}
+                      <button
+                        onClick={() => removeStudent(r)}
+                        aria-label="إزالة من الكورس"
+                        title="إزالة من الكورس"
+                        className="text-red-400 hover:bg-red-50 p-1.5 rounded-ruwad-sm transition shrink-0"
+                      >
+                        <UserMinus size={15} />
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))}
