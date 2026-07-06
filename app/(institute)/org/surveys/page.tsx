@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
+import { SurveyImportButton } from '@/components/trainer/SurveyImportButton'
 import { Plus, ClipboardList, MessageSquare, Pencil, BarChart3 } from 'lucide-react'
 
 export default async function InstituteSurveysPage() {
@@ -20,10 +21,10 @@ export default async function InstituteSurveysPage() {
 
   return (
     <>
-      <Header title="استبيانات المعهد" />
+      <Header title="الاستبيانات" />
       <main className="p-6 flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm text-ruwad-navy/60">استبيانات ينشئها المعهد مباشرة، منفصلة عن استبيانات المدربين.</p>
+        <div className="flex justify-end gap-3">
+          <SurveyImportButton instituteId={institute.id} redirectBase="/org/surveys" />
           <Link
             href="/org/surveys/new"
             className="bg-ruwad-blue text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad flex items-center gap-2"
@@ -35,7 +36,7 @@ export default async function InstituteSurveysPage() {
         {!surveys || surveys.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center">
             <ClipboardList className="mx-auto text-ruwad-navy/30 mb-3" size={40} />
-            <p className="text-ruwad-navy/60">لا توجد استبيانات للمعهد حتى الآن.</p>
+            <p className="text-ruwad-navy/60">لا توجد استبيانات حتى الآن.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -78,3 +79,4 @@ export default async function InstituteSurveysPage() {
     </>
   )
 }
+

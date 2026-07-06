@@ -21,12 +21,14 @@ export function PostComposer({
   assignments,
   challenges,
   surveys,
+  instituteId,
 }: {
   courses: EntityOption[]
   exams: EntityOption[]
   assignments: EntityOption[]
   challenges: EntityOption[]
   surveys: EntityOption[]
+  instituteId?: string
 }) {
   const [content, setContent] = useState('')
   const [cardType, setCardType] = useState<PostCardType | null>(null)
@@ -54,12 +56,11 @@ export function PostComposer({
     setLoading(true)
     setError(null)
 
-    const { error: insertError } = await supabase.from('trainer_posts').insert({
-      trainer_id: (await supabase.auth.getUser()).data.user!.id,
-      content: content.trim(),
-      card_type: cardType,
-      card_ref_id: cardType ? cardRefId : null,
-    })
+    const { error: insertError } = await supabase.from('trainer_posts').insert(
+      instituteId
+        ? { institute_id: instituteId, content: content.trim(), card_type: cardType, card_ref_id: cardType ? cardRefId : null }
+        : { trainer_id: (await supabase.auth.getUser()).data.user!.id, content: content.trim(), card_type: cardType, card_ref_id: cardType ? cardRefId : null }
+    )
 
     if (insertError) { setError('حدث خطأ أثناء نشر المنشور'); setLoading(false); return }
 

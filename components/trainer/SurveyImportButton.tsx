@@ -24,7 +24,7 @@ interface SurveyImportFile {
   questions?: ImportedQuestion[]
 }
 
-export function SurveyImportButton() {
+export function SurveyImportButton({ instituteId, redirectBase = '/surveys' }: { instituteId?: string; redirectBase?: string } = {}) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -54,12 +54,21 @@ export function SurveyImportButton() {
       // 1) إنشاء الاستبيان
       const { data: newSurvey, error: surveyErr } = await supabase
         .from('surveys')
-        .insert({
-          trainer_id: user.id,
-          title: data.title.trim(),
-          description: data.description ?? null,
-          is_anonymous: data.is_anonymous ?? false,
-        })
+        .insert(
+          instituteId
+            ? {
+                institute_id: instituteId,
+                title: data.title.trim(),
+                description: data.description ?? null,
+                is_anonymous: data.is_anonymous ?? false,
+              }
+            : {
+                trainer_id: user.id,
+                title: data.title.trim(),
+                description: data.description ?? null,
+                is_anonymous: data.is_anonymous ?? false,
+              }
+        )
         .select()
         .single()
       if (surveyErr || !newSurvey) throw new Error('تعذّر إنشاء الاستبيان')
@@ -110,7 +119,7 @@ export function SurveyImportButton() {
         }
       }
 
-      router.push(`/surveys/${newSurvey.id}`)
+      router.push(`${redirectBase}/${newSurvey.id}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'حدث خطأ غير متوقع أثناء الاستيراد')
     } finally {

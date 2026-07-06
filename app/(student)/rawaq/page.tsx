@@ -9,22 +9,29 @@ export default async function RawaqPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const uid = user!.id
 
-  const { data: follows } = await supabase.from('trainer_follows').select('trainer_id').eq('student_id', uid)
-  const followedIds = (follows ?? []).map((f) => f.trainer_id)
+  const { data: follows } = await supabase.from('trainer_follows').select('trainer_id, institute_id').eq('student_id', uid)
+  const followedIds = (follows ?? []).map((f) => f.trainer_id).filter((id): id is string => !!id)
+  const followedInstituteIds = (follows ?? []).map((f) => f.institute_id).filter((id): id is string => !!id)
+  const hasAnyFollow = followedIds.length > 0 || followedInstituteIds.length > 0
 
   let posts: any[] = []
   const cardData: Record<string, Record<PostCardType, any>> = {}
   let enrolledCourseIds = new Set<string>()
   let activeChallengeSessions: Record<string, { session_code: string } | null> = {}
 
-  if (followedIds.length > 0) {
-    const { data: postsData } = await supabase
+  if (hasAnyFollow) {
+    let postsQuery = supabase
       .from('trainer_posts')
-      .select('*, trainer:profiles!trainer_id(full_name, avatar_url, bio)')
-      .in('trainer_id', followedIds)
+      .select('*, trainer:profiles!trainer_id(full_name, avatar_url, bio), institute:institutes!institute_id(name)')
       .order('created_at', { ascending: false })
       .limit(50)
 
+    const orParts: string[] = []
+    if (followedIds.length > 0) orParts.push(`trainer_id.in.(${followedIds.join(',')})`)
+    if (followedInstituteIds.length > 0) orParts.push(`institute_id.in.(${followedInstituteIds.join(',')})`)
+    postsQuery = postsQuery.or(orParts.join(','))
+
+    const { data: postsData } = await postsQuery
     posts = postsData ?? []
 
     const idsByType: Record<PostCardType, string[]> = { course: [], exam: [], assignment: [], challenge: [], survey: [] }
@@ -73,15 +80,15 @@ export default async function RawaqPage() {
     <>
       <Header title="الرواق" />
       <main className="p-6 flex flex-col gap-6 max-w-2xl">
-        <TrainerSearch followedIds={followedIds} />
+        <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
 
-        {followedIds.length === 0 ? (
+        {!hasAnyFollow ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/60">
-            لا تتابع أي مدرب بعد. استخدم البحث أعلاه لإيجاد مدربين ومتابعتهم لتظهر منشوراتهم هنا.
+            لا تتابع أي مدرب أو معهد بعد. استخدم البحث أعلاه لإيجادهم ومتابعتهم لتظهر منشوراتهم هنا.
           </div>
         ) : posts.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/60">
-            لا توجد منشورات حتى الآن من المدربين الذين تتابعهم.
+            لا توجد منشورات حتى الآن ممن تتابعهم.
           </div>
         ) : (
           <RawaqFeed

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { GraduationCap, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap } from 'lucide-react'
+import { GraduationCap, Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap } from 'lucide-react'
 
 interface CourseCard { id: string; title: string; description: string | null; course_code: string; status: string }
 interface ExamCard { id: string; title: string; description: string | null; exam_code: string; is_active: boolean }
@@ -56,10 +56,12 @@ export function RawaqFeed({
           <div key={post.id} className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2.5">
               <span className="w-10 h-10 rounded-full bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0">
-                <GraduationCap size={18} />
+                {post.institute_id ? <Building2 size={18} /> : <GraduationCap size={18} />}
               </span>
               <div>
-                <p className="font-semibold text-ruwad-navy text-sm">{post.trainer?.full_name ?? 'مدرّب'}</p>
+                <p className="font-semibold text-ruwad-navy text-sm">
+                  {post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')}
+                </p>
                 <p className="text-xs text-ruwad-navy/40">{timeAgo(post.created_at)}</p>
               </div>
             </div>

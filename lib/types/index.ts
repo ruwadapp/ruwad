@@ -437,10 +437,12 @@ export interface TrainerFollow {
 
 export interface TrainerPost {
   id: string
-  trainer_id: string
+  trainer_id: string | null
+  institute_id: string | null
   content: string
   card_type: PostCardType | null
   card_ref_id: string | null
   created_at: string
   trainer?: { full_name: string; avatar_url: string | null; bio: string | null }
+  institute?: { name: string }
 }
