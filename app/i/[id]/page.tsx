@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { FollowButton } from '@/components/shared/FollowButton'
+import { CourseDiscoveryList } from '@/components/shared/CourseDiscoveryList'
 import { RatingsSummary } from '@/components/shared/RatingsSummary'
 import { RatingForm } from '@/components/shared/RatingForm'
 import { Building2, Users, GraduationCap } from 'lucide-react'
@@ -12,15 +13,28 @@ export default async function PublicInstituteProfilePage({ params }: { params: P
   const { data: { user } } = await supabase.auth.getUser()
   const { data: viewerProfile } = await supabase.from('profiles').select('role').eq('id', user!.id).single()
 
-  const [{ data: institute }, { data: statsRows }, { data: ratingsRaw }, { data: follows }] = await Promise.all([
+  const [{ data: institute }, { data: statsRows }, { data: ratingsRaw }, { data: follows }, { data: shares }] = await Promise.all([
     supabase.from('institutes').select('id, name, description, created_at').eq('id', id).single(),
     supabase.rpc('get_institute_public_stats', { p_institute_id: id }),
     supabase.from('institute_ratings').select('*').eq('institute_id', id).order('created_at', { ascending: false }),
     supabase.from('trainer_follows').select('id').eq('institute_id', id).eq('student_id', user!.id).maybeSingle(),
+    supabase.from('resource_institute_shares').select('resource_id').eq('institute_id', id).eq('resource_type', 'courses'),
   ])
 
   if (!institute) notFound()
   const stats = statsRows?.[0] ?? { trainers_count: 0, students_count: 0 }
+
+  const sharedCourseIds = (shares ?? []).map((s) => s.resource_id)
+  const { data: courses } = sharedCourseIds.length
+    ? await supabase.from('courses').select('id, title, description').in('id', sharedCourseIds).eq('status', 'published')
+    : { data: [] }
+
+  const courseIds = (courses ?? []).map((c) => c.id)
+  const { data: myEnrollments } = viewerProfile?.role === 'student' && courseIds.length
+    ? await supabase.from('enrollments').select('course_id, status').eq('student_id', user!.id).in('course_id', courseIds)
+    : { data: [] }
+  const myEnrollmentMap = new Map((myEnrollments ?? []).map((e) => [e.course_id, e.status]))
+  const coursesWithStatus = (courses ?? []).map((c) => ({ ...c, myStatus: myEnrollmentMap.get(c.id) ?? null }))
 
   const raterIds = [...new Set((ratingsRaw ?? []).map((r) => r.rater_id))]
   const { data: raterProfiles } = raterIds.length ? await supabase.rpc('get_public_rater_names', { p_rater_ids: raterIds }) : { data: [] }
@@ -69,6 +83,10 @@ export default async function PublicInstituteProfilePage({ params }: { params: P
             </div>
           </div>
         </div>
+
+        {viewerProfile?.role === 'student' && (
+          <CourseDiscoveryList courses={coursesWithStatus} emptyText="لا توجد كورسات مشارَكة مع هذا المعهد حالياً." />
+        )}
 
         {(canRateAsStudent || canRateAsTrainer) && (
           <RatingForm

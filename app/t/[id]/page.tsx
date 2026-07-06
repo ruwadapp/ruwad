@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { FollowButton } from '@/components/shared/FollowButton'
+import { CourseDiscoveryList } from '@/components/shared/CourseDiscoveryList'
 import { RatingsSummary } from '@/components/shared/RatingsSummary'
 import { RatingForm } from '@/components/shared/RatingForm'
 import { BookOpen, Users, GraduationCap } from 'lucide-react'
@@ -12,16 +13,24 @@ export default async function PublicTrainerProfilePage({ params }: { params: Pro
   const { data: { user } } = await supabase.auth.getUser()
   const { data: viewerProfile } = await supabase.from('profiles').select('role').eq('id', user!.id).single()
 
-  const [{ data: trainerRows }, { data: statsRows }, { data: ratingsRaw }, { data: follows }] = await Promise.all([
+  const [{ data: trainerRows }, { data: statsRows }, { data: ratingsRaw }, { data: follows }, { data: courses }] = await Promise.all([
     supabase.rpc('get_public_trainer_profile', { p_trainer_id: id }),
     supabase.rpc('get_trainer_public_stats', { p_trainer_id: id }),
     supabase.from('trainer_ratings').select('*').eq('trainer_id', id).order('created_at', { ascending: false }),
     supabase.from('trainer_follows').select('id').eq('trainer_id', id).eq('student_id', user!.id).maybeSingle(),
+    supabase.from('courses').select('id, title, description').eq('trainer_id', id).eq('status', 'published'),
   ])
 
   const trainer = trainerRows?.[0]
   if (!trainer) notFound()
   const stats = statsRows?.[0] ?? { courses_count: 0, students_count: 0 }
+
+  const courseIds = (courses ?? []).map((c) => c.id)
+  const { data: myEnrollments } = viewerProfile?.role === 'student' && courseIds.length
+    ? await supabase.from('enrollments').select('course_id, status').eq('student_id', user!.id).in('course_id', courseIds)
+    : { data: [] }
+  const myEnrollmentMap = new Map((myEnrollments ?? []).map((e) => [e.course_id, e.status]))
+  const coursesWithStatus = (courses ?? []).map((c) => ({ ...c, myStatus: myEnrollmentMap.get(c.id) ?? null }))
 
   const raterIds = [...new Set((ratingsRaw ?? []).map((r) => r.rater_id))]
   const { data: raterProfiles } = raterIds.length ? await supabase.rpc('get_public_rater_names', { p_rater_ids: raterIds }) : { data: [] }
@@ -70,6 +79,10 @@ export default async function PublicTrainerProfilePage({ params }: { params: Pro
             </div>
           </div>
         </div>
+
+        {viewerProfile?.role === 'student' && (
+          <CourseDiscoveryList courses={coursesWithStatus} emptyText="لا توجد كورسات منشورة لهذا المدرب حالياً." />
+        )}
 
         {(canRateAsStudent || canRateAsInstitute) && (
           <RatingForm
