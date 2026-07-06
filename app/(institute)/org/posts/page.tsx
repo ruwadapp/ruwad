@@ -12,29 +12,26 @@ export default async function InstitutePostsPage() {
   const { data: institute } = await supabase.from('institutes').select('id').eq('owner_id', user!.id).single()
   if (!institute) redirect('/org/dashboard')
 
-  const { data: members } = await supabase
-    .from('institute_members')
-    .select('user_id')
-    .eq('institute_id', institute.id)
-    .eq('status', 'approved')
-  const trainerIds = (members ?? []).map((m) => m.user_id)
-
   const [
     { data: posts },
-    { data: courses },
-    { data: exams },
-    { data: assignments },
-    { data: challenges },
+    { data: shares },
     { data: surveys },
     { count: followersCount },
   ] = await Promise.all([
     supabase.from('trainer_posts').select('*').eq('institute_id', institute.id).order('created_at', { ascending: false }),
-    trainerIds.length ? supabase.from('courses').select('id, title').in('trainer_id', trainerIds).eq('shared_with_institute', true) : Promise.resolve({ data: [] }),
-    trainerIds.length ? supabase.from('exams').select('id, title').in('trainer_id', trainerIds).eq('shared_with_institute', true) : Promise.resolve({ data: [] }),
-    trainerIds.length ? supabase.from('assignments').select('id, title').in('trainer_id', trainerIds).eq('shared_with_institute', true) : Promise.resolve({ data: [] }),
-    trainerIds.length ? supabase.from('challenges').select('id, title').in('trainer_id', trainerIds).eq('shared_with_institute', true) : Promise.resolve({ data: [] }),
+    supabase.from('resource_institute_shares').select('resource_type, resource_id').eq('institute_id', institute.id),
     supabase.from('surveys').select('id, title').eq('institute_id', institute.id).order('created_at', { ascending: false }),
     supabase.from('trainer_follows').select('id', { count: 'exact', head: true }).eq('institute_id', institute.id),
+  ])
+
+  const idsByType: Record<string, string[]> = { courses: [], exams: [], assignments: [], challenges: [] }
+  for (const s of shares ?? []) idsByType[s.resource_type]?.push(s.resource_id)
+
+  const [{ data: courses }, { data: exams }, { data: assignments }, { data: challenges }] = await Promise.all([
+    idsByType.courses.length ? supabase.from('courses').select('id, title').in('id', idsByType.courses) : Promise.resolve({ data: [] }),
+    idsByType.exams.length ? supabase.from('exams').select('id, title').in('id', idsByType.exams) : Promise.resolve({ data: [] }),
+    idsByType.assignments.length ? supabase.from('assignments').select('id, title').in('id', idsByType.assignments) : Promise.resolve({ data: [] }),
+    idsByType.challenges.length ? supabase.from('challenges').select('id, title').in('id', idsByType.challenges) : Promise.resolve({ data: [] }),
   ])
 
   return (

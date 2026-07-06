@@ -6,8 +6,8 @@ import { ChallengeForm } from '@/components/trainer/ChallengeForm'
 import { ChallengeQuestionManager } from '@/components/trainer/ChallengeQuestionManager'
 import { StartChallengeSessionButton } from '@/components/trainer/StartChallengeSessionButton'
 import { DeleteButton } from '@/components/shared/DeleteButton'
-import { ShareToggle } from '@/components/shared/ShareToggle'
-import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
+import { ShareManager } from '@/components/shared/ShareManager'
+import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
 import { Building2, Trophy } from 'lucide-react'
 
 export default async function ChallengeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,9 +19,10 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
   if (!challenge) notFound()
 
   const actingAsInstituteAdmin = challenge.trainer_id !== user!.id
-  const [{ data: courses }, institute] = await Promise.all([
+  const [{ data: courses }, institutes, sharedInstituteIds] = await Promise.all([
     supabase.from('courses').select('*').eq('trainer_id', challenge.trainer_id),
-    actingAsInstituteAdmin ? Promise.resolve(null) : getTrainerInstitute(supabase, user!.id),
+    actingAsInstituteAdmin ? Promise.resolve([]) : getTrainerInstitutes(supabase, user!.id),
+    actingAsInstituteAdmin ? Promise.resolve([]) : getResourceShares(supabase, 'challenges', id),
   ])
 
   const { data: questions } = await supabase
@@ -36,12 +37,12 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
       <main className="p-6 flex flex-col gap-6">
         {actingAsInstituteAdmin && (
           <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm font-semibold rounded-ruwad-sm px-4 py-3 flex items-center gap-2">
-            <Building2 size={16} /> تُعدّل هذا التحدي بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع المعهد.
+            <Building2 size={16} /> تُعدّل هذا التحدي بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع معهدك.
           </div>
         )}
         <div className="flex justify-end gap-3 flex-wrap">
-          {institute && (
-            <ShareToggle table="challenges" id={id} initialShared={challenge.shared_with_institute} instituteName={institute.name} />
+          {institutes.length > 0 && (
+            <ShareManager resourceType="challenges" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
           )}
           <DeleteButton table="challenges" id={id} redirectTo="/challenges" label="حذف التحدي" />
           <Link href={`/challenges/${id}/results`} className="bg-white border-2 border-ruwad-gray text-ruwad-navy px-5 py-2.5 rounded-ruwad-sm font-semibold hover:bg-ruwad-gray/20 transition flex items-center gap-2">
@@ -55,4 +56,5 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
     </>
   )
 }
+
 

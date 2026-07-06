@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, Link2, Check, FileText, Users, BookOpen, Clock, type LucideIcon } from 'lucide-react'
-import { ShareToggle } from '@/components/shared/ShareToggle'
+import { ShareManager } from '@/components/shared/ShareManager'
+import type { ShareResourceType, TrainerInstitute } from '@/lib/utils/getTrainerInstitutes'
 
 // حصراً التدرّجان المعتمدان رسمياً في الهوية البصرية (--gradient-primary و --gradient-dark)،
 // بالإضافة لِلَون الليموني كخلفية صلبة (بلا مزج مع الأزرق) — لأن مزج الأزرق بالليموني في تدرّج واحد
@@ -77,8 +78,8 @@ interface EntityCardProps {
   deleteTable: string
   deleteId: string
   deleteConfirmText: string
-  /** يظهر فقط إن كان المدرب عضواً موافَقاً عليه في معهد */
-  instituteShare?: { table: 'courses' | 'exams' | 'assignments' | 'challenges'; shared: boolean; instituteName: string }
+  /** يظهر فقط إن كان المدرب عضواً موافَقاً عليه في معهد واحد أو أكثر */
+  instituteShare?: { resourceType: ShareResourceType; institutes: TrainerInstitute[]; sharedInstituteIds: string[] }
 }
 
 export function EntityCard({
@@ -162,13 +163,13 @@ export function EntityCard({
         </div>
       )}
 
-      {instituteShare && (
+      {instituteShare && instituteShare.institutes.length > 0 && (
         <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <ShareToggle
-            table={instituteShare.table}
-            id={deleteId}
-            initialShared={instituteShare.shared}
-            instituteName={instituteShare.instituteName}
+          <ShareManager
+            resourceType={instituteShare.resourceType}
+            resourceId={deleteId}
+            institutes={instituteShare.institutes}
+            initialSharedInstituteIds={instituteShare.sharedInstituteIds}
           />
         </div>
       )}

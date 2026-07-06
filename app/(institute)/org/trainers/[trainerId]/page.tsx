@@ -33,13 +33,18 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
     { data: surveys },
     { data: challenges },
     { data: assignments },
+    { data: shares },
   ] = await Promise.all([
     supabase.from('courses').select('*, lectures(count), enrollments(count)').eq('trainer_id', trainerId).order('created_at', { ascending: false }),
     supabase.from('exams').select('*, questions(count), exam_submissions(count)').eq('trainer_id', trainerId).order('created_at', { ascending: false }),
     supabase.from('surveys').select('*, survey_questions(count), survey_responses(count)').eq('trainer_id', trainerId).order('created_at', { ascending: false }),
     supabase.from('challenges').select('*, challenge_questions(count), challenge_submissions(count)').eq('trainer_id', trainerId).order('created_at', { ascending: false }),
     supabase.from('assignments').select('*, assignment_submissions(count)').eq('trainer_id', trainerId).order('created_at', { ascending: false }),
+    supabase.from('resource_institute_shares').select('resource_type, resource_id').eq('institute_id', institute.id).eq('trainer_id', trainerId),
   ])
+
+  const sharedIdsByType: Record<string, Set<string>> = { courses: new Set(), exams: new Set(), assignments: new Set(), challenges: new Set() }
+  for (const s of shares ?? []) sharedIdsByType[s.resource_type]?.add(s.resource_id)
 
   const courseIds = (courses ?? []).map((c) => c.id)
   const { data: enrollments } = courseIds.length
@@ -105,9 +110,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {courses.map((c) => (
                 <EntitySummaryCard
                   key={c.id}
-                  href={c.shared_with_institute ? `/courses/${c.id}` : undefined}
+                  href={sharedIdsByType.courses.has(c.id) ? `/courses/${c.id}` : undefined}
                   title={c.title}
-                  shared={c.shared_with_institute}
+                  shared={sharedIdsByType.courses.has(c.id)}
                   badge={<StatusBadge active={c.status === 'published'} activeLabel="منشور" inactiveLabel="مسودة" />}
                   meta={`${c.lectures?.[0]?.count ?? 0} محاضرة · ${c.enrollments?.[0]?.count ?? 0} طالب`}
                 />
@@ -123,9 +128,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {exams.map((e) => (
                 <EntitySummaryCard
                   key={e.id}
-                  href={e.shared_with_institute ? `/exams/${e.id}` : undefined}
+                  href={sharedIdsByType.exams.has(e.id) ? `/exams/${e.id}` : undefined}
                   title={e.title}
-                  shared={e.shared_with_institute}
+                  shared={sharedIdsByType.exams.has(e.id)}
                   badge={<StatusBadge active={e.is_active} activeLabel="نشط" inactiveLabel="متوقف" />}
                   meta={`${e.questions?.[0]?.count ?? 0} سؤال · ${e.exam_submissions?.[0]?.count ?? 0} مشارك`}
                 />
@@ -155,9 +160,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {challenges.map((c) => (
                 <EntitySummaryCard
                   key={c.id}
-                  href={c.shared_with_institute ? `/challenges/${c.id}` : undefined}
+                  href={sharedIdsByType.challenges.has(c.id) ? `/challenges/${c.id}` : undefined}
                   title={c.title}
-                  shared={c.shared_with_institute}
+                  shared={sharedIdsByType.challenges.has(c.id)}
                   accent
                   meta={`${c.challenge_questions?.[0]?.count ?? 0} سؤال · ${c.challenge_submissions?.[0]?.count ?? 0} مشارك`}
                 />
@@ -173,9 +178,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {assignments.map((a) => (
                 <EntitySummaryCard
                   key={a.id}
-                  href={a.shared_with_institute ? `/assignments/${a.id}` : undefined}
+                  href={sharedIdsByType.assignments.has(a.id) ? `/assignments/${a.id}` : undefined}
                   title={a.title}
-                  shared={a.shared_with_institute}
+                  shared={sharedIdsByType.assignments.has(a.id)}
                   meta={`${a.assignment_submissions?.[0]?.count ?? 0} تسليم`}
                 />
               ))}

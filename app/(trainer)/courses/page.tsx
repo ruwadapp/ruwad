@@ -2,19 +2,21 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EntityCard } from '@/components/shared/EntityCard'
-import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
+import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, BookOpen } from 'lucide-react'
 
 export default async function CoursesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const institute = await getTrainerInstitute(supabase, user!.id)
+  const institutes = await getTrainerInstitutes(supabase, user!.id)
 
   const { data: courses } = await supabase
     .from('courses')
     .select('*, lectures(count), enrollments(count)')
     .eq('trainer_id', user!.id)
     .order('created_at', { ascending: false })
+
+  const sharesMap = await getResourceSharesMap(supabase, 'courses', (courses ?? []).map((c) => c.id))
 
   return (
     <>
@@ -56,7 +58,7 @@ export default async function CoursesPage() {
                 deleteTable="courses"
                 deleteId={course.id}
                 deleteConfirmText="حذف الكورس سيحذف معه كل محاضراته وتسجيلات الطلاب فيه نهائياً. متابعة؟"
-                instituteShare={institute ? { table: 'courses', shared: course.shared_with_institute ?? false, instituteName: institute.name } : undefined}
+                instituteShare={{ resourceType: 'courses', institutes, sharedInstituteIds: sharesMap[course.id] ?? [] }}
               />
             ))}
           </div>

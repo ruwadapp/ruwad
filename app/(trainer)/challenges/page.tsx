@@ -2,20 +2,22 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
-import { ShareToggle } from '@/components/shared/ShareToggle'
-import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
+import { ShareManager } from '@/components/shared/ShareManager'
+import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, Trophy, Zap, Users, Pencil } from 'lucide-react'
 
 export default async function ChallengesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const institute = await getTrainerInstitute(supabase, user!.id)
+  const institutes = await getTrainerInstitutes(supabase, user!.id)
 
   const { data: challenges } = await supabase
     .from('challenges')
     .select('*, challenge_questions(count), challenge_submissions(count)')
     .eq('trainer_id', user!.id)
     .order('created_at', { ascending: false })
+
+  const sharesMap = await getResourceSharesMap(supabase, 'challenges', (challenges ?? []).map((c) => c.id))
 
   return (
     <>
@@ -60,8 +62,8 @@ export default async function ChallengesPage() {
                   <span className="flex items-center gap-1.5"><Users size={16} /> {c.challenge_submissions?.[0]?.count ?? 0} مشارك</span>
                 </div>
 
-                {institute && (
-                  <ShareToggle table="challenges" id={c.id} initialShared={c.shared_with_institute ?? false} instituteName={institute.name} />
+                {institutes.length > 0 && (
+                  <ShareManager resourceType="challenges" resourceId={c.id} institutes={institutes} initialSharedInstituteIds={sharesMap[c.id] ?? []} />
                 )}
 
                 <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
