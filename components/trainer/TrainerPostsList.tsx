@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost } from '@/lib/types'
-import { Trash2, BookOpen, FileText, FileCheck, Trophy, ClipboardList } from 'lucide-react'
+import { Trash2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, Award } from 'lucide-react'
 
-const CARD_ICON = { course: BookOpen, exam: FileText, assignment: FileCheck, challenge: Trophy, survey: ClipboardList }
-const CARD_LABEL = { course: 'كورس', exam: 'امتحان', assignment: 'واجب', challenge: 'تحدٍ', survey: 'استبيان' }
+const CARD_ICON = { course: BookOpen, exam: FileText, assignment: FileCheck, challenge: Trophy, survey: ClipboardList, certificate: Award }
+const CARD_LABEL = { course: 'كورس', exam: 'امتحان', assignment: 'واجب', challenge: 'تحدٍ', survey: 'استبيان', certificate: 'شهادة' }
 
 export function TrainerPostsList({ posts }: { posts: TrainerPost[] }) {
   const [items, setItems] = useState(posts)

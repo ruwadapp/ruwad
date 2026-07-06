@@ -87,7 +87,7 @@ export function PostComposer({
         {CARD_TYPES.map((c) => {
           const Icon = c.icon
           const active = cardType === c.type
-          const disabled = optionsByType[c.type].length === 0
+          const disabled = (optionsByType[c.type] ?? []).length === 0
           return (
             <button
               key={c.type}
@@ -113,7 +113,7 @@ export function PostComposer({
             className="flex-1 border border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm outline-none focus:border-ruwad-blue"
           >
             <option value="">اختر {CARD_TYPES.find((c) => c.type === cardType)?.label}...</option>
-            {optionsByType[cardType].map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
+            {(optionsByType[cardType] ?? []).map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
           </select>
           <button type="button" onClick={() => { setCardType(null); setCardRefId('') }} aria-label="إزالة البطاقة" className="text-ruwad-navy/50 hover:text-red-500 transition">
             <X size={16} />
