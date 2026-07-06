@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -86,7 +87,7 @@ export function TrainerSearch({ followedIds, followedInstituteIds = [] }: { foll
             const isFollowing = r.kind === 'trainer' ? following.has(r.id) : followingInstitutes.has(r.id)
             return (
               <div key={`${r.kind}-${r.id}`} className="flex items-center justify-between gap-3 p-3 rounded-ruwad-sm bg-ruwad-gray/10">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <Link href={`${r.kind === 'trainer' ? '/t' : '/i'}/${r.id}`} className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition">
                   <span className="w-9 h-9 rounded-full bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0">
                     {r.kind === 'trainer' ? <GraduationCap size={16} /> : <Building2 size={16} />}
                   </span>
@@ -94,7 +95,7 @@ export function TrainerSearch({ followedIds, followedInstituteIds = [] }: { foll
                     <p className="text-sm font-semibold text-ruwad-navy truncate">{r.full_name}</p>
                     {r.bio && <p className="text-xs text-ruwad-navy/50 truncate">{r.bio}</p>}
                   </div>
-                </div>
+                </Link>
                 <button
                   onClick={() => (r.kind === 'trainer' ? toggleFollowTrainer(r.id) : toggleFollowInstitute(r.id))}
                   disabled={busyId === r.id}

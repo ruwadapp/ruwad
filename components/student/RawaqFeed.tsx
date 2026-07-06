@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { GraduationCap, Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap } from 'lucide-react'
+import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap } from 'lucide-react'
 
 interface CourseCard { id: string; title: string; description: string | null; course_code: string; status: string }
 interface ExamCard { id: string; title: string; description: string | null; exam_code: string; is_active: boolean }
@@ -52,19 +52,24 @@ export function RawaqFeed({
     <div className="flex flex-col gap-4">
       {posts.map((post) => {
         const card = post.card_type ? cardData[post.id]?.[post.card_type] : null
+        const profileHref = post.institute_id ? `/i/${post.institute_id}` : `/t/${post.trainer_id}`
+        const name = post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')
         return (
-          <div key={post.id} className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="w-10 h-10 rounded-full bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0">
-                {post.institute_id ? <Building2 size={18} /> : <GraduationCap size={18} />}
+          <div key={post.id} className="relative overflow-hidden bg-white rounded-ruwad shadow-card hover:shadow-ruwad-lg transition-shadow p-5 flex flex-col gap-3">
+            <div className={`absolute top-0 right-0 left-0 h-1.5 ${post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'}`} />
+            <Link href={profileHref} className="flex items-center gap-2.5 group">
+              <span
+                className={`w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 font-bold shadow-ruwad group-hover:scale-105 transition-transform ${
+                  post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'
+                }`}
+              >
+                {post.institute_id ? <Building2 size={18} /> : name.charAt(0)}
               </span>
               <div>
-                <p className="font-semibold text-ruwad-navy text-sm">
-                  {post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')}
-                </p>
+                <p className="font-bold text-ruwad-navy text-sm group-hover:text-ruwad-blue transition-colors">{name}</p>
                 <p className="text-xs text-ruwad-navy/40">{timeAgo(post.created_at)}</p>
               </div>
-            </div>
+            </Link>
 
             <p className="text-ruwad-navy whitespace-pre-wrap leading-relaxed">{post.content}</p>
 
@@ -97,13 +102,13 @@ export function RawaqFeed({
             {post.card_type === 'exam' && card && (() => {
               const e = card as ExamCard
               return (
-                <div className="rounded-ruwad-sm border-2 border-ruwad-blue/20 bg-ruwad-blue/5 p-4 flex items-center justify-between gap-3 flex-wrap">
+                <div className="rounded-ruwad-sm border-2 border-ruwad-blue-light/30 bg-ruwad-blue-light/10 p-4 flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2 min-w-0">
-                    <FileText size={18} className="text-ruwad-blue shrink-0" />
+                    <FileText size={18} className="text-ruwad-blue-light shrink-0" />
                     <p className="font-bold text-ruwad-navy truncate">{e.title}</p>
                   </div>
                   {e.is_active ? (
-                    <Link href={`/qr/${e.exam_code}`} className="text-xs font-semibold bg-ruwad-blue text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0">ابدأ الامتحان</Link>
+                    <Link href={`/qr/${e.exam_code}`} className="text-xs font-semibold bg-ruwad-blue-light text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0">ابدأ الامتحان</Link>
                   ) : (
                     <span className="text-xs font-semibold bg-ruwad-gray/40 text-ruwad-navy/60 px-3 py-1.5 rounded-full shrink-0">متوقف حالياً</span>
                   )}
@@ -114,13 +119,13 @@ export function RawaqFeed({
             {post.card_type === 'assignment' && card && (() => {
               const a = card as AssignmentCard
               return (
-                <div className="rounded-ruwad-sm border-2 border-ruwad-blue/20 bg-ruwad-blue/5 p-4 flex items-center justify-between gap-3 flex-wrap">
+                <div className="rounded-ruwad-sm border-2 border-ruwad-navy/15 bg-ruwad-navy/5 p-4 flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2 min-w-0">
-                    <FileCheck size={18} className="text-ruwad-blue shrink-0" />
+                    <FileCheck size={18} className="text-ruwad-navy shrink-0" />
                     <p className="font-bold text-ruwad-navy truncate">{a.title}</p>
                   </div>
                   {a.is_active ? (
-                    <Link href={`/qr/${a.assignment_code}`} className="text-xs font-semibold bg-ruwad-blue text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0">عرض الواجب</Link>
+                    <Link href={`/qr/${a.assignment_code}`} className="text-xs font-semibold bg-ruwad-navy text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0">عرض الواجب</Link>
                   ) : (
                     <span className="text-xs font-semibold bg-ruwad-gray/40 text-ruwad-navy/60 px-3 py-1.5 rounded-full shrink-0">متوقف حالياً</span>
                   )}

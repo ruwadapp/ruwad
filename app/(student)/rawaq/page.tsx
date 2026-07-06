@@ -80,6 +80,15 @@ export default async function RawaqPage() {
     <>
       <Header title="الرواق" />
       <main className="p-6 flex flex-col gap-6 max-w-2xl">
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 flex items-center gap-3">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-ruwad-lime/30 rounded-full blur-3xl" />
+          <div className="relative">
+            <h2 className="text-xl font-extrabold text-white">جدارك الاجتماعي 🎉</h2>
+            <p className="text-sm text-white/80 mt-1">تابع مدربيك ومعاهدك المفضّلة وشاهد كل جديدهم هنا أولاً بأول</p>
+          </div>
+        </div>
+
         <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
 
         {!hasAnyFollow ? (

@@ -9,6 +9,7 @@ const TRAINER_ROUTES = [
 const STUDENT_ROUTES = ['/home', '/rawaq', '/my-courses', '/my-exams', '/my-assignments', '/my-attendance', '/my-challenges', '/progress', '/my-presentations', '/my-institute', '/profile', '/my-badges', '/my-certificates']
 const INSTITUTE_ROUTES = ['/org']
 const SUPERADMIN_ROUTES = ['/admin']
+const PROFILE_ROUTES = ['/t', '/i']
 
 export async function middleware(request: NextRequest) {
   const { user, response } = await updateSession(request)
@@ -37,7 +38,8 @@ export async function middleware(request: NextRequest) {
     TRAINER_ROUTES.some((r) => path.startsWith(r)) ||
     STUDENT_ROUTES.some((r) => path.startsWith(r)) ||
     INSTITUTE_ROUTES.some((r) => path.startsWith(r)) ||
-    SUPERADMIN_ROUTES.some((r) => path.startsWith(r))
+    SUPERADMIN_ROUTES.some((r) => path.startsWith(r)) ||
+    PROFILE_ROUTES.some((r) => path.startsWith(r))
 
   if (isProtected && !user) {
     const loginUrl = new URL('/login', request.url)

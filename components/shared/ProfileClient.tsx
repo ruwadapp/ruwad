@@ -29,6 +29,10 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
   const [savedName, setSavedName] = useState(profile.full_name)
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [editingBio, setEditingBio] = useState(false)
+  const [bio, setBio]             = useState(profile.bio ?? '')
+  const [savedBio, setSavedBio]   = useState(profile.bio ?? '')
+  const [savingBio, setSavingBio] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -59,6 +63,16 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
   }
 
   function cancelEdit() { setName(savedName); setEditing(false); setError(null) }
+
+  async function saveBio() {
+    setSavingBio(true)
+    const { error: e } = await supabase.from('profiles').update({ bio: bio.trim() || null }).eq('id', profile.id)
+    setSavingBio(false)
+    if (e) return
+    setSavedBio(bio.trim())
+    setEditingBio(false)
+    router.refresh()
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -160,6 +174,38 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
             </div>
           )}
         </div>
+
+        {profile.role === 'trainer' && (
+          <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold text-ruwad-navy/50 uppercase tracking-wider">السيرة الذاتية المختصرة</h2>
+              <a href={`/t/${profile.id}`} className="text-xs font-semibold text-ruwad-blue hover:underline">عرض ملفي العلني</a>
+            </div>
+            {editingBio ? (
+              <>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  autoFocus
+                  placeholder="اكتب نبذة مختصرة عن خبرتك وتخصصك يراها الطلاب والمعاهد في ملفك العلني..."
+                  className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 text-sm outline-none focus:border-ruwad-blue transition resize-none"
+                />
+                <div className="flex items-center gap-2 self-end">
+                  <button onClick={() => { setBio(savedBio); setEditingBio(false) }} className="text-sm text-ruwad-navy/50 px-3 py-1.5">إلغاء</button>
+                  <button onClick={saveBio} disabled={savingBio} className="bg-ruwad-blue text-white text-sm font-semibold px-4 py-1.5 rounded-ruwad-sm hover:opacity-90 transition disabled:opacity-50">
+                    {savingBio ? 'جارٍ الحفظ...' : 'حفظ'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm text-ruwad-navy/70 leading-relaxed">{savedBio || 'لم تُضف سيرة ذاتية بعد — أضفها ليراها من يزور ملفك العلني.'}</p>
+                <button onClick={() => setEditingBio(true)} className="text-ruwad-blue hover:opacity-70 transition shrink-0"><Pencil size={14} /></button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ===== الإشعارات ===== */}
         <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4">
