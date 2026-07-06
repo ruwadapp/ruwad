@@ -6,7 +6,7 @@ import type { Survey } from '@/lib/types'
 import { CodeQrImage } from '@/components/shared/CodeQrImage'
 import { Copy, Check } from 'lucide-react'
 
-export function SurveyForm({ initialSurvey }: { initialSurvey?: Survey }) {
+export function SurveyForm({ initialSurvey, instituteId, redirectBase = '/surveys' }: { initialSurvey?: Survey; instituteId?: string; redirectBase?: string }) {
   const [title, setTitle] = useState(initialSurvey?.title ?? '')
   const [description, setDescription] = useState(initialSurvey?.description ?? '')
   const [logoUrl, setLogoUrl] = useState(initialSurvey?.logo_url ?? '')
@@ -46,12 +46,12 @@ export function SurveyForm({ initialSurvey }: { initialSurvey?: Survey }) {
     } else {
       const { data, error: insertError } = await supabase
         .from('surveys')
-        .insert({ ...payload, trainer_id: user.id })
+        .insert(instituteId ? { ...payload, institute_id: instituteId } : { ...payload, trainer_id: user.id })
         .select()
         .single()
 
       if (insertError || !data) { setError('حدث خطأ أثناء إنشاء الاستبيان'); setLoading(false); return }
-      router.push(`/surveys/${data.id}`)
+      router.push(`${redirectBase}/${data.id}`)
       router.refresh()
     }
   }

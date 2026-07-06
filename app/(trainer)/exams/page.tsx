@@ -2,11 +2,13 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EntityCard } from '@/components/shared/EntityCard'
+import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
 import { Plus, FileText, Zap, Award } from 'lucide-react'
 
 export default async function ExamsPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const institute = await getTrainerInstitute(supabase, user!.id)
 
   const { data: exams } = await supabase
     .from('exams')
@@ -84,6 +86,7 @@ export default async function ExamsPage() {
                 deleteTable="exams"
                 deleteId={exam.id}
                 deleteConfirmText="حذف الامتحان سيحذف معه كل أسئلته ونتائج الطلاب فيه نهائياً. متابعة؟"
+                instituteShare={institute ? { table: 'exams', shared: exam.shared_with_institute ?? false, instituteName: institute.name } : undefined}
               />
             ))}
           </div>

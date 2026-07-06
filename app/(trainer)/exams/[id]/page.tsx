@@ -5,19 +5,25 @@ import { Header } from '@/components/shared/Header'
 import { ExamForm } from '@/components/trainer/ExamForm'
 import { QuestionManager } from '@/components/trainer/QuestionManager'
 import { DeleteButton } from '@/components/shared/DeleteButton'
-import { BarChart3, PenLine } from 'lucide-react'
+import { ShareToggle } from '@/components/shared/ShareToggle'
+import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
+import { Building2, BarChart3, PenLine } from 'lucide-react'
 
 export default async function ExamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: exam }, { data: courses }] = await Promise.all([
-    supabase.from('exams').select('*').eq('id', id).eq('trainer_id', user!.id).single(),
-    supabase.from('courses').select('*').eq('trainer_id', user!.id),
-  ])
-
+  // لا نقيّد بـ trainer_id = المستخدم الحالي هنا؛ RLS (can_manage_shared_resource) هو من
+  // يقرر الصلاحية الفعلية، وهذا ما يسمح لمدير المعهد بفتح وتعديل الامتحانات المُشارَكة معه.
+  const { data: exam } = await supabase.from('exams').select('*').eq('id', id).single()
   if (!exam) notFound()
+
+  const actingAsInstituteAdmin = exam.trainer_id !== user!.id
+  const [{ data: courses }, institute] = await Promise.all([
+    supabase.from('courses').select('*').eq('trainer_id', exam.trainer_id),
+    actingAsInstituteAdmin ? Promise.resolve(null) : getTrainerInstitute(supabase, user!.id),
+  ])
 
   const { data: questions } = await supabase
     .from('questions')
@@ -34,7 +40,15 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
     <>
       <Header title={exam.title} />
       <main className="p-6 flex flex-col gap-6">
+        {actingAsInstituteAdmin && (
+          <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm font-semibold rounded-ruwad-sm px-4 py-3 flex items-center gap-2">
+            <Building2 size={16} /> تُعدّل هذا الامتحان بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع المعهد.
+          </div>
+        )}
         <div className="flex justify-end gap-3 flex-wrap">
+          {institute && (
+            <ShareToggle table="exams" id={id} initialShared={exam.shared_with_institute} instituteName={institute.name} />
+          )}
           <DeleteButton table="exams" id={id} redirectTo="/exams" label="حذف الامتحان" />
           {hasEssay && (
             <Link
@@ -62,3 +76,4 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
     </>
   )
 }
+

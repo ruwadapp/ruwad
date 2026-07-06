@@ -4,18 +4,23 @@ import { Header } from '@/components/shared/Header'
 import { SubmissionsGrader } from '@/components/trainer/SubmissionsGrader'
 import { AssignmentForm } from '@/components/trainer/AssignmentForm'
 import { DeleteButton } from '@/components/shared/DeleteButton'
+import { ShareToggle } from '@/components/shared/ShareToggle'
+import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
+import { Building2 } from 'lucide-react'
 
 export default async function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: assignment }, { data: courses }] = await Promise.all([
-    supabase.from('assignments').select('*').eq('id', id).eq('trainer_id', user!.id).single(),
-    supabase.from('courses').select('*').eq('trainer_id', user!.id),
-  ])
-
+  const { data: assignment } = await supabase.from('assignments').select('*').eq('id', id).single()
   if (!assignment) notFound()
+
+  const actingAsInstituteAdmin = assignment.trainer_id !== user!.id
+  const [{ data: courses }, institute] = await Promise.all([
+    supabase.from('courses').select('*').eq('trainer_id', assignment.trainer_id),
+    actingAsInstituteAdmin ? Promise.resolve(null) : getTrainerInstitute(supabase, user!.id),
+  ])
 
   const { data: submissions } = await supabase
     .from('assignment_submissions')
@@ -27,7 +32,15 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
     <>
       <Header title={assignment.title} />
       <main className="p-6 flex flex-col gap-6">
-        <div className="flex justify-end">
+        {actingAsInstituteAdmin && (
+          <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm font-semibold rounded-ruwad-sm px-4 py-3 flex items-center gap-2">
+            <Building2 size={16} /> تُعدّل هذا الواجب بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع المعهد.
+          </div>
+        )}
+        <div className="flex justify-end gap-3 flex-wrap">
+          {institute && (
+            <ShareToggle table="assignments" id={id} initialShared={assignment.shared_with_institute} instituteName={institute.name} />
+          )}
           <DeleteButton table="assignments" id={id} redirectTo="/assignments" label="حذف الواجب" />
         </div>
 
@@ -41,3 +54,4 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
     </>
   )
 }
+

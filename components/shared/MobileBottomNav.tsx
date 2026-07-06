@@ -51,6 +51,7 @@ const studentNav: NavItem[] = [
 const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
+  { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/members', label: 'الأعضاء', icon: 'UserCog' },
 ]
 

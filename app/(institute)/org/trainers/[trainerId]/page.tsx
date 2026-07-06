@@ -1,8 +1,9 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import {
-  BookOpen, FileText, ClipboardList, Trophy, FileCheck, Users, Calendar,
+  BookOpen, FileText, ClipboardList, Trophy, FileCheck, Users, Calendar, Building2,
 } from 'lucide-react'
 
 export default async function InstituteTrainerDetailPage({ params }: { params: Promise<{ trainerId: string }> }) {
@@ -102,13 +103,14 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
           {!courses || courses.length === 0 ? <EmptyRow text="لا توجد كورسات." /> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {courses.map((c) => (
-                <div key={c.id} className="border border-ruwad-gray/60 rounded-ruwad-sm p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-ruwad-navy text-sm line-clamp-1">{c.title}</p>
-                    <StatusBadge active={c.status === 'published'} activeLabel="منشور" inactiveLabel="مسودة" />
-                  </div>
-                  <p className="text-xs text-ruwad-navy/50 mt-2">{c.lectures?.[0]?.count ?? 0} محاضرة · {c.enrollments?.[0]?.count ?? 0} طالب</p>
-                </div>
+                <EntitySummaryCard
+                  key={c.id}
+                  href={c.shared_with_institute ? `/courses/${c.id}` : undefined}
+                  title={c.title}
+                  shared={c.shared_with_institute}
+                  badge={<StatusBadge active={c.status === 'published'} activeLabel="منشور" inactiveLabel="مسودة" />}
+                  meta={`${c.lectures?.[0]?.count ?? 0} محاضرة · ${c.enrollments?.[0]?.count ?? 0} طالب`}
+                />
               ))}
             </div>
           )}
@@ -119,13 +121,14 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
           {!exams || exams.length === 0 ? <EmptyRow text="لا توجد امتحانات." /> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {exams.map((e) => (
-                <div key={e.id} className="border border-ruwad-gray/60 rounded-ruwad-sm p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-ruwad-navy text-sm line-clamp-1">{e.title}</p>
-                    <StatusBadge active={e.is_active} activeLabel="نشط" inactiveLabel="متوقف" />
-                  </div>
-                  <p className="text-xs text-ruwad-navy/50 mt-2">{e.questions?.[0]?.count ?? 0} سؤال · {e.exam_submissions?.[0]?.count ?? 0} مشارك</p>
-                </div>
+                <EntitySummaryCard
+                  key={e.id}
+                  href={e.shared_with_institute ? `/exams/${e.id}` : undefined}
+                  title={e.title}
+                  shared={e.shared_with_institute}
+                  badge={<StatusBadge active={e.is_active} activeLabel="نشط" inactiveLabel="متوقف" />}
+                  meta={`${e.questions?.[0]?.count ?? 0} سؤال · ${e.exam_submissions?.[0]?.count ?? 0} مشارك`}
+                />
               ))}
             </div>
           )}
@@ -150,10 +153,14 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
           {!challenges || challenges.length === 0 ? <EmptyRow text="لا توجد تحديات." /> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {challenges.map((c) => (
-                <div key={c.id} className="border border-ruwad-lime/50 bg-ruwad-lime/5 rounded-ruwad-sm p-4">
-                  <p className="font-bold text-ruwad-navy text-sm line-clamp-1">{c.title}</p>
-                  <p className="text-xs text-ruwad-navy/50 mt-2">{c.challenge_questions?.[0]?.count ?? 0} سؤال · {c.challenge_submissions?.[0]?.count ?? 0} مشارك</p>
-                </div>
+                <EntitySummaryCard
+                  key={c.id}
+                  href={c.shared_with_institute ? `/challenges/${c.id}` : undefined}
+                  title={c.title}
+                  shared={c.shared_with_institute}
+                  accent
+                  meta={`${c.challenge_questions?.[0]?.count ?? 0} سؤال · ${c.challenge_submissions?.[0]?.count ?? 0} مشارك`}
+                />
               ))}
             </div>
           )}
@@ -164,10 +171,13 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
           {!assignments || assignments.length === 0 ? <EmptyRow text="لا توجد واجبات." /> : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {assignments.map((a) => (
-                <div key={a.id} className="border border-ruwad-gray/60 rounded-ruwad-sm p-4">
-                  <p className="font-bold text-ruwad-navy text-sm line-clamp-1">{a.title}</p>
-                  <p className="text-xs text-ruwad-navy/50 mt-2">{a.assignment_submissions?.[0]?.count ?? 0} تسليم</p>
-                </div>
+                <EntitySummaryCard
+                  key={a.id}
+                  href={a.shared_with_institute ? `/assignments/${a.id}` : undefined}
+                  title={a.title}
+                  shared={a.shared_with_institute}
+                  meta={`${a.assignment_submissions?.[0]?.count ?? 0} تسليم`}
+                />
               ))}
             </div>
           )}
@@ -222,4 +232,48 @@ function StatusBadge({ active, activeLabel, inactiveLabel }: { active: boolean; 
       {active ? activeLabel : inactiveLabel}
     </span>
   )
+}
+
+/**
+ * بطاقة عنصر (كورس/امتحان/تحدي/واجب) في صفحة المدرب داخل لوحة المعهد.
+ * تصبح قابلة للنقر والتعديل فقط إذا فعّل المدرب مشاركتها مع المعهد (href موجود)؛
+ * الوصول الفعلي محكوم بـ RLS (can_manage_shared_resource) وليس فقط بإخفاء الرابط هنا.
+ */
+function EntitySummaryCard({
+  href,
+  title,
+  shared,
+  meta,
+  badge,
+  accent = false,
+}: {
+  href?: string
+  title: string
+  shared?: boolean
+  meta: string
+  badge?: React.ReactNode
+  accent?: boolean
+}) {
+  const content = (
+    <div
+      className={`rounded-ruwad-sm p-4 h-full transition ${
+        accent ? 'border border-ruwad-lime/50 bg-ruwad-lime/5' : 'border border-ruwad-gray/60'
+      } ${href ? 'hover:shadow-card hover:-translate-y-0.5 cursor-pointer' : ''}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-bold text-ruwad-navy text-sm line-clamp-1">{title}</p>
+        {badge}
+      </div>
+      <p className="text-xs text-ruwad-navy/50 mt-2">{meta}</p>
+      {shared ? (
+        <p className="flex items-center gap-1 text-[11px] font-semibold text-ruwad-blue mt-2">
+          <Building2 size={12} /> مُشارَك مع المعهد — قابل للتعديل
+        </p>
+      ) : (
+        <p className="text-[11px] text-ruwad-navy/35 mt-2">غير مُشارَك — للعرض فقط</p>
+      )}
+    </div>
+  )
+
+  return href ? <Link href={href}>{content}</Link> : content
 }

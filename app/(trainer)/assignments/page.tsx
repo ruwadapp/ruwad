@@ -2,11 +2,13 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { EntityCard } from '@/components/shared/EntityCard'
+import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
 import { Plus, FileCheck, Users, Clock } from 'lucide-react'
 
 export default async function AssignmentsPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const institute = await getTrainerInstitute(supabase, user!.id)
 
   const { data: assignments } = await supabase
     .from('assignments')
@@ -80,6 +82,7 @@ export default async function AssignmentsPage() {
                   deleteTable="assignments"
                   deleteId={a.id}
                   deleteConfirmText="حذف الواجب سيحذف معه كل تسليمات الطلاب فيه نهائياً. متابعة؟"
+                  instituteShare={institute ? { table: 'assignments', shared: a.shared_with_institute ?? false, instituteName: institute.name } : undefined}
                 />
               )
             })}

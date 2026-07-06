@@ -2,11 +2,14 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
+import { ShareToggle } from '@/components/shared/ShareToggle'
+import { getTrainerInstitute } from '@/lib/utils/getTrainerInstitute'
 import { Plus, Trophy, Zap, Users, Pencil } from 'lucide-react'
 
 export default async function ChallengesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const institute = await getTrainerInstitute(supabase, user!.id)
 
   const { data: challenges } = await supabase
     .from('challenges')
@@ -56,6 +59,10 @@ export default async function ChallengesPage() {
                   <span className="flex items-center gap-1.5"><Zap size={16} className="text-ruwad-navy/40" /> {c.challenge_questions?.[0]?.count ?? 0} سؤال</span>
                   <span className="flex items-center gap-1.5"><Users size={16} /> {c.challenge_submissions?.[0]?.count ?? 0} مشارك</span>
                 </div>
+
+                {institute && (
+                  <ShareToggle table="challenges" id={c.id} initialShared={c.shared_with_institute ?? false} instituteName={institute.name} />
+                )}
 
                 <div className="flex items-center gap-2 mt-2 pt-3 border-t border-ruwad-gray/40">
                   <Link href={`/challenges/${c.id}`} className="flex-1 flex items-center justify-center gap-1.5 text-sm font-semibold text-ruwad-blue hover:bg-ruwad-blue/10 px-3 py-2 rounded-ruwad-sm transition">

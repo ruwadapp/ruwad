@@ -22,6 +22,7 @@ export interface Course {
   cover_image: string | null
   status: 'draft' | 'published' | 'archived'
   course_code: string
+  shared_with_institute: boolean
   created_at: string
   updated_at: string
   lectures?: Lecture[]
@@ -103,6 +104,7 @@ export interface Exam {
   show_results: boolean
   allow_review: boolean
   shuffle_questions: boolean
+  shared_with_institute: boolean
   created_at: string
   starts_at: string | null
   ends_at: string | null
@@ -153,7 +155,8 @@ export interface SurveyQuestion {
 
 export interface Survey {
   id: string
-  trainer_id: string
+  trainer_id: string | null
+  institute_id: string | null
   title: string
   description: string | null
   logo_url: string | null
@@ -188,6 +191,7 @@ export interface Challenge {
   starts_at: string | null
   ends_at: string | null
   is_active: boolean
+  shared_with_institute: boolean
   created_at: string
   questions?: ChallengeQuestion[]
 }
@@ -260,6 +264,7 @@ export interface Assignment {
   total_marks: number
   due_date: string | null
   is_active: boolean
+  shared_with_institute: boolean
   created_at: string
   assignment_code: string
 }
