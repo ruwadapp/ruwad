@@ -22,11 +22,16 @@ export default async function QrResolverPage({ params }: { params: Promise<{ cod
   // فبدل تعطّل الصفحة، نتجاهل خطأ التسجيل الفردي ونكمل التوجيه للوجهة المناسبة على أي حال
   switch (match.entity_type) {
     case 'institute': {
-      await supabase.from('institute_members').upsert(
-        { institute_id: match.entity_id, user_id: user.id, member_role: role === 'trainer' ? 'trainer' : 'student', invited_by: 'self' },
-        { onConflict: 'institute_id,user_id', ignoreDuplicates: true }
-      )
-      redirect(role === 'trainer' ? '/institute' : '/my-institute')
+      if (role === 'trainer') {
+        await supabase.from('institute_members').upsert(
+          { institute_id: match.entity_id, user_id: user.id, member_role: 'trainer', invited_by: 'self' },
+          { onConflict: 'institute_id,user_id', ignoreDuplicates: true }
+        )
+        redirect('/institute')
+      }
+      // الطالب: لا حاجة لعضوية رسمية بالمعهد بعد الآن — تجربته أصبحت عبر متابعة المعهد
+      // من الرواق وتصفّح كورساته المنشورة وطلب الالتحاق مباشرة من ملفه العلني
+      redirect(`/i/${match.entity_id}`)
     }
     case 'course': {
       const { data: existing } = await supabase

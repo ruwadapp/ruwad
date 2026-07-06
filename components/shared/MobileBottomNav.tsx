@@ -45,7 +45,6 @@ const studentNav: NavItem[] = [
   { href: '/progress', label: 'تقدّمي', icon: 'BarChart3' },
   { href: '/my-badges', label: 'شاراتي', icon: 'Award' },
   { href: '/my-certificates', label: 'شهاداتي', icon: 'ShieldCheck' },
-  { href: '/my-institute', label: 'المعهد', icon: 'Building2' },
 ]
 
 const instituteNav: NavItem[] = [
