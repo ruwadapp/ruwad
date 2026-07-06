@@ -84,7 +84,7 @@ export default async function AssignmentsPage() {
                   deleteTable="assignments"
                   deleteId={a.id}
                   deleteConfirmText="حذف الواجب سيحذف معه كل تسليمات الطلاب فيه نهائياً. متابعة؟"
-                  instituteShare={{ resourceType: 'assignments', institutes, sharedInstituteIds: sharesMap[a.id] ?? [] }}
+                  instituteShare={a.course_id ? undefined : { resourceType: 'assignments', institutes, sharedInstituteIds: sharesMap[a.id] ?? [] }}
                 />
               )
             })}

@@ -88,7 +88,7 @@ export default async function ExamsPage() {
                 deleteTable="exams"
                 deleteId={exam.id}
                 deleteConfirmText="حذف الامتحان سيحذف معه كل أسئلته ونتائج الطلاب فيه نهائياً. متابعة؟"
-                instituteShare={{ resourceType: 'exams', institutes, sharedInstituteIds: sharesMap[exam.id] ?? [] }}
+                instituteShare={exam.course_id ? undefined : { resourceType: 'exams', institutes, sharedInstituteIds: sharesMap[exam.id] ?? [] }}
               />
             ))}
           </div>

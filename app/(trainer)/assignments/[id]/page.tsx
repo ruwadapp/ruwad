@@ -5,6 +5,7 @@ import { SubmissionsGrader } from '@/components/trainer/SubmissionsGrader'
 import { AssignmentForm } from '@/components/trainer/AssignmentForm'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { ShareManager } from '@/components/shared/ShareManager'
+import { InheritedShareNote } from '@/components/shared/InheritedShareNote'
 import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
 import { Building2 } from 'lucide-react'
 
@@ -39,8 +40,12 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
           </div>
         )}
         <div className="flex justify-end gap-3 flex-wrap">
-          {institutes.length > 0 && (
-            <ShareManager resourceType="assignments" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+          {assignment.course_id ? (
+            <InheritedShareNote courseId={assignment.course_id} />
+          ) : (
+            institutes.length > 0 && (
+              <ShareManager resourceType="assignments" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+            )
           )}
           <DeleteButton table="assignments" id={id} redirectTo="/assignments" label="حذف الواجب" />
         </div>

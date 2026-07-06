@@ -10,7 +10,10 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (profile?.role !== 'trainer') redirect('/home')
+  // مدير المعهد مسموح له بالدخول أيضاً كي يستطيع فتح وتعديل صفحات التفاصيل
+  // (كورس/امتحان/واجب/تحدٍ) التي شاركها معه أحد المدربين المنضمين له. صلاحية
+  // التعديل الفعلية محكومة بـ RLS داخل كل صفحة، وليس بهذا الحارس فقط.
+  if (profile?.role !== 'trainer' && profile?.role !== 'institute_admin') redirect('/home')
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">

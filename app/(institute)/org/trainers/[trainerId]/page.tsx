@@ -46,12 +46,22 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
   const sharedIdsByType: Record<string, Set<string>> = { courses: new Set(), exams: new Set(), assignments: new Set(), challenges: new Set() }
   for (const s of shares ?? []) sharedIdsByType[s.resource_type]?.add(s.resource_id)
 
-  const courseIds = (courses ?? []).map((c) => c.id)
-  const { data: enrollments } = courseIds.length
+  // امتحان/واجب/تحدٍ يُعتبر "مُشارَكاً" إمّا بمشاركة مباشرة أو لأن كورسه الأصل مُشارَك
+  const isShared = {
+    courses: (id: string) => sharedIdsByType.courses.has(id),
+    exams: (e: { id: string; course_id: string | null }) => sharedIdsByType.exams.has(e.id) || (!!e.course_id && sharedIdsByType.courses.has(e.course_id)),
+    assignments: (a: { id: string; course_id: string | null }) => sharedIdsByType.assignments.has(a.id) || (!!a.course_id && sharedIdsByType.courses.has(a.course_id)),
+    challenges: (c: { id: string; course_id: string | null }) => sharedIdsByType.challenges.has(c.id) || (!!c.course_id && sharedIdsByType.courses.has(c.course_id)),
+  }
+
+  // الطلاب: فقط من الكورسات المُشارَكة فعلياً مع هذا المعهد تحديداً — لا كل طلاب المدرب،
+  // لأن المدرب قد يُدرّب بشكل فردي أو مع معاهد أخرى لم يشاركها هذا الكورس
+  const sharedCourseIds = (courses ?? []).filter((c) => isShared.courses(c.id)).map((c) => c.id)
+  const { data: enrollments } = sharedCourseIds.length
     ? await supabase
         .from('enrollments')
         .select('student_id, course_id, progress, status, student:profiles!student_id(full_name)')
-        .in('course_id', courseIds)
+        .in('course_id', sharedCourseIds)
         .eq('status', 'approved')
     : { data: [] }
 
@@ -110,9 +120,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {courses.map((c) => (
                 <EntitySummaryCard
                   key={c.id}
-                  href={sharedIdsByType.courses.has(c.id) ? `/courses/${c.id}` : undefined}
+                  href={isShared.courses(c.id) ? `/courses/${c.id}` : undefined}
                   title={c.title}
-                  shared={sharedIdsByType.courses.has(c.id)}
+                  shared={isShared.courses(c.id)}
                   badge={<StatusBadge active={c.status === 'published'} activeLabel="منشور" inactiveLabel="مسودة" />}
                   meta={`${c.lectures?.[0]?.count ?? 0} محاضرة · ${c.enrollments?.[0]?.count ?? 0} طالب`}
                 />
@@ -128,9 +138,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {exams.map((e) => (
                 <EntitySummaryCard
                   key={e.id}
-                  href={sharedIdsByType.exams.has(e.id) ? `/exams/${e.id}` : undefined}
+                  href={isShared.exams(e) ? `/exams/${e.id}` : undefined}
                   title={e.title}
-                  shared={sharedIdsByType.exams.has(e.id)}
+                  shared={isShared.exams(e)}
                   badge={<StatusBadge active={e.is_active} activeLabel="نشط" inactiveLabel="متوقف" />}
                   meta={`${e.questions?.[0]?.count ?? 0} سؤال · ${e.exam_submissions?.[0]?.count ?? 0} مشارك`}
                 />
@@ -160,9 +170,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {challenges.map((c) => (
                 <EntitySummaryCard
                   key={c.id}
-                  href={sharedIdsByType.challenges.has(c.id) ? `/challenges/${c.id}` : undefined}
+                  href={isShared.challenges(c) ? `/challenges/${c.id}` : undefined}
                   title={c.title}
-                  shared={sharedIdsByType.challenges.has(c.id)}
+                  shared={isShared.challenges(c)}
                   accent
                   meta={`${c.challenge_questions?.[0]?.count ?? 0} سؤال · ${c.challenge_submissions?.[0]?.count ?? 0} مشارك`}
                 />
@@ -178,9 +188,9 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
               {assignments.map((a) => (
                 <EntitySummaryCard
                   key={a.id}
-                  href={sharedIdsByType.assignments.has(a.id) ? `/assignments/${a.id}` : undefined}
+                  href={isShared.assignments(a) ? `/assignments/${a.id}` : undefined}
                   title={a.title}
-                  shared={sharedIdsByType.assignments.has(a.id)}
+                  shared={isShared.assignments(a)}
                   meta={`${a.assignment_submissions?.[0]?.count ?? 0} تسليم`}
                 />
               ))}

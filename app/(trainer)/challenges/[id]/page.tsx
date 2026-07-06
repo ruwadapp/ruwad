@@ -7,6 +7,7 @@ import { ChallengeQuestionManager } from '@/components/trainer/ChallengeQuestion
 import { StartChallengeSessionButton } from '@/components/trainer/StartChallengeSessionButton'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { ShareManager } from '@/components/shared/ShareManager'
+import { InheritedShareNote } from '@/components/shared/InheritedShareNote'
 import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
 import { Building2, Trophy } from 'lucide-react'
 
@@ -41,8 +42,12 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
           </div>
         )}
         <div className="flex justify-end gap-3 flex-wrap">
-          {institutes.length > 0 && (
-            <ShareManager resourceType="challenges" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+          {challenge.course_id ? (
+            <InheritedShareNote courseId={challenge.course_id} />
+          ) : (
+            institutes.length > 0 && (
+              <ShareManager resourceType="challenges" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+            )
           )}
           <DeleteButton table="challenges" id={id} redirectTo="/challenges" label="حذف التحدي" />
           <Link href={`/challenges/${id}/results`} className="bg-white border-2 border-ruwad-gray text-ruwad-navy px-5 py-2.5 rounded-ruwad-sm font-semibold hover:bg-ruwad-gray/20 transition flex items-center gap-2">

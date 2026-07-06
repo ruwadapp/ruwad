@@ -6,6 +6,7 @@ import { ExamForm } from '@/components/trainer/ExamForm'
 import { QuestionManager } from '@/components/trainer/QuestionManager'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { ShareManager } from '@/components/shared/ShareManager'
+import { InheritedShareNote } from '@/components/shared/InheritedShareNote'
 import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
 import { Building2, BarChart3, PenLine } from 'lucide-react'
 
@@ -47,8 +48,12 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
           </div>
         )}
         <div className="flex justify-end gap-3 flex-wrap">
-          {institutes.length > 0 && (
-            <ShareManager resourceType="exams" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+          {exam.course_id ? (
+            <InheritedShareNote courseId={exam.course_id} />
+          ) : (
+            institutes.length > 0 && (
+              <ShareManager resourceType="exams" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
+            )
           )}
           <DeleteButton table="exams" id={id} redirectTo="/exams" label="حذف الامتحان" />
           {hasEssay && (

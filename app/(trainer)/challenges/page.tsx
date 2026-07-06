@@ -62,7 +62,7 @@ export default async function ChallengesPage() {
                   <span className="flex items-center gap-1.5"><Users size={16} /> {c.challenge_submissions?.[0]?.count ?? 0} مشارك</span>
                 </div>
 
-                {institutes.length > 0 && (
+                {!c.course_id && institutes.length > 0 && (
                   <ShareManager resourceType="challenges" resourceId={c.id} institutes={institutes} initialSharedInstituteIds={sharesMap[c.id] ?? []} />
                 )}
 
