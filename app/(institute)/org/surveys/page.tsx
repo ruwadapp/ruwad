@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { SurveyImportButton } from '@/components/trainer/SurveyImportButton'
+import { SharedSurveysList } from '@/components/shared/SharedSurveysList'
 import { Plus, ClipboardList, MessageSquare, Pencil, BarChart3 } from 'lucide-react'
 
 export default async function InstituteSurveysPage() {
@@ -13,11 +14,22 @@ export default async function InstituteSurveysPage() {
   const { data: institute } = await supabase.from('institutes').select('id, name').eq('owner_id', user!.id).single()
   if (!institute) redirect('/org/dashboard')
 
-  const { data: surveys } = await supabase
-    .from('surveys')
-    .select('*, survey_questions(count), survey_responses(count)')
-    .eq('institute_id', institute.id)
-    .order('created_at', { ascending: false })
+  const [{ data: surveys }, { data: sharedRows }] = await Promise.all([
+    supabase
+      .from('surveys')
+      .select('*, survey_questions(count), survey_responses(count)')
+      .eq('institute_id', institute.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('survey_shares').select('survey_id').eq('shared_with_type', 'institute').eq('shared_with_id', institute.id),
+  ])
+
+  const sharedSurveyIds = (sharedRows ?? []).map((r) => r.survey_id)
+  const { data: sharedSurveysRaw } = sharedSurveyIds.length
+    ? await supabase.from('surveys').select('id, title, description, trainer:profiles!trainer_id(full_name)').in('id', sharedSurveyIds)
+    : { data: [] }
+  const sharedSurveys = (sharedSurveysRaw ?? []).map((s: any) => ({
+    id: s.id, title: s.title, description: s.description, ownerName: s.trainer?.full_name ?? 'مدرب',
+  }))
 
   return (
     <>
@@ -32,6 +44,14 @@ export default async function InstituteSurveysPage() {
             <Plus size={18} /> استبيان جديد
           </Link>
         </div>
+
+        <SharedSurveysList
+          surveys={sharedSurveys}
+          asOwnerType="institute"
+          ownerId={institute.id}
+          resultsHrefBase="/org/surveys"
+          cloneRedirectBase="/org/surveys"
+        />
 
         {!surveys || surveys.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center">

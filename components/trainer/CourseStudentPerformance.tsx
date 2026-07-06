@@ -141,6 +141,14 @@ export function CourseStudentPerformance({ courseId }: { courseId: string }) {
 
     if (!error && data) {
       setRows((prev) => prev.map((r) => (r.student_id === issuingFor.student_id ? { ...r, certificateId: data.id } : r)))
+      // نشر تلقائي في الرواق — الشهادة تصبح إنجازاً مرئياً لمتابعي المدرب
+      const { data: courseRow } = await supabase.from('courses').select('title').eq('id', courseId).single()
+      await supabase.from('trainer_posts').insert({
+        trainer_id: user!.id,
+        content: `🎓 أتمّ ${issuingFor.full_name} كورس "${courseRow?.title ?? ''}" بنجاح!`,
+        card_type: 'certificate',
+        card_ref_id: data.id,
+      })
     }
     setSaving(false)
     setIssuingFor(null)

@@ -422,7 +422,7 @@ export interface BadgeApproval {
 }
 
 // ======= الرواق (متابعة المدربين ومنشوراتهم) =======
-export type PostCardType = 'course' | 'exam' | 'assignment' | 'challenge' | 'survey'
+export type PostCardType = 'course' | 'exam' | 'assignment' | 'challenge' | 'survey' | 'certificate'
 
 export interface TrainerFollow {
   id: string

@@ -6,6 +6,7 @@ import type { Profile } from '@/lib/types'
 import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight } from 'lucide-react'
 import { PushNotificationSetup } from './PushNotificationSetup'
 import { NotificationTestButton } from './NotificationTestButton'
+import { AvatarUpload } from './AvatarUpload'
 
 const ROLE_LABELS: Record<string, string> = {
   trainer: 'مدرب',
@@ -97,9 +98,15 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
           <ArrowRight size={20} />
         </button>
 
-        <div className={`relative z-10 w-20 h-20 rounded-full ${style.bg} flex items-center justify-center text-3xl font-extrabold text-white shadow-ruwad-lg ring-4 ring-white/20`}>
-          {initials}
-        </div>
+        {(profile.role === 'trainer' || profile.role === 'institute_admin') ? (
+          <div className="relative z-10">
+            <AvatarUpload currentUrl={profile.avatar_url} fallbackLetter={initials} table="profiles" rowId={profile.id} column="avatar_url" size={80} />
+          </div>
+        ) : (
+          <div className={`relative z-10 w-20 h-20 rounded-full ${style.bg} flex items-center justify-center text-3xl font-extrabold text-white shadow-ruwad-lg ring-4 ring-white/20`}>
+            {initials}
+          </div>
+        )}
 
         <span className="relative z-10 text-xs font-bold px-3 py-1 rounded-full bg-white/20 text-white flex items-center gap-1.5 mt-1">
           <RoleIcon size={12} /> {ROLE_LABELS[profile.role] ?? ''}

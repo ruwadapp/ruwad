@@ -4,13 +4,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap } from 'lucide-react'
+import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award } from 'lucide-react'
+import { PostLikeButton } from '@/components/shared/PostLikeButton'
+import { StoryShareButton } from '@/components/shared/StoryShareButton'
 
 interface CourseCard { id: string; title: string; description: string | null; course_code: string; status: string }
 interface ExamCard { id: string; title: string; description: string | null; exam_code: string; is_active: boolean }
 interface AssignmentCard { id: string; title: string; description: string | null; assignment_code: string; is_active: boolean; due_date: string | null }
 interface ChallengeCard { id: string; title: string; description: string | null }
 interface SurveyCard { id: string; title: string; description: string | null; share_token: string; is_active: boolean }
+interface CertificateCard { id: string; certificate_code: string; score: number; student?: { full_name: string }; course?: { title: string } }
+
+const CARD_TYPE_LABELS: Record<string, string> = {
+  course: '📚 كورس جديد', exam: '📝 امتحان', assignment: '✅ واجب', challenge: '🏆 تحدٍ', survey: '📋 استبيان', certificate: '🎓 شهادة إتمام',
+}
 
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
@@ -25,15 +32,20 @@ export function RawaqFeed({
   cardData,
   enrolledCourseIds,
   activeChallengeSessions,
+  likedPostIds,
+  likeCounts,
 }: {
   posts: TrainerPost[]
   cardData: Record<string, Partial<Record<PostCardType, any>>>
   enrolledCourseIds: string[]
   activeChallengeSessions: Record<string, { session_code: string } | null>
+  likedPostIds: string[]
+  likeCounts: Record<string, number>
 }) {
   const [enrolled, setEnrolled] = useState(new Set(enrolledCourseIds))
   const [pending, setPending] = useState(new Set<string>())
   const [joiningId, setJoiningId] = useState<string | null>(null)
+  const likedSet = new Set(likedPostIds)
   const router = useRouter()
   const supabase = createClient()
 
@@ -167,6 +179,33 @@ export function RawaqFeed({
                 </div>
               )
             })()}
+
+            {post.card_type === 'certificate' && card && (() => {
+              const c = card as CertificateCard
+              return (
+                <div className="rounded-ruwad-sm border-2 border-ruwad-lime bg-gradient-to-l from-ruwad-lime/20 to-white p-4 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Award size={20} className="text-ruwad-navy shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-ruwad-navy truncate">{c.course?.title ?? 'شهادة إتمام'}</p>
+                      <p className="text-xs text-ruwad-navy/50">النتيجة: {c.score}%</p>
+                    </div>
+                  </div>
+                  <Link href={`/certificates/verify/${c.certificate_code}`} className="text-xs font-semibold bg-ruwad-navy text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0">تحقق من الشهادة</Link>
+                </div>
+              )
+            })()}
+
+            <div className="flex items-center justify-between -mx-1 pt-1 border-t border-ruwad-gray/30 mt-1">
+              <PostLikeButton postId={post.id} initialLiked={likedSet.has(post.id)} initialCount={likeCounts[post.id] ?? 0} />
+              <StoryShareButton
+                authorName={name}
+                isInstitute={!!post.institute_id}
+                content={post.content}
+                cardTitle={card?.title ?? null}
+                cardTypeLabel={CARD_TYPE_LABELS[post.card_type ?? ''] ?? null}
+              />
+            </div>
           </div>
         )
       })}

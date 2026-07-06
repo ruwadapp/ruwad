@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CodeQrImage } from '@/components/shared/CodeQrImage'
+import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { Users, GraduationCap, BookOpen, FileText, Award } from 'lucide-react'
 
 export default async function InstituteDashboardPage() {
@@ -56,9 +57,12 @@ export default async function InstituteDashboardPage() {
       <main className="p-6 flex flex-col gap-6">
         <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-8 flex items-center justify-between flex-wrap gap-4">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-          <div className="relative">
-            <p className="text-white/70 text-sm">معرّف المعهد (شاركه للانضمام)</p>
-            <p className="relative text-3xl font-mono font-bold text-white tracking-widest mt-1">{institute.institute_code}</p>
+          <div className="relative flex items-center gap-4">
+            <AvatarUpload currentUrl={institute.logo_url} fallbackLetter={institute.name.charAt(0)} table="institutes" rowId={institute.id} column="logo_url" size={72} />
+            <div>
+              <p className="text-white/70 text-sm">معرّف المعهد (شاركه للانضمام)</p>
+              <p className="relative text-3xl font-mono font-bold text-white tracking-widest mt-1">{institute.institute_code}</p>
+            </div>
           </div>
           <CodeQrImage code={institute.institute_code} size={110} className="relative" />
         </div>

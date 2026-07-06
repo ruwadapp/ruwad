@@ -3,17 +3,29 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { SurveyImportButton } from '@/components/trainer/SurveyImportButton'
+import { SharedSurveysList } from '@/components/shared/SharedSurveysList'
 import { Plus, ClipboardList, MessageSquare, Pencil, BarChart3 } from 'lucide-react'
 
 export default async function SurveysPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: surveys } = await supabase
-    .from('surveys')
-    .select('*, survey_questions(count), survey_responses(count)')
-    .eq('trainer_id', user!.id)
-    .order('created_at', { ascending: false })
+  const [{ data: surveys }, { data: sharedRows }] = await Promise.all([
+    supabase
+      .from('surveys')
+      .select('*, survey_questions(count), survey_responses(count)')
+      .eq('trainer_id', user!.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('survey_shares').select('survey_id').eq('shared_with_type', 'trainer').eq('shared_with_id', user!.id),
+  ])
+
+  const sharedSurveyIds = (sharedRows ?? []).map((r) => r.survey_id)
+  const { data: sharedSurveysRaw } = sharedSurveyIds.length
+    ? await supabase.from('surveys').select('id, title, description, institute:institutes(name)').in('id', sharedSurveyIds)
+    : { data: [] }
+  const sharedSurveys = (sharedSurveysRaw ?? []).map((s: any) => ({
+    id: s.id, title: s.title, description: s.description, ownerName: s.institute?.name ?? 'معهد',
+  }))
 
   return (
     <>
@@ -28,6 +40,14 @@ export default async function SurveysPage() {
             <Plus size={18} /> استبيان جديد
           </Link>
         </div>
+
+        <SharedSurveysList
+          surveys={sharedSurveys}
+          asOwnerType="trainer"
+          ownerId={user!.id}
+          resultsHrefBase="/surveys"
+          cloneRedirectBase="/surveys"
+        />
 
         {!surveys || surveys.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center">

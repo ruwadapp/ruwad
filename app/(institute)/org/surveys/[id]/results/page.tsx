@@ -16,7 +16,6 @@ export default async function InstituteSurveyResultsPage({ params }: { params: P
     .from('surveys')
     .select('*')
     .eq('id', id)
-    .eq('institute_id', institute.id)
     .single()
 
   if (!survey) notFound()

@@ -13,7 +13,6 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
     .from('surveys')
     .select('*')
     .eq('id', id)
-    .eq('trainer_id', user!.id)
     .single()
 
   if (!survey) notFound()

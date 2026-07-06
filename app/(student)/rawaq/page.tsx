@@ -18,6 +18,8 @@ export default async function RawaqPage() {
   const cardData: Record<string, Record<PostCardType, any>> = {}
   let enrolledCourseIds = new Set<string>()
   let activeChallengeSessions: Record<string, { session_code: string } | null> = {}
+  let likedPostIds: string[] = []
+  let likeCounts: Record<string, number> = {}
 
   if (hasAnyFollow) {
     let postsQuery = supabase
@@ -34,17 +36,18 @@ export default async function RawaqPage() {
     const { data: postsData } = await postsQuery
     posts = postsData ?? []
 
-    const idsByType: Record<PostCardType, string[]> = { course: [], exam: [], assignment: [], challenge: [], survey: [] }
+    const idsByType: Record<PostCardType, string[]> = { course: [], exam: [], assignment: [], challenge: [], survey: [], certificate: [] }
     for (const p of posts) {
       if (p.card_type && p.card_ref_id) idsByType[p.card_type as PostCardType].push(p.card_ref_id)
     }
 
-    const [coursesRes, examsRes, assignmentsRes, challengesRes, surveysRes, enrollRes] = await Promise.all([
+    const [coursesRes, examsRes, assignmentsRes, challengesRes, surveysRes, certificatesRes, enrollRes] = await Promise.all([
       idsByType.course.length ? supabase.from('courses').select('id, title, description, course_code, status').in('id', idsByType.course) : Promise.resolve({ data: [] }),
       idsByType.exam.length ? supabase.from('exams').select('id, title, description, exam_code, is_active').in('id', idsByType.exam) : Promise.resolve({ data: [] }),
       idsByType.assignment.length ? supabase.from('assignments').select('id, title, description, assignment_code, is_active, due_date').in('id', idsByType.assignment) : Promise.resolve({ data: [] }),
       idsByType.challenge.length ? supabase.from('challenges').select('id, title, description').in('id', idsByType.challenge) : Promise.resolve({ data: [] }),
       idsByType.survey.length ? supabase.from('surveys').select('id, title, description, share_token, is_active').in('id', idsByType.survey) : Promise.resolve({ data: [] }),
+      idsByType.certificate.length ? supabase.from('certificates').select('id, certificate_code, score, student:profiles!student_id(full_name), course:courses(title)').in('id', idsByType.certificate) : Promise.resolve({ data: [] }),
       supabase.from('enrollments').select('course_id').eq('student_id', uid),
     ])
 
@@ -56,10 +59,11 @@ export default async function RawaqPage() {
     const assignmentsMap = byId(assignmentsRes.data as any[])
     const challengesMap = byId(challengesRes.data as any[])
     const surveysMap = byId(surveysRes.data as any[])
+    const certificatesMap = byId(certificatesRes.data as any[])
 
     for (const p of posts) {
       if (!p.card_type || !p.card_ref_id) continue
-      const map = { course: coursesMap, exam: examsMap, assignment: assignmentsMap, challenge: challengesMap, survey: surveysMap }[p.card_type as PostCardType]
+      const map = { course: coursesMap, exam: examsMap, assignment: assignmentsMap, challenge: challengesMap, survey: surveysMap, certificate: certificatesMap }[p.card_type as PostCardType]
       cardData[p.id] = { [p.card_type]: map.get(p.card_ref_id) } as any
     }
 
@@ -72,6 +76,15 @@ export default async function RawaqPage() {
         .order('started_at', { ascending: false })
       for (const s of sessions ?? []) {
         if (!activeChallengeSessions[s.challenge_id]) activeChallengeSessions[s.challenge_id] = { session_code: s.session_code }
+      }
+    }
+
+    const postIds = posts.map((p) => p.id)
+    if (postIds.length > 0) {
+      const { data: likes } = await supabase.from('post_likes').select('post_id, user_id').in('post_id', postIds)
+      for (const l of likes ?? []) {
+        likeCounts[l.post_id] = (likeCounts[l.post_id] ?? 0) + 1
+        if (l.user_id === uid) likedPostIds.push(l.post_id)
       }
     }
   }
@@ -105,6 +118,8 @@ export default async function RawaqPage() {
             cardData={cardData}
             enrolledCourseIds={[...enrolledCourseIds]}
             activeChallengeSessions={activeChallengeSessions}
+            likedPostIds={likedPostIds}
+            likeCounts={likeCounts}
           />
         )}
       </main>

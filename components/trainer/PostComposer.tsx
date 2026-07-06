@@ -38,7 +38,7 @@ export function PostComposer({
   const router = useRouter()
   const supabase = createClient()
 
-  const optionsByType: Record<PostCardType, EntityOption[]> = {
+  const optionsByType: Partial<Record<PostCardType, EntityOption[]>> = {
     course: courses, exam: exams, assignment: assignments, challenge: challenges, survey: surveys,
   }
 
