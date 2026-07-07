@@ -104,13 +104,19 @@ export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?
           className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-lime transition resize-none" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">نوع التحدي</label>
           <select value={challengeType} onChange={(e) => setChallengeType(e.target.value as Challenge['challenge_type'])}
             className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 outline-none focus:border-ruwad-lime transition bg-white">
             {Object.entries(TYPE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
           </select>
+          <p className="text-xs text-ruwad-navy/50">
+            {challengeType === 'quiz' && 'أسئلة اختيار من متعدد بجلسة مباشرة وترتيب فوري (Kahoot-style).'}
+            {challengeType === 'coding' && 'يكتب الطالب كوداً في مربع نص وتُصحَّح يدوياً من قبلك.'}
+            {challengeType === 'upload' && 'يرفع الطالب ملفاً (صورة/مستند/مشروع) وتُصحَّح يدوياً من قبلك.'}
+            {challengeType === 'practical' && 'يكتب الطالب وصفاً لما أنجزه عملياً وتُصحَّح يدوياً من قبلك.'}
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">الوقت المحدد (دقائق، اختياري)</label>

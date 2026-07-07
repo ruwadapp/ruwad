@@ -39,7 +39,7 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
             <Building2 size={16} /> تُعدّل هذا الواجب بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع معهدك.
           </div>
         )}
-        <div className="flex justify-end gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-3 [&>*]:w-full sm:[&>*]:w-auto [&>*]:flex [&>*]:justify-center">
           {assignment.course_id ? (
             <InheritedShareNote courseId={assignment.course_id} />
           ) : (

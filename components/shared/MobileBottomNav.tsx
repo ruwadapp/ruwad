@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, UserCircle2, ShieldCheck, Rss,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
@@ -161,18 +161,6 @@ export function MobileBottomNav({ profile }: { profile: Profile | null }) {
                   </Link>
                 )
               })}
-
-              {/* ===== حسابي — دائماً في النهاية ===== */}
-              <Link
-                href="/profile"
-                style={{ scrollSnapAlign: 'start' }}
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-[20%] shrink-0 py-1.5 rounded-[18px] transition-all ${
-                  isActive('/profile') ? 'bg-ruwad-blue text-white scale-105 shadow-ruwad' : 'text-ruwad-navy/50'
-                }`}
-              >
-                <UserCircle2 size={20} />
-                <span className="text-[10px] font-semibold leading-none whitespace-nowrap">حسابي</span>
-              </Link>
             </div>
           </nav>
 

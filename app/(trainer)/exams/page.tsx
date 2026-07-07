@@ -35,31 +35,31 @@ export default async function ExamsPage() {
       <Header title="الامتحانات" />
       <main className="p-6 flex flex-col gap-6">
         {/* ===== هيدر إحصائي متدرّج ===== */}
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7 flex items-center justify-between flex-wrap gap-4">
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
 
-          <div className="relative grid grid-cols-3 gap-4 flex-1">
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+          <div className="relative grid grid-cols-3 gap-2 sm:gap-4 w-full sm:flex-1">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <FileText size={18} className="text-white mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{exams?.length ?? 0}</p>
-              <p className="text-[11px] text-white/70">امتحان</p>
+              <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{exams?.length ?? 0}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/70 leading-tight">امتحان</p>
             </div>
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <Zap size={18} className="text-white mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{activeCount}</p>
-              <p className="text-[11px] text-white/70">نشط</p>
+              <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{activeCount}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/70 leading-tight">نشط</p>
             </div>
-            <div className="bg-ruwad-lime rounded-ruwad-sm p-4 text-center">
+            <div className="bg-ruwad-lime rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <Award size={18} className="text-ruwad-navy mx-auto mb-1" />
-              <p className="text-2xl font-bold text-ruwad-navy">{avgScore !== null ? `${avgScore}%` : '—'}</p>
-              <p className="text-[11px] text-ruwad-navy/70">متوسط الأداء</p>
+              <p className="text-lg sm:text-2xl font-bold text-ruwad-navy leading-tight">{avgScore !== null ? `${avgScore}%` : '—'}</p>
+              <p className="text-[10px] sm:text-[11px] text-ruwad-navy/70 leading-tight">متوسط الأداء</p>
             </div>
           </div>
 
           <Link
             href="/exams/new"
-            className="relative bg-white text-ruwad-blue px-5 py-2.5 rounded-ruwad-sm font-bold hover:opacity-90 transition shadow-ruwad flex items-center gap-2 shrink-0"
+            className="relative bg-white text-ruwad-blue px-5 py-2.5 rounded-ruwad-sm font-bold hover:opacity-90 transition shadow-ruwad flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto"
           >
             <Plus size={18} /> امتحان جديد
           </Link>

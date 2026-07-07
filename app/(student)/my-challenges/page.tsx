@@ -20,7 +20,7 @@ export default async function MyChallengesPage() {
   const { data: courseChallenges } = courseIds.length
     ? await supabase
         .from('challenges')
-        .select('id, title, course:courses(title)')
+        .select('id, title, challenge_type, course:courses(title)')
         .in('course_id', courseIds)
         .eq('is_active', true)
     : { data: [] }
@@ -62,7 +62,11 @@ export default async function MyChallengesPage() {
                       <p className="font-medium text-ruwad-navy">{c.title}</p>
                       <p className="text-xs text-ruwad-navy/50">{courseTitle}</p>
                     </div>
-                    {session ? (
+                    {c.challenge_type !== 'quiz' ? (
+                      <Link href={`/my-challenges/${c.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
+                        فتح التحدي
+                      </Link>
+                    ) : session ? (
                       <Link href={`/my-challenges/live/${session.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
                         <Radio size={14} className="animate-pulse" /> انضم الآن
                       </Link>

@@ -30,31 +30,31 @@ export default async function AssignmentsPage() {
       <Header title="الوظائف" />
       <main className="p-6 flex flex-col gap-6">
         {/* ===== هيدر إحصائي متدرّج ===== */}
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7 flex items-center justify-between flex-wrap gap-4">
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
 
-          <div className="relative grid grid-cols-3 gap-4 flex-1">
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+          <div className="relative grid grid-cols-3 gap-2 sm:gap-4 w-full sm:flex-1">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <FileCheck size={18} className="text-white mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{assignments?.length ?? 0}</p>
-              <p className="text-[11px] text-white/70">واجب</p>
+              <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{assignments?.length ?? 0}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/70 leading-tight">واجب</p>
             </div>
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-4 text-center">
+            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <Users size={18} className="text-white mx-auto mb-1" />
-              <p className="text-2xl font-bold text-white">{totalSubmissions}</p>
-              <p className="text-[11px] text-white/70">تسليم</p>
+              <p className="text-lg sm:text-2xl font-bold text-white leading-tight">{totalSubmissions}</p>
+              <p className="text-[10px] sm:text-[11px] text-white/70 leading-tight">تسليم</p>
             </div>
-            <div className="bg-ruwad-lime rounded-ruwad-sm p-4 text-center">
+            <div className="bg-ruwad-lime rounded-ruwad-sm p-2.5 sm:p-4 text-center">
               <Clock size={18} className="text-ruwad-navy mx-auto mb-1" />
-              <p className="text-2xl font-bold text-ruwad-navy">{ungraded?.length ?? 0}</p>
-              <p className="text-[11px] text-ruwad-navy/70">بانتظار التصحيح</p>
+              <p className="text-lg sm:text-2xl font-bold text-ruwad-navy leading-tight">{ungraded?.length ?? 0}</p>
+              <p className="text-[10px] sm:text-[11px] text-ruwad-navy/70 leading-tight">بانتظار التصحيح</p>
             </div>
           </div>
 
           <Link
             href="/assignments/new"
-            className="relative bg-white text-ruwad-blue px-5 py-2.5 rounded-ruwad-sm font-bold hover:opacity-90 transition shadow-ruwad flex items-center gap-2 shrink-0"
+            className="relative bg-white text-ruwad-blue px-5 py-2.5 rounded-ruwad-sm font-bold hover:opacity-90 transition shadow-ruwad flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto"
           >
             <Plus size={18} /> واجب جديد
           </Link>

@@ -141,7 +141,7 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
         <p className="text-xs text-ruwad-navy/50">ربط الامتحان بكورس يتيح لك متابعة مستوى طلاب ذلك الكورس تحديداً.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">المدة (دقائق، اتركها فارغة لبلا حد)</label>
           <input
@@ -166,7 +166,7 @@ export function ExamForm({ initialExam, courses }: ExamFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">يبدأ في (اختياري)</label>
           <input

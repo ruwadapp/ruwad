@@ -21,11 +21,11 @@ export default async function AttendancePage() {
     <>
       <Header title="الحضور" />
       <main className="p-6 flex flex-col gap-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <CreateSessionForm courses={courses ?? []} />
           <Link
             href="/attendance/analytics"
-            className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition flex items-center gap-2 h-fit"
+            className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto"
           >
             <BarChart3 size={18} /> إحصاءات الحضور الشاملة
           </Link>

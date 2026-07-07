@@ -38,7 +38,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             امتحان أو واجب أو تحدٍ مرتبط به قابل للتعديل أيضاً.
           </div>
         )}
-        <div className="flex justify-end gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:justify-end gap-3 [&>*]:w-full sm:[&>*]:w-auto [&>*]:flex [&>*]:justify-center">
           {institutes.length > 0 && (
             <ShareManager resourceType="courses" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
           )}

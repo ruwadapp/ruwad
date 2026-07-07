@@ -174,7 +174,7 @@ export function SlideManager({ presentationId, slides }: { presentationId: strin
       .single()
     if (insertError || !data) { setError('حدث خطأ أثناء الحفظ'); setLoading(false); return }
     setItems((prev) => [...prev, data])
-    setSelectedId(data.id)
+    setSelectedId(null)
     setLoading(false)
     flashSaved()
     router.refresh()

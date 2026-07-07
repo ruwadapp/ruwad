@@ -53,48 +53,52 @@ export function LectureManager({ courseId, lectures }: { courseId: string; lectu
             .map((lecture, idx) => (
               <div
                 key={lecture.id}
-                className="flex items-center gap-3 p-4 rounded-ruwad-sm border border-ruwad-gray/60"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-ruwad-sm border border-ruwad-gray/60"
               >
-                <GripVertical size={18} className="text-ruwad-navy/30 shrink-0" />
-                <span className="w-6 h-6 rounded-full bg-ruwad-gray/40 text-ruwad-navy text-xs font-bold flex items-center justify-center shrink-0">
-                  {idx + 1}
-                </span>
-                {lecture.video_url ? (
-                  <Video size={18} className="text-ruwad-blue shrink-0" />
-                ) : (
-                  <FileText size={18} className="text-ruwad-blue shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-ruwad-navy truncate">{lecture.title}</p>
-                  {lecture.duration_minutes && (
-                    <p className="text-xs text-ruwad-navy/50">{lecture.duration_minutes} دقيقة</p>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <GripVertical size={18} className="text-ruwad-navy/30 shrink-0" />
+                  <span className="w-6 h-6 rounded-full bg-ruwad-gray/40 text-ruwad-navy text-xs font-bold flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  {lecture.video_url ? (
+                    <Video size={18} className="text-ruwad-blue shrink-0" />
+                  ) : (
+                    <FileText size={18} className="text-ruwad-blue shrink-0" />
                   )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-ruwad-navy truncate">{lecture.title}</p>
+                    {lecture.duration_minutes && (
+                      <p className="text-xs text-ruwad-navy/50">{lecture.duration_minutes} دقيقة</p>
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => togglePublish(lecture)}
-                  title="اضغط لتبديل حالة النشر"
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-full transition shrink-0 ${
-                    lecture.is_published
-                      ? 'bg-ruwad-lime text-ruwad-navy'
-                      : 'bg-ruwad-gray/50 text-ruwad-navy/60'
-                  }`}
-                >
-                  {lecture.is_published ? 'منشورة' : 'مسودة'}
-                </button>
-                <Link
-                  href={`/courses/${courseId}/lectures/${lecture.id}/edit`}
-                  aria-label="تعديل المحاضرة"
-                  className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0"
-                >
-                  <Pencil size={16} />
-                </Link>
-                <button
-                  onClick={() => deleteLecture(lecture.id)}
-                  aria-label="حذف المحاضرة"
-                  className="text-red-500 hover:bg-red-50 p-2 rounded-ruwad-sm transition shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                  <button
+                    onClick={() => togglePublish(lecture)}
+                    title="اضغط لتبديل حالة النشر"
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition shrink-0 whitespace-nowrap ${
+                      lecture.is_published
+                        ? 'bg-ruwad-lime text-ruwad-navy'
+                        : 'bg-ruwad-gray/50 text-ruwad-navy/60'
+                    }`}
+                  >
+                    {lecture.is_published ? 'منشورة' : 'مسودة'}
+                  </button>
+                  <Link
+                    href={`/courses/${courseId}/lectures/${lecture.id}/edit`}
+                    aria-label="تعديل المحاضرة"
+                    className="text-ruwad-blue hover:bg-ruwad-blue/10 p-2 rounded-ruwad-sm transition shrink-0"
+                  >
+                    <Pencil size={16} />
+                  </Link>
+                  <button
+                    onClick={() => deleteLecture(lecture.id)}
+                    aria-label="حذف المحاضرة"
+                    className="text-red-500 hover:bg-red-50 p-2 rounded-ruwad-sm transition shrink-0"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
         </div>
