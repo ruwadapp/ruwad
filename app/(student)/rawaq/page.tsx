@@ -94,11 +94,11 @@ export default async function RawaqPage() {
       <Header title="الرواق" />
       <main
         className="p-6 flex flex-col gap-6 max-w-2xl mx-auto min-h-[calc(100vh-72px)]"
-        style={{ background: 'linear-gradient(180deg, #252943 0%, #3A4EFB 45%, #33A4FA 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #3A4EFB 0%, #33A4FA 100%)' }}
       >
-        <div className="relative overflow-hidden bg-white/10 backdrop-blur rounded-ruwad shadow-sm p-6 flex items-center gap-3 border border-white/10">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-ruwad-lime/30 rounded-full blur-3xl" />
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 flex items-center gap-3">
+          <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
           <div className="relative">
             <h2 className="text-xl font-extrabold text-white">جدارك الاجتماعي 🎉</h2>
             <p className="text-sm text-white/80 mt-1">تابع مدربيك ومعاهدك المفضّلة وشاهد كل جديدهم هنا أولاً بأول</p>
@@ -108,11 +108,11 @@ export default async function RawaqPage() {
         <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
 
         {!hasAnyFollow ? (
-          <div className="bg-white/10 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/80">
+          <div className="bg-white/15 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/90">
             لا تتابع أي مدرب أو معهد بعد. استخدم البحث أعلاه لإيجادهم ومتابعتهم لتظهر منشوراتهم هنا.
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/80">
+          <div className="bg-white/15 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/90">
             لا توجد منشورات حتى الآن ممن تتابعهم.
           </div>
         ) : (
