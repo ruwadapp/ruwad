@@ -95,7 +95,7 @@ export default async function DashboardPage() {
 
   const stats = [
     { title: 'عدد الطلاب', value: totalStudents, icon: <Users />, variant: 'blue' as const },
-    { title: 'الكورسات', value: coursesRes.count ?? 0, icon: <BookOpen />, variant: 'white' as const },
+    { title: 'تدريبات', value: coursesRes.count ?? 0, icon: <BookOpen />, variant: 'white' as const },
     { title: 'الامتحانات', value: examsRes.count ?? 0, icon: <FileText />, variant: 'lime' as const },
     { title: 'نسبة الحضور', value: attendanceRate !== null ? `${attendanceRate}%` : '—', icon: <CalendarCheck />, variant: 'white' as const },
   ]

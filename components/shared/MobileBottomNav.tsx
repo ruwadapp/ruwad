@@ -19,7 +19,7 @@ interface NavItem { href: string; label: string; icon: string }
 
 const trainerNav: NavItem[] = [
   { href: '/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
-  { href: '/courses', label: 'الكورسات', icon: 'BookOpen' },
+  { href: '/courses', label: 'تدريبات', icon: 'BookOpen' },
   { href: '/students', label: 'الطلاب', icon: 'Users' },
   { href: '/exams', label: 'الامتحانات', icon: 'FileText' },
   { href: '/presentations', label: 'العروض', icon: 'MonitorPlay' },

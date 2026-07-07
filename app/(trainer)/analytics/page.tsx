@@ -87,7 +87,7 @@ export default async function AnalyticsPage() {
           </div>
           <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
             <BookOpen size={20} className="text-ruwad-blue" />
-            <p className="text-xs text-ruwad-navy/60">الكورسات</p>
+            <p className="text-xs text-ruwad-navy/60">تدريبات</p>
             <p className="text-2xl font-bold text-ruwad-navy">{courses?.length ?? 0}</p>
           </div>
           <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2">
@@ -104,7 +104,7 @@ export default async function AnalyticsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section className="bg-white rounded-ruwad shadow-card p-6">
-            <h2 className="text-lg font-bold text-ruwad-navy mb-4">شعبية الكورسات (عدد الطلاب المقبولين)</h2>
+            <h2 className="text-lg font-bold text-ruwad-navy mb-4">شعبية التدريبات (عدد الطلاب المقبولين)</h2>
             <AnalyticsBarChart data={popularityData} color="#3A4EFB" />
           </section>
 

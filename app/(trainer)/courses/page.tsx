@@ -20,7 +20,7 @@ export default async function CoursesPage() {
 
   return (
     <>
-      <Header title="الكورسات" />
+      <Header title="تدريبات" />
       <main className="p-6 flex flex-col gap-6">
         <div className="flex justify-end">
           <Link
