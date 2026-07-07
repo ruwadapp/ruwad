@@ -67,7 +67,7 @@ export function RawaqFeed({
         const profileHref = post.institute_id ? `/i/${post.institute_id}` : `/t/${post.trainer_id}`
         const name = post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')
         return (
-          <div key={post.id} className="relative overflow-hidden bg-white rounded-ruwad shadow-card hover:shadow-ruwad-lg transition-shadow p-5 flex flex-col gap-3">
+          <div key={post.id} className="relative overflow-hidden bg-white rounded-ruwad shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col gap-3">
             <div className={`absolute top-0 right-0 left-0 h-1.5 ${post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'}`} />
             <Link href={profileHref} className="flex items-center gap-2.5 group">
               <span

@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { StudentProgressTabs } from '@/components/student/StudentProgressTabs'
 import { ExamProgressChart } from '@/components/student/ExamProgressChart'
 import { Award, BookOpen, FileText, CalendarCheck, Trophy, FileCheck } from 'lucide-react'
 
@@ -46,7 +45,6 @@ export default async function ProgressPage() {
     <>
       <Header title="تقدّمي" />
       <main className="p-6 flex flex-col gap-6">
-        <StudentProgressTabs />
 
         {/* ===== ملخّص سريع ===== */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -72,9 +70,9 @@ export default async function ProgressPage() {
           </div>
         </div>
 
-        {/* ===== أداء الامتحانات عبر الزمن ===== */}
+        {/* ===== مخطط الأداء في الامتحانات ===== */}
         <section className="bg-white rounded-ruwad shadow-card p-6">
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4">أداء الامتحانات عبر الزمن</h2>
+          <h2 className="text-lg font-bold text-ruwad-navy mb-4">مخطط الأداء في الامتحانات</h2>
           <ExamProgressChart data={examChartData} />
         </section>
 

@@ -92,8 +92,11 @@ export default async function RawaqPage() {
   return (
     <>
       <Header title="الرواق" />
-      <main className="p-6 flex flex-col gap-6 max-w-2xl">
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 flex items-center gap-3">
+      <main
+        className="p-6 flex flex-col gap-6 max-w-2xl mx-auto min-h-[calc(100vh-72px)]"
+        style={{ background: 'linear-gradient(180deg, #252943 0%, #3A4EFB 45%, #33A4FA 100%)' }}
+      >
+        <div className="relative overflow-hidden bg-white/10 backdrop-blur rounded-ruwad shadow-sm p-6 flex items-center gap-3 border border-white/10">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-ruwad-lime/30 rounded-full blur-3xl" />
           <div className="relative">
@@ -105,11 +108,11 @@ export default async function RawaqPage() {
         <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
 
         {!hasAnyFollow ? (
-          <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/60">
+          <div className="bg-white/10 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/80">
             لا تتابع أي مدرب أو معهد بعد. استخدم البحث أعلاه لإيجادهم ومتابعتهم لتظهر منشوراتهم هنا.
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/60">
+          <div className="bg-white/10 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/80">
             لا توجد منشورات حتى الآن ممن تتابعهم.
           </div>
         ) : (

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { StudentProgressTabs } from '@/components/student/StudentProgressTabs'
 import { ShieldCheck } from 'lucide-react'
 
 export default async function StudentCertificatesPage() {
@@ -18,7 +17,6 @@ export default async function StudentCertificatesPage() {
     <>
       <Header title="شهاداتي" />
       <main className="p-6 flex flex-col gap-6">
-        <StudentProgressTabs />
 
         <div className="bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5 flex items-center gap-3 text-white">
           <ShieldCheck size={26} />

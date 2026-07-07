@@ -68,7 +68,7 @@ export function TrainerSearch({ followedIds, followedInstituteIds = [] }: { foll
   }
 
   return (
-    <div className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-3">
+    <div className="bg-white rounded-ruwad shadow-sm p-5 flex flex-col gap-3">
       <div className="relative">
         <Search size={17} className="absolute right-3 top-1/2 -translate-y-1/2 text-ruwad-navy/40" />
         <input

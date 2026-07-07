@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { StudentProgressTabs } from '@/components/student/StudentProgressTabs'
 import { BadgeCard } from '@/components/shared/BadgeCard'
 import { BadgeShareCard } from '@/components/student/BadgeShareCard'
 import type { Badge, BadgeRarity } from '@/lib/types'
@@ -42,7 +41,6 @@ export default async function StudentBadgesPage() {
     <>
       <Header title="شاراتي" />
       <main className="p-6 flex flex-col gap-6">
-        <StudentProgressTabs />
 
         <div className="bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5 flex items-center justify-between text-white flex-wrap gap-3">
           <div className="flex items-center gap-3">
