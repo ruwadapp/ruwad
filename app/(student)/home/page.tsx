@@ -3,8 +3,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import {
   BookOpen, Award, CalendarCheck, PlayCircle, Radio, FileText,
-  FileCheck, ScanLine, KeyRound, ArrowLeft, Sparkles,
+  FileCheck, ScanLine, KeyRound, ArrowLeft, Sparkles, Flame,
 } from 'lucide-react'
+import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
 
 export default async function StudentHomePage() {
   const supabase = await createServerSupabaseClient()
@@ -108,21 +109,20 @@ export default async function StudentHomePage() {
 
         {/* ===== نشاط مباشر الآن ===== */}
         {activeLiveItems.length > 0 && (
-          <div className="bg-red-500 rounded-ruwad shadow-ruwad-lg p-5 flex items-center justify-between gap-4 text-white">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
-              </span>
-              <div>
-                <p className="font-bold">تحدٍ مباشر الآن! ⚡</p>
-                <p className="text-sm opacity-90">{activeLiveItems[0].title}</p>
+          <FireCardFrame>
+            <div className="bg-gradient-to-l from-orange-600 via-red-500 to-orange-500 animate-fire-bg rounded-[10px] p-5 flex items-center justify-between gap-4 text-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <FireChallengeBadge />
+                <div className="min-w-0">
+                  <p className="font-bold flex items-center gap-1.5">تحدٍ مشتعل الآن <Flame size={16} className="animate-flame-flicker" /></p>
+                  <p className="text-sm opacity-90 truncate">{activeLiveItems[0].title}</p>
+                </div>
               </div>
+              <Link href={`/my-challenges/live/${activeLiveItems[0].sessionId}`} className="bg-white text-orange-600 font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0 hover:opacity-90 transition">
+                انضم الآن
+              </Link>
             </div>
-            <Link href={`/my-challenges/live/${activeLiveItems[0].sessionId}`} className="bg-white text-red-500 font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0">
-              انضم الآن
-            </Link>
-          </div>
+          </FireCardFrame>
         )}
 
         {/* ===== استمر من حيث توقفت ===== */}

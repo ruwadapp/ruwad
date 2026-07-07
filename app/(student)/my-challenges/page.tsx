@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { ChallengeCodeJoin } from '@/components/student/ChallengeCodeJoin'
-import { Trophy, Zap, Radio } from 'lucide-react'
+import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
+import { Trophy, Zap, Flame } from 'lucide-react'
 
 export default async function MyChallengesPage() {
   const supabase = await createServerSupabaseClient()
@@ -56,25 +57,29 @@ export default async function MyChallengesPage() {
               {courseChallenges.map((c) => {
                 const courseTitle = (c.course as unknown as { title?: string } | null)?.title ?? ''
                 const session = sessionByChallenge.get(c.id)
-                return (
-                  <div key={c.id} className="flex items-center gap-3 p-4 rounded-ruwad-sm border border-ruwad-gray/60">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-ruwad-navy">{c.title}</p>
-                      <p className="text-xs text-ruwad-navy/50">{courseTitle}</p>
+                const row = (
+                  <div className={`flex items-center gap-3 p-4 rounded-ruwad-sm ${session ? 'bg-gradient-to-l from-orange-50 via-ruwad-lime/10 to-white' : 'border border-ruwad-gray/60'}`}>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      {session && <FireChallengeBadge size="sm" />}
+                      <div className="min-w-0">
+                        <p className="font-medium text-ruwad-navy truncate">{c.title}</p>
+                        <p className="text-xs text-ruwad-navy/50 truncate">{courseTitle}</p>
+                      </div>
                     </div>
                     {c.challenge_type !== 'quiz' ? (
                       <Link href={`/my-challenges/${c.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
                         فتح التحدي
                       </Link>
                     ) : session ? (
-                      <Link href={`/my-challenges/live/${session.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
-                        <Radio size={14} className="animate-pulse" /> انضم الآن
+                      <Link href={`/my-challenges/live/${session.id}`} className="flex items-center gap-1.5 text-sm font-bold text-white px-4 py-2 rounded-ruwad-sm shrink-0 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg shadow-ruwad">
+                        <Flame size={14} className="animate-flame-flicker" /> مشتعل الآن — انضم
                       </Link>
                     ) : (
                       <span className="text-xs text-ruwad-navy/40 shrink-0">لا توجد جلسة مباشرة الآن</span>
                     )}
                   </div>
                 )
+                return <div key={c.id}>{session ? <FireCardFrame>{row}</FireCardFrame> : row}</div>
               })}
             </div>
           </div>

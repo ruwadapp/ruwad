@@ -5,9 +5,10 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award } from 'lucide-react'
+import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award, Flame } from 'lucide-react'
 import { PostLikeButton } from '@/components/shared/PostLikeButton'
 import { StoryShareButton } from '@/components/shared/StoryShareButton'
+import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
 
 interface CourseCard { id: string; title: string; description: string | null; course_code: string; status: string }
 interface ExamCard { id: string; title: string; description: string | null; exam_code: string; is_active: boolean }
@@ -156,19 +157,24 @@ export function RawaqFeed({
             {post.card_type === 'challenge' && card && (() => {
               const ch = card as ChallengeCard
               const session = activeChallengeSessions[ch.id]
-              return (
-                <div className="rounded-ruwad-sm border-2 border-ruwad-lime/40 bg-ruwad-lime/10 p-4 flex items-center justify-between gap-3 flex-wrap">
+              const content = (
+                <div className={`rounded-ruwad-sm p-4 flex items-center justify-between gap-3 flex-wrap ${
+                  session ? 'bg-gradient-to-l from-orange-50 via-ruwad-lime/10 to-white' : 'border-2 border-ruwad-lime/40 bg-ruwad-lime/10'
+                }`}>
                   <div className="flex items-center gap-2 min-w-0">
-                    <Trophy size={18} className="text-ruwad-navy shrink-0" />
+                    {session ? <FireChallengeBadge /> : <Trophy size={18} className="text-ruwad-navy shrink-0" />}
                     <p className="font-bold text-ruwad-navy truncate">{ch.title}</p>
                   </div>
                   {session ? (
-                    <Link href={`/qr/${session.session_code}`} className="flex items-center gap-1 text-xs font-semibold bg-ruwad-navy text-white px-4 py-1.5 rounded-full hover:opacity-90 transition shrink-0"><Zap size={12} /> انضم الآن — مباشر</Link>
+                    <Link href={`/qr/${session.session_code}`} className="flex items-center gap-1.5 text-xs font-bold text-white px-4 py-1.5 rounded-full shrink-0 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg shadow-ruwad">
+                      <Flame size={13} className="animate-flame-flicker" /> تحدٍ مشتعل الآن — انضم!
+                    </Link>
                   ) : (
                     <span className="text-xs font-semibold bg-white text-ruwad-navy/60 px-3 py-1.5 rounded-full shrink-0">لا توجد جلسة نشطة الآن</span>
                   )}
                 </div>
               )
+              return session ? <FireCardFrame>{content}</FireCardFrame> : content
             })()}
 
             {post.card_type === 'survey' && card && (() => {
