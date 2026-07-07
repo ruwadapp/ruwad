@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
@@ -66,17 +67,24 @@ export function RawaqFeed({
         const card = post.card_type ? cardData[post.id]?.[post.card_type] : null
         const profileHref = post.institute_id ? `/i/${post.institute_id}` : `/t/${post.trainer_id}`
         const name = post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')
+        const pictureUrl = post.institute_id ? post.institute?.logo_url : post.trainer?.avatar_url
         return (
           <div key={post.id} className="relative overflow-hidden bg-white rounded-ruwad shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col gap-3">
             <div className={`absolute top-0 right-0 left-0 h-1.5 ${post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'}`} />
             <Link href={profileHref} className="flex items-center gap-2.5 group">
-              <span
-                className={`w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 font-bold shadow-ruwad group-hover:scale-105 transition-transform ${
-                  post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'
-                }`}
-              >
-                {post.institute_id ? <Building2 size={18} /> : name.charAt(0)}
-              </span>
+              {pictureUrl ? (
+                <span className="relative w-11 h-11 rounded-full shrink-0 overflow-hidden shadow-ruwad group-hover:scale-105 transition-transform">
+                  <Image src={pictureUrl} alt={name} fill sizes="44px" className="object-cover" />
+                </span>
+              ) : (
+                <span
+                  className={`w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 font-bold shadow-ruwad group-hover:scale-105 transition-transform ${
+                    post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'
+                  }`}
+                >
+                  {post.institute_id ? <Building2 size={18} /> : name.charAt(0)}
+                </span>
+              )}
               <div>
                 <p className="font-bold text-ruwad-navy text-sm group-hover:text-ruwad-blue transition-colors">{name}</p>
                 <p className="text-xs text-ruwad-navy/40">{timeAgo(post.created_at)}</p>

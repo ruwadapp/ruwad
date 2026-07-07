@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight } from 'lucide-react'
-import { PushNotificationSetup } from './PushNotificationSetup'
-import { NotificationTestButton } from './NotificationTestButton'
 import { AvatarUpload } from './AvatarUpload'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -213,19 +211,6 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
             )}
           </div>
         )}
-
-        {/* ===== الإشعارات ===== */}
-        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4">
-          <h2 className="text-xs font-bold text-ruwad-navy/50 uppercase tracking-wider">الإشعارات</h2>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-ruwad-navy">إشعارات الجهاز</p>
-              <p className="text-xs text-ruwad-navy/50 mt-0.5">تلقّ إشعارات حتى وإن كان التطبيق مغلقاً</p>
-            </div>
-            <PushNotificationSetup variant="light" />
-          </div>
-          <NotificationTestButton />
-        </div>
 
         <button
           onClick={handleLogout}

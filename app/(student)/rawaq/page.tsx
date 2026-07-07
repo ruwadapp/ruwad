@@ -24,7 +24,7 @@ export default async function RawaqPage() {
   if (hasAnyFollow) {
     let postsQuery = supabase
       .from('trainer_posts')
-      .select('*, trainer:profiles!trainer_id(full_name, avatar_url, bio), institute:institutes!institute_id(name)')
+      .select('*, trainer:profiles!trainer_id(full_name, avatar_url, bio), institute:institutes!institute_id(name, logo_url)')
       .order('created_at', { ascending: false })
       .limit(50)
 
