@@ -7,7 +7,7 @@ export default async function SuperAdminAccountsPage() {
 
   const { data: accounts } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, account_status, created_at')
+    .select('id, full_name, email, role, account_status, created_at, is_frozen, subscription_ends_at')
     .neq('role', 'super_admin')
     .order('created_at', { ascending: false })
 

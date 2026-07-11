@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { Clock, XCircle, LogOut, MessageCircle } from 'lucide-react'
+import { Clock, XCircle, LogOut, MessageCircle, Snowflake, CalendarX } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,15 +11,42 @@ export default async function AccountPendingPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('account_status, full_name').eq('id', user.id).single()
-  const rejected = profile?.account_status === 'rejected'
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('account_status, full_name, is_frozen, subscription_ends_at')
+    .eq('id', user.id)
+    .single()
 
-  const whatsappMessage = encodeURIComponent(`السلام عليكم، حسابي (${profile?.full_name ?? ''}) ${rejected ? 'تم رفضه ولديّ استفسار' : 'بانتظار الموافقة'} على منصة رُوّاد`)
+  const rejected = profile?.account_status === 'rejected'
+  const frozen = !!profile?.is_frozen
+  const expired = !frozen && profile?.subscription_ends_at ? new Date(profile.subscription_ends_at) < new Date() : false
+
+  const reasonText = frozen ? 'تم تجميد حسابي ولديّ استفسار'
+    : expired ? 'انتهى اشتراكي وأرغب بالتجديد'
+    : rejected ? 'تم رفضه ولديّ استفسار'
+    : 'بانتظار الموافقة'
+  const whatsappMessage = encodeURIComponent(`السلام عليكم، حسابي (${profile?.full_name ?? ''}) ${reasonText} على منصة رُوّاد`)
 
   return (
     <main className="min-h-screen bg-[#F5F6FA] flex items-center justify-center p-6" dir="rtl">
       <div className="bg-white rounded-ruwad shadow-ruwad-lg p-10 max-w-md w-full flex flex-col items-center gap-5 text-center">
-        {rejected ? (
+        {frozen ? (
+          <>
+            <Snowflake size={48} className="text-sky-500" />
+            <div>
+              <h1 className="text-xl font-bold text-ruwad-navy">تم تجميد حسابك</h1>
+              <p className="text-sm text-ruwad-navy/60 mt-2">تواصل مع الإدارة لمعرفة السبب أو لإعادة تفعيل حسابك.</p>
+            </div>
+          </>
+        ) : expired ? (
+          <>
+            <CalendarX size={48} className="text-amber-500" />
+            <div>
+              <h1 className="text-xl font-bold text-ruwad-navy">انتهت مدة اشتراكك</h1>
+              <p className="text-sm text-ruwad-navy/60 mt-2">تواصل مع الإدارة لتجديد اشتراكك ومتابعة استخدام المنصة.</p>
+            </div>
+          </>
+        ) : rejected ? (
           <>
             <XCircle size={48} className="text-red-500" />
             <div>
@@ -55,3 +82,4 @@ export default async function AccountPendingPage() {
     </main>
   )
 }
+

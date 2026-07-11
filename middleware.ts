@@ -47,15 +47,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // بوابة موافقة واحدة وبسيطة: أي حساب (مدرّب/طالب/معهد) غير موافَق عليه من المالك يُحوَّل لصفحة الانتظار
+  // بوابة موافقة واحدة وبسيطة: أي حساب (مدرّب/طالب/معهد) غير موافَق عليه، مجمَّد، أو منتهي الاشتراك يُحوَّل لصفحة الانتظار
   if (user && isProtected && !SUPERADMIN_ROUTES.some((r) => path.startsWith(r))) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
     )
-    const { data: profile } = await supabase.from('profiles').select('account_status').eq('id', user.id).single()
-    if (profile?.account_status !== 'approved' && path !== '/account-pending') {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('account_status, is_frozen, subscription_ends_at')
+      .eq('id', user.id)
+      .single()
+    const expired = !!profile?.subscription_ends_at && new Date(profile.subscription_ends_at) < new Date()
+    const blocked = profile?.account_status !== 'approved' || profile?.is_frozen || expired
+    if (blocked && path !== '/account-pending') {
       return NextResponse.redirect(new URL('/account-pending', request.url))
     }
   }
