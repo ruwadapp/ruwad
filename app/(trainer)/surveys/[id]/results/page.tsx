@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { SurveyResultsView } from '@/components/trainer/SurveyResultsView'
+import { ExportCsvButton } from '@/components/shared/ExportCsvButton'
 import type { SurveyQuestion } from '@/lib/types'
 
 export default async function SurveyResultsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -91,11 +92,25 @@ export default async function SurveyResultsPage({ params }: { params: Promise<{ 
             <p className="text-sm text-ruwad-navy/60">إجمالي الردود</p>
             <p className="text-2xl font-bold text-ruwad-navy">{totalResponses}</p>
           </div>
-          {survey.is_anonymous && (
-            <span className="text-xs font-semibold bg-ruwad-gray/40 text-ruwad-navy/70 px-3 py-1.5 rounded-full">
-              استبيان مجهول الهوية
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {survey.is_anonymous && (
+              <span className="text-xs font-semibold bg-ruwad-gray/40 text-ruwad-navy/70 px-3 py-1.5 rounded-full">
+                استبيان مجهول الهوية
+              </span>
+            )}
+            <ExportCsvButton
+              fileName={`ردود-${survey.title}`}
+              headers={[survey.is_anonymous ? 'رقم الرد' : 'المستجيب', ...(questions ?? []).map((q) => q.question_text)]}
+              rows={(responses ?? []).map((r, idx) => [
+                survey.is_anonymous ? `رد #${idx + 1}` : ((r.respondent as unknown as { full_name?: string } | null)?.full_name ?? 'مجهول'),
+                ...(questions ?? []).map((q) => {
+                  const a = r.answers[q.id]
+                  if (a === undefined || a === null || a === '') return '—'
+                  return Array.isArray(a) ? a.join('، ') : String(a)
+                }),
+              ])}
+            />
+          </div>
         </div>
 
         {totalResponses === 0 ? (

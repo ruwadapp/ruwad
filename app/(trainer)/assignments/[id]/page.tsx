@@ -6,6 +6,7 @@ import { AssignmentForm } from '@/components/trainer/AssignmentForm'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { ShareManager } from '@/components/shared/ShareManager'
 import { InheritedShareNote } from '@/components/shared/InheritedShareNote'
+import { ExportCsvButton } from '@/components/shared/ExportCsvButton'
 import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
 import { Building2 } from 'lucide-react'
 
@@ -53,7 +54,20 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
         <AssignmentForm initialAssignment={assignment} courses={courses ?? []} />
 
         <div className="bg-white rounded-ruwad shadow-card p-6">
-          <h2 className="text-lg font-bold text-ruwad-navy mb-4">التسليمات ({submissions?.length ?? 0})</h2>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <h2 className="text-lg font-bold text-ruwad-navy">التسليمات ({submissions?.length ?? 0})</h2>
+            <ExportCsvButton
+              fileName={`تسليمات-${assignment.title}`}
+              headers={['الطالب', 'تاريخ التسليم', 'الدرجة', 'من', 'ملاحظات']}
+              rows={(submissions ?? []).map((s) => [
+                s.student?.full_name ?? 'طالب',
+                s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('ar') : '—',
+                s.score ?? '—',
+                assignment.total_marks,
+                s.feedback ?? '—',
+              ])}
+            />
+          </div>
           <SubmissionsGrader submissions={submissions ?? []} totalMarks={assignment.total_marks} dueDate={assignment.due_date} />
         </div>
       </main>

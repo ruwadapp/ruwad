@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Course } from '@/lib/types'
+import { ExportCsvButton } from '@/components/shared/ExportCsvButton'
 import { Award, AlertTriangle, Minus, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface StudentStat {
@@ -141,7 +142,14 @@ export function AttendanceAnalytics({ courses }: { courses: Course[] }) {
           </div>
 
           <div className="bg-white rounded-ruwad shadow-card p-6">
-            <h3 className="font-bold text-ruwad-navy mb-4">جدول تفصيلي</h3>
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+              <h3 className="font-bold text-ruwad-navy">جدول تفصيلي</h3>
+              <ExportCsvButton
+                fileName={`حضور-${courses.find((c) => c.id === courseId)?.title ?? 'كورس'}`}
+                headers={['الطالب', 'حاضر', 'غائب', 'النسبة', 'التقييم']}
+                rows={sorted.map((s) => [s.full_name, s.attended, s.absent, `${s.rate}%`, statusFor(s.rate).label])}
+              />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

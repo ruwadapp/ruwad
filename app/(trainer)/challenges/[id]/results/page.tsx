@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
+import { ExportCsvButton } from '@/components/shared/ExportCsvButton'
 import { Trophy, CheckCircle2, XCircle } from 'lucide-react'
 
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -37,6 +38,14 @@ export default async function ChallengeResultsPage({ params }: { params: Promise
             <Trophy size={48} className="text-ruwad-navy" />
             <h2 className="text-2xl font-bold text-ruwad-navy">لوحة المتصدّرين — سباق الإجابات</h2>
             <p className="text-ruwad-navy/70">{list.length} مشارك</p>
+          </div>
+
+          <div className="flex justify-end">
+            <ExportCsvButton
+              fileName={`نتائج-${challenge.title}`}
+              headers={['الطالب', 'إجابات صحيحة', 'إجابات خاطئة', 'الحالة']}
+              rows={list.map((run) => [run.student?.full_name ?? 'طالب', run.correct_count, run.wrong_count, run.finished ? 'أنهى السباق' : 'لم يبدأ بعد'])}
+            />
           </div>
 
           {list.length === 0 ? (
@@ -95,6 +104,14 @@ export default async function ChallengeResultsPage({ params }: { params: Promise
           <Trophy size={48} className="text-ruwad-navy" />
           <h2 className="text-2xl font-bold text-ruwad-navy">لوحة المتصدّرين</h2>
           <p className="text-ruwad-navy/70">{list.length} مشارك</p>
+        </div>
+
+        <div className="flex justify-end">
+          <ExportCsvButton
+            fileName={`نتائج-${challenge.title}`}
+            headers={['الطالب', 'الدرجة', 'من', 'النسبة']}
+            rows={list.map((sub) => [sub.student?.full_name ?? 'طالب', sub.score ?? 0, challenge.total_marks, `${sub.percentage ?? 0}%`])}
+          />
         </div>
 
         {list.length === 0 ? (
