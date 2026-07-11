@@ -176,3 +176,17 @@ textarea:focus-visible {
   background-size: 200% 200%;
   animation: heroGlowPan 8s ease-in-out infinite;
 }
+
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(37, 41, 67, 0.12) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+.clip-angle-down {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
+}
+
+.text-outline-navy {
+  -webkit-text-stroke: 1.5px rgba(37, 41, 67, 0.08);
+  color: transparent;
+}
