@@ -119,10 +119,10 @@ textarea:focus-visible {
 /* ===== الصفحة الرئيسية التسويقية ===== */
 @keyframes floatY {
   0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
-  50% { transform: translateY(-14px) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--tilt, 0deg)); }
 }
 .animate-float {
-  animation: floatY 6s ease-in-out infinite;
+  animation: floatY 8s ease-in-out infinite;
 }
 
 @keyframes revealUp {
