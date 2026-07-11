@@ -53,8 +53,15 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
           <Link href={`/challenges/${id}/results`} className="bg-white border-2 border-ruwad-gray text-ruwad-navy px-5 py-2.5 rounded-ruwad-sm font-semibold hover:bg-ruwad-gray/20 transition flex items-center gap-2">
             <Trophy size={18} /> سجل النتائج
           </Link>
-          <StartChallengeSessionButton challengeId={id} hasQuestions={(questions?.length ?? 0) > 0} />
+          {challenge.challenge_type === 'quiz' && (
+            <StartChallengeSessionButton challengeId={id} hasQuestions={(questions?.length ?? 0) > 0} />
+          )}
         </div>
+        {challenge.challenge_type === 'sprint' && (
+          <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm rounded-ruwad-sm px-4 py-3">
+            هذا تحدي "سباق إجابات" — لا توجد جلسة مباشرة يديرها المدرب؛ كل طالب يبدأ ويُجيب بوقته الخاص من صفحة التحدي لديه، ويظهر ترتيب الجميع في سجل النتائج.
+          </div>
+        )}
         <ChallengeForm initialChallenge={challenge} courses={courses ?? []} />
         <ChallengeQuestionManager challengeId={id} questions={questions ?? []} />
       </main>

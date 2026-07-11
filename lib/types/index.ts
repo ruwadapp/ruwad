@@ -183,7 +183,7 @@ export interface Challenge {
   title: string
   description: string | null
   instructions: string | null
-  challenge_type: 'quiz'
+  challenge_type: 'quiz' | 'sprint'
   total_marks: number
   time_limit_minutes: number | null
   starts_at: string | null
@@ -216,6 +216,21 @@ export interface ChallengeSession {
   started_at: string
   ended_at: string | null
 }
+
+export interface ChallengeRun {
+  id: string
+  challenge_id: string
+  student_id: string
+  question_order: string[]
+  current_index: number
+  correct_count: number
+  wrong_count: number
+  started_at: string
+  ends_at: string
+  finished: boolean
+  student?: Profile
+}
+
 
 export interface ChallengeSessionParticipant {
   id: string

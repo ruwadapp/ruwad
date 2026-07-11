@@ -26,12 +26,12 @@ export default async function MyChallengesPage() {
         .eq('is_active', true)
     : { data: [] }
 
-  const challengeIds = (courseChallenges ?? []).map((c) => c.id)
-  const { data: activeSessions } = challengeIds.length
+  const quizChallengeIds = (courseChallenges ?? []).filter((c) => c.challenge_type === 'quiz').map((c) => c.id)
+  const { data: activeSessions } = quizChallengeIds.length
     ? await supabase
         .from('challenge_sessions')
         .select('id, challenge_id, status')
-        .in('challenge_id', challengeIds)
+        .in('challenge_id', quizChallengeIds)
         .neq('status', 'ended')
     : { data: [] }
 
@@ -66,7 +66,11 @@ export default async function MyChallengesPage() {
                         <p className="text-xs text-ruwad-navy/50 truncate">{courseTitle}</p>
                       </div>
                     </div>
-                    {session ? (
+                    {c.challenge_type === 'sprint' ? (
+                      <Link href={`/my-challenges/sprint/${c.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
+                        ابدأ السباق
+                      </Link>
+                    ) : session ? (
                       <Link href={`/my-challenges/live/${session.id}`} className="flex items-center gap-1.5 text-sm font-bold text-white px-4 py-2 rounded-ruwad-sm shrink-0 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg shadow-ruwad">
                         <Flame size={14} className="animate-flame-flicker" /> مشتعل الآن — انضم
                       </Link>

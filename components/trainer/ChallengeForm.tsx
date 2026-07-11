@@ -5,11 +5,20 @@ import { createClient } from '@/lib/supabase/client'
 import type { Challenge, Course } from '@/lib/types'
 import { Copy, Check, Zap } from 'lucide-react'
 
+const TYPE_LABELS: Record<string, string> = {
+  quiz: 'اختبار سريع (Quiz)',
+  sprint: 'سباق الإجابات (Sprint)',
+}
+const TYPE_DESCRIPTIONS: Record<string, string> = {
+  quiz: 'جلسة مباشرة يديرها المدرب — سؤال واحد يظهر للجميع بنفس اللحظة، والنقاط حسب الصحة والسرعة (Kahoot-style).',
+  sprint: 'كل طالب يبدأ بوقته الخاص ويجاوب أكبر عدد ممكن من الأسئلة قبل انتهاء الوقت المحدد — الفوز لمن يجمع أكثر إجابات صحيحة.',
+}
+
 export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?: Challenge; courses: Course[] }) {
   const [title, setTitle] = useState(initialChallenge?.title ?? '')
   const [description, setDescription] = useState(initialChallenge?.description ?? '')
   const [instructions, setInstructions] = useState(initialChallenge?.instructions ?? '')
-  const challengeType = 'quiz' as const
+  const [challengeType, setChallengeType] = useState<'quiz' | 'sprint'>(initialChallenge?.challenge_type ?? 'quiz')
   const [courseId, setCourseId] = useState(initialChallenge?.course_id ?? '')
   const [timeLimit, setTimeLimit] = useState(initialChallenge?.time_limit_minutes?.toString() ?? '')
   const [isActive, setIsActive] = useState(initialChallenge?.is_active ?? true)
@@ -22,6 +31,7 @@ export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) { setError('عنوان التحدي مطلوب'); return }
+    if (challengeType === 'sprint' && !timeLimit) { setError('سباق الإجابات يتطلب تحديد الوقت بالدقائق'); return }
     setLoading(true)
     setError(null)
 
@@ -100,16 +110,23 @@ export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">نوع التحدي</label>
-          <div className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 bg-ruwad-gray/10 text-ruwad-navy font-medium">
-            اختبار سريع (Quiz)
-          </div>
-          <p className="text-xs text-ruwad-navy/50">
-            أسئلة اختيار من متعدد بجلسة مباشرة وترتيب فوري (Kahoot-style).
-          </p>
+          {initialChallenge ? (
+            <div className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 bg-ruwad-gray/10 text-ruwad-navy font-medium">
+              {TYPE_LABELS[challengeType]}
+            </div>
+          ) : (
+            <select value={challengeType} onChange={(e) => setChallengeType(e.target.value as 'quiz' | 'sprint')}
+              className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 outline-none focus:border-ruwad-lime transition bg-white">
+              {Object.entries(TYPE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+            </select>
+          )}
+          <p className="text-xs text-ruwad-navy/50">{TYPE_DESCRIPTIONS[challengeType]}</p>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-ruwad-navy">الوقت المحدد (دقائق، اختياري)</label>
-          <input type="number" min={0} value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}
+          <label className="text-sm font-medium text-ruwad-navy">
+            الوقت المحدد (دقائق{challengeType === 'sprint' ? '' : '، اختياري'})
+          </label>
+          <input type="number" min={1} required={challengeType === 'sprint'} value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)}
             className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 outline-none focus:border-ruwad-lime transition" />
         </div>
       </div>
