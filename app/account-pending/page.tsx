@@ -43,7 +43,9 @@ export default async function AccountPendingPage() {
             <CalendarX size={48} className="text-amber-500" />
             <div>
               <h1 className="text-xl font-bold text-ruwad-navy">انتهت مدة اشتراكك</h1>
-              <p className="text-sm text-ruwad-navy/60 mt-2">تواصل مع الإدارة لتجديد اشتراكك ومتابعة استخدام المنصة.</p>
+              <p className="text-sm text-ruwad-navy/60 mt-2">
+                لتجديد اشتراكك ومتابعة استخدام المنصة، أرسل رسالة واتساب للإدارة عبر الزر أدناه.
+              </p>
             </div>
           </>
         ) : rejected ? (
@@ -72,7 +74,7 @@ export default async function AccountPendingPage() {
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-ruwad-sm font-semibold hover:opacity-90 transition w-full"
         >
-          <MessageCircle size={18} /> التواصل عبر واتساب
+          <MessageCircle size={18} /> {expired ? 'تجديد الاشتراك عبر واتساب' : 'التواصل عبر واتساب'}
         </a>
 
         <a href="/login" className="flex items-center gap-2 text-sm font-medium text-ruwad-navy/50 hover:text-ruwad-navy transition mt-1">
