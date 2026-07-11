@@ -183,7 +183,7 @@ export interface Challenge {
   title: string
   description: string | null
   instructions: string | null
-  challenge_type: 'quiz' | 'coding' | 'upload' | 'practical'
+  challenge_type: 'quiz'
   total_marks: number
   time_limit_minutes: number | null
   starts_at: string | null

@@ -66,11 +66,7 @@ export default async function MyChallengesPage() {
                         <p className="text-xs text-ruwad-navy/50 truncate">{courseTitle}</p>
                       </div>
                     </div>
-                    {c.challenge_type !== 'quiz' ? (
-                      <Link href={`/my-challenges/${c.id}`} className="flex items-center gap-1.5 text-sm font-bold bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm hover:opacity-90 transition shrink-0">
-                        فتح التحدي
-                      </Link>
-                    ) : session ? (
+                    {session ? (
                       <Link href={`/my-challenges/live/${session.id}`} className="flex items-center gap-1.5 text-sm font-bold text-white px-4 py-2 rounded-ruwad-sm shrink-0 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg shadow-ruwad">
                         <Flame size={14} className="animate-flame-flicker" /> مشتعل الآن — انضم
                       </Link>

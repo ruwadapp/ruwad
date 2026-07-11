@@ -5,18 +5,11 @@ import { createClient } from '@/lib/supabase/client'
 import type { Challenge, Course } from '@/lib/types'
 import { Copy, Check, Zap } from 'lucide-react'
 
-const TYPE_LABELS = {
-  quiz: 'اختبار سريع',
-  coding: 'تحدي برمجي',
-  upload: 'رفع ملف',
-  practical: 'تطبيقي',
-}
-
 export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?: Challenge; courses: Course[] }) {
   const [title, setTitle] = useState(initialChallenge?.title ?? '')
   const [description, setDescription] = useState(initialChallenge?.description ?? '')
   const [instructions, setInstructions] = useState(initialChallenge?.instructions ?? '')
-  const [challengeType, setChallengeType] = useState(initialChallenge?.challenge_type ?? 'quiz')
+  const challengeType = 'quiz' as const
   const [courseId, setCourseId] = useState(initialChallenge?.course_id ?? '')
   const [timeLimit, setTimeLimit] = useState(initialChallenge?.time_limit_minutes?.toString() ?? '')
   const [isActive, setIsActive] = useState(initialChallenge?.is_active ?? true)
@@ -107,15 +100,11 @@ export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-ruwad-navy">نوع التحدي</label>
-          <select value={challengeType} onChange={(e) => setChallengeType(e.target.value as Challenge['challenge_type'])}
-            className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 outline-none focus:border-ruwad-lime transition bg-white">
-            {Object.entries(TYPE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-          </select>
+          <div className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 bg-ruwad-gray/10 text-ruwad-navy font-medium">
+            اختبار سريع (Quiz)
+          </div>
           <p className="text-xs text-ruwad-navy/50">
-            {challengeType === 'quiz' && 'أسئلة اختيار من متعدد بجلسة مباشرة وترتيب فوري (Kahoot-style).'}
-            {challengeType === 'coding' && 'يكتب الطالب كوداً في مربع نص وتُصحَّح يدوياً من قبلك.'}
-            {challengeType === 'upload' && 'يرفع الطالب ملفاً (صورة/مستند/مشروع) وتُصحَّح يدوياً من قبلك.'}
-            {challengeType === 'practical' && 'يكتب الطالب وصفاً لما أنجزه عملياً وتُصحَّح يدوياً من قبلك.'}
+            أسئلة اختيار من متعدد بجلسة مباشرة وترتيب فوري (Kahoot-style).
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
