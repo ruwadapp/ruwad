@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CourseForm } from '@/components/trainer/CourseForm'
+import { CourseLandingLinkButton } from '@/components/trainer/CourseLandingLinkButton'
 import { LectureManager } from '@/components/trainer/LectureManager'
 import { CourseStudentPerformance } from '@/components/trainer/CourseStudentPerformance'
 import { RelatedCourseItems } from '@/components/shared/RelatedCourseItems'
@@ -43,6 +44,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             <ShareManager resourceType="courses" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
           )}
           <DeleteButton table="courses" id={id} redirectTo="/courses" label="حذف الكورس" />
+          <CourseLandingLinkButton courseId={id} published={course.status === 'published'} />
         </div>
         <CourseForm initialCourse={course} />
         <LectureManager courseId={id} lectures={lectures ?? []} />

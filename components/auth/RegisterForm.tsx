@@ -1,10 +1,12 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
 export function RegisterForm() {
+  const searchParams = useSearchParams()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -38,7 +40,8 @@ export function RegisterForm() {
     }
 
     if (data.user && !data.session) {
-      window.location.href = '/login'
+      const next = searchParams.get('next')
+      window.location.href = next ? `/login?next=${encodeURIComponent(next)}` : '/login'
       return
     }
 
@@ -52,7 +55,9 @@ export function RegisterForm() {
       institute_admin: '/org/dashboard',
       super_admin: '/admin/dashboard',
     }
-    window.location.href = redirectMap[role]
+    const next = searchParams.get('next')
+    const isSafeRelativePath = !!next && next.startsWith('/') && !next.startsWith('//')
+    window.location.href = isSafeRelativePath ? next : redirectMap[role]
   }
 
   return (
