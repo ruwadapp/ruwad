@@ -115,3 +115,64 @@ textarea:focus-visible {
 .animate-ember {
   animation: emberRise 1.8s ease-out infinite;
 }
+
+/* ===== الصفحة الرئيسية التسويقية ===== */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-14px) rotate(var(--tilt, 0deg)); }
+}
+.animate-float {
+  animation: floatY 6s ease-in-out infinite;
+}
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal-hidden { opacity: 0; }
+.reveal-shown {
+  animation: revealUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes ringDrain {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 226; }
+}
+.animate-ring-drain {
+  animation: ringDrain 6s linear infinite;
+}
+
+@keyframes tilePop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.93); }
+  100% { transform: scale(1); }
+}
+.animate-tile-pop {
+  animation: tilePop 0.4s ease-out;
+}
+
+@keyframes scorePulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-score-pulse {
+  animation: scorePulse 0.5s ease-out;
+}
+
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marqueeScroll 26s linear infinite;
+}
+
+@keyframes heroGlowPan {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-hero-glow {
+  background-size: 200% 200%;
+  animation: heroGlowPan 8s ease-in-out infinite;
+}
