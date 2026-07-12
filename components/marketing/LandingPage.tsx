@@ -89,6 +89,15 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ===== PHONE SHOWCASE — تظهر فوراً بدون تمرير ===== */}
+      <section className="bg-white py-10 sm:py-14 border-b-2 border-ruwad-navy">
+        <div className="text-center max-w-xl mx-auto mb-8 px-5">
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">جولة سريعة</span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ruwad-navy mt-3">استعرض الميزات من هاتفك</h2>
+        </div>
+        <PhoneShowcase />
+      </section>
+
       {/* ===== MARQUEE ===== */}
       <div className="bg-ruwad-lime border-y-2 border-ruwad-navy py-3 overflow-hidden -rotate-1 scale-105">
         <div className="flex whitespace-nowrap animate-marquee">
@@ -127,17 +136,6 @@ export function LandingPage() {
             </Reveal>
           ))}
         </div>
-      </section>
-
-      {/* ===== PHONE SHOWCASE ===== */}
-      <section className="bg-white py-20 sm:py-28 border-y-2 border-ruwad-navy">
-        <Reveal className="text-center max-w-xl mx-auto mb-14 px-5">
-          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">جولة سريعة</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">استعرض الميزات من هاتفك</h2>
-        </Reveal>
-        <Reveal delay={100}>
-          <PhoneShowcase />
-        </Reveal>
       </section>
 
       {/* ===== SIGNATURE: LIVE DEMO ===== */}
