@@ -41,6 +41,60 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
   function next() { setIndex((i) => (i + 1) % SLIDES.length) }
   function prev() { setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length) }
 
+  if (compact) {
+    return (
+      <div className="flex flex-row items-center justify-center gap-5">
+        {/* موك أب الهاتف — أكبر بما أن النص جنبه وليس تحته */}
+        <div className="relative w-[190px] sm:w-[230px] shrink-0">
+          <div className={`bg-ruwad-navy ${dark ? 'border-white' : 'border-ruwad-navy'} rounded-[2.5rem] border-2 shadow-hard p-3`}>
+            <div className="w-24 h-5 bg-ruwad-navy rounded-full mx-auto mb-2 relative z-10 -mt-1" />
+            <div className={`${slide.bg} rounded-[1.8rem] aspect-[9/19] flex flex-col items-center justify-center gap-4 p-6 text-center transition-colors duration-300 relative overflow-hidden`}>
+              <div className="absolute -top-8 -right-8 w-28 h-28 bg-white/10 rounded-full blur-xl" />
+              <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur flex items-center justify-center border-2 border-white/30">
+                <slide.icon size={28} className="text-white" />
+              </div>
+              <span className="text-white/70 text-[11px] font-bold">تمثيل توضيحي</span>
+            </div>
+          </div>
+        </div>
+
+        {/* النص + الأسهم بجانب الهاتف */}
+        <div className="flex flex-col items-start gap-3 max-w-[190px]">
+          <span className="inline-block bg-ruwad-lime text-ruwad-navy text-[11px] font-extrabold px-3 py-1.5 rounded-full border-2 border-ruwad-navy">
+            {slide.badge}
+          </span>
+          <h3 className={`text-lg font-extrabold leading-snug ${dark ? 'text-white' : 'text-ruwad-navy'}`}>{slide.title}</h3>
+          <p className={`text-xs leading-relaxed ${dark ? 'text-white/70' : 'text-ruwad-navy/60'}`}>{slide.desc}</p>
+
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={prev}
+              aria-label="السابق"
+              className={`w-8 h-8 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm flex items-center justify-center shrink-0`}
+            >
+              <ChevronRight size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+            </button>
+            {SLIDES.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                aria-label={`الشريحة ${i + 1}`}
+                className={`h-2 rounded-full border-2 ${dark ? 'border-white' : 'border-ruwad-navy'} transition-all ${i === index ? 'w-5 bg-ruwad-lime' : dark ? 'w-2 bg-transparent' : 'w-2 bg-white'}`}
+              />
+            ))}
+            <button
+              onClick={next}
+              aria-label="التالي"
+              className={`w-8 h-8 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm flex items-center justify-center shrink-0`}
+            >
+              <ChevronLeft size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`flex ${compact ? 'flex-col' : 'flex-col lg:flex-row'} items-center justify-center gap-6`}>
       {/* السهم الأيمن (السابق بالعربي RTL) */}
