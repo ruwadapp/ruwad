@@ -11,6 +11,10 @@ const INSTITUTE_ROUTES = ['/org']
 const SUPERADMIN_ROUTES = ['/admin']
 const PROFILE_ROUTES = ['/t', '/i']
 
+function matchesRoute(path: string, prefixes: string[]) {
+  return prefixes.some((p) => path === p || path.startsWith(`${p}/`))
+}
+
 export async function middleware(request: NextRequest) {
   const { user, response } = await updateSession(request)
   const path = request.nextUrl.pathname
@@ -35,11 +39,11 @@ export async function middleware(request: NextRequest) {
   }
 
   const isProtected =
-    TRAINER_ROUTES.some((r) => path.startsWith(r)) ||
-    STUDENT_ROUTES.some((r) => path.startsWith(r)) ||
-    INSTITUTE_ROUTES.some((r) => path.startsWith(r)) ||
-    SUPERADMIN_ROUTES.some((r) => path.startsWith(r)) ||
-    PROFILE_ROUTES.some((r) => path.startsWith(r))
+    matchesRoute(path, TRAINER_ROUTES) ||
+    matchesRoute(path, STUDENT_ROUTES) ||
+    matchesRoute(path, INSTITUTE_ROUTES) ||
+    matchesRoute(path, SUPERADMIN_ROUTES) ||
+    matchesRoute(path, PROFILE_ROUTES)
 
   if (isProtected && !user) {
     const loginUrl = new URL('/login', request.url)
@@ -48,7 +52,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // بوابة موافقة واحدة وبسيطة: أي حساب (مدرّب/طالب/معهد) غير موافَق عليه، مجمَّد، أو منتهي الاشتراك يُحوَّل لصفحة الانتظار
-  if (user && isProtected && !SUPERADMIN_ROUTES.some((r) => path.startsWith(r))) {
+  if (user && isProtected && !matchesRoute(path, SUPERADMIN_ROUTES)) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
