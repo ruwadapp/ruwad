@@ -48,7 +48,7 @@ export function LandingPage() {
       <LandingNav />
 
       {/* ===== HERO — لوحة ملصقات ملوّنة ===== */}
-      <section className="relative bg-ruwad-navy overflow-hidden pt-28 pb-24 sm:pt-36 sm:pb-32">
+      <section className="relative bg-ruwad-navy overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-20">
         <ParallaxLayer speed={0.12} className="absolute -top-10 -left-10 w-72 h-72 bg-ruwad-blue/40 rounded-full blur-3xl">
           <div />
         </ParallaxLayer>
@@ -56,46 +56,43 @@ export function LandingPage() {
           <div />
         </ParallaxLayer>
 
-        <div className="relative max-w-5xl mx-auto px-5 sm:px-8">
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <span className="bg-white text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-2 inline-flex items-center gap-1">
-              <Flame size={12} className="text-red-500" /> تحديات حيّة
-            </span>
-            <span className="bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm rotate-1">
-              تصحيح تلقائي فوري
-            </span>
-            <span className="bg-ruwad-blue text-white text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-1">
-              شهادات بـQR
-            </span>
+        <div className="relative max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-7">
+              <span className="bg-white text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-2 inline-flex items-center gap-1">
+                <Flame size={12} className="text-red-500" /> تحديات حيّة
+              </span>
+              <span className="bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm rotate-1">
+                تصحيح تلقائي فوري
+              </span>
+              <span className="bg-ruwad-blue text-white text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-1">
+                شهادات بـQR
+              </span>
+            </div>
+
+            <h1 className="text-center lg:text-right text-5xl sm:text-6xl font-extrabold leading-[0.98] tracking-tight">
+              <span className="block text-white">تدريبك،</span>
+              <span className="block text-ruwad-lime -rotate-1 inline-block my-1">بروح المسابقة</span>
+            </h1>
+
+            <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0 text-center lg:text-right mt-6">
+              كورسات، امتحانات تُصحَّح نفسها، تحديات حيّة بنفس اللحظة، وشهادات تُشارَك تلقائياً — كل ما يحتاجه المدرب والمعهد في مكان واحد.
+            </p>
+
+            <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mt-9">
+              <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop text-center">
+                ابدأ مجاناً الآن
+              </Link>
+              <a href="#demo" className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white font-bold px-9 py-4 rounded-ruwad-sm hover:bg-white hover:text-ruwad-navy transition">
+                جرّب تحدياً حياً <ArrowLeft size={16} />
+              </a>
+            </div>
           </div>
 
-          <h1 className="text-center text-[15vw] sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight">
-            <span className="block text-white">تدريبك،</span>
-            <span className="block text-ruwad-lime -rotate-1 inline-block my-1">بروح المسابقة</span>
-          </h1>
-
-          <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-lg mx-auto text-center mt-6">
-            كورسات، امتحانات تُصحَّح نفسها، تحديات حيّة بنفس اللحظة، وشهادات تُشارَك تلقائياً — كل ما يحتاجه المدرب والمعهد في مكان واحد.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-9">
-            <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop text-center">
-              ابدأ مجاناً الآن
-            </Link>
-            <a href="#demo" className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white font-bold px-9 py-4 rounded-ruwad-sm hover:bg-white hover:text-ruwad-navy transition">
-              جرّب تحدياً حياً <ArrowLeft size={16} />
-            </a>
+          <div>
+            <PhoneShowcase dark compact />
           </div>
         </div>
-      </section>
-
-      {/* ===== PHONE SHOWCASE — تظهر فوراً بدون تمرير ===== */}
-      <section className="bg-white py-10 sm:py-14 border-b-2 border-ruwad-navy">
-        <div className="text-center max-w-xl mx-auto mb-8 px-5">
-          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">جولة سريعة</span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-ruwad-navy mt-3">استعرض الميزات من هاتفك</h2>
-        </div>
-        <PhoneShowcase />
       </section>
 
       {/* ===== MARQUEE ===== */}
