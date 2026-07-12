@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { LandingNav } from './LandingNav'
 import { LiveQuizDemo } from './LiveQuizDemo'
+import { PhoneShowcase } from './PhoneShowcase'
 import { Reveal } from './Reveal'
 import { ParallaxLayer } from './ParallaxLayer'
 
@@ -126,6 +127,17 @@ export function LandingPage() {
             </Reveal>
           ))}
         </div>
+      </section>
+
+      {/* ===== PHONE SHOWCASE ===== */}
+      <section className="bg-white py-20 sm:py-28 border-y-2 border-ruwad-navy">
+        <Reveal className="text-center max-w-xl mx-auto mb-14 px-5">
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">جولة سريعة</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">استعرض الميزات من هاتفك</h2>
+        </Reveal>
+        <Reveal delay={100}>
+          <PhoneShowcase />
+        </Reveal>
       </section>
 
       {/* ===== SIGNATURE: LIVE DEMO ===== */}
