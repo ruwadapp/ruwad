@@ -117,21 +117,49 @@ textarea:focus-visible {
 }
 
 /* ===== الصفحة الرئيسية التسويقية ===== */
-@keyframes floatY {
-  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
-  50% { transform: translateY(-10px) rotate(var(--tilt, 0deg)); }
-}
-.animate-float {
-  animation: floatY 8s ease-in-out infinite;
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(37, 41, 67, 0.12) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
 }
 
-@keyframes revealUp {
-  from { opacity: 0; transform: translateY(28px); }
-  to { opacity: 1; transform: translateY(0); }
+.clip-angle-down {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
 }
-.reveal-hidden { opacity: 0; }
-.reveal-shown {
-  animation: revealUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+.clip-diagonal-lime {
+  clip-path: polygon(0 35%, 100% 0, 100% 100%, 0% 100%);
+}
+
+.text-outline-navy {
+  -webkit-text-stroke: 1.5px rgba(37, 41, 67, 0.1);
+  color: transparent;
+}
+
+/* ===== لغة تصميم "الملاحظات المثبّتة" — ظلال صلبة بدل التمويه ===== */
+.shadow-hard {
+  box-shadow: 6px 6px 0 0 #252943;
+}
+.shadow-hard-sm {
+  box-shadow: 4px 4px 0 0 #252943;
+}
+.shadow-hard-lime {
+  box-shadow: 6px 6px 0 0 #E3FF3B;
+}
+.hover-pop {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-pop:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 0 #252943;
+}
+
+@keyframes scorePulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-score-pulse {
+  animation: scorePulse 0.5s ease-out;
 }
 
 @keyframes ringDrain {
@@ -151,13 +179,13 @@ textarea:focus-visible {
   animation: tilePop 0.4s ease-out;
 }
 
-@keyframes scorePulse {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.25); }
-  100% { transform: scale(1); }
+@keyframes revealPin {
+  from { opacity: 0; transform: translateY(24px) rotate(var(--r, 0deg)) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)) scale(1); }
 }
-.animate-score-pulse {
-  animation: scorePulse 0.5s ease-out;
+.reveal-hidden { opacity: 0; }
+.reveal-shown {
+  animation: revealPin 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes marqueeScroll {
@@ -165,28 +193,13 @@ textarea:focus-visible {
   to { transform: translateX(-50%); }
 }
 .animate-marquee {
-  animation: marqueeScroll 26s linear infinite;
+  animation: marqueeScroll 22s linear infinite;
 }
 
-@keyframes heroGlowPan {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--tilt, 0deg)); }
 }
-.animate-hero-glow {
-  background-size: 200% 200%;
-  animation: heroGlowPan 8s ease-in-out infinite;
-}
-
-.bg-dot-grid {
-  background-image: radial-gradient(rgba(37, 41, 67, 0.12) 1.5px, transparent 1.5px);
-  background-size: 22px 22px;
-}
-
-.clip-angle-down {
-  clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
-}
-
-.text-outline-navy {
-  -webkit-text-stroke: 1.5px rgba(37, 41, 67, 0.08);
-  color: transparent;
+.animate-bob {
+  animation: bob 7s ease-in-out infinite;
 }

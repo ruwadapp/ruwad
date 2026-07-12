@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
-export function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+export function Reveal({ children, delay = 0, rotate = 0, className = '' }: { children: React.ReactNode; delay?: number; rotate?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const [shown, setShown] = useState(false)
 
@@ -25,7 +25,7 @@ export function Reveal({ children, delay = 0, className = '' }: { children: Reac
     <div
       ref={ref}
       className={`${shown ? 'reveal-shown' : 'reveal-hidden'} ${className}`}
-      style={shown ? { animationDelay: `${delay}ms` } : undefined}
+      style={{ '--r': `${rotate}deg`, ...(shown ? { animationDelay: `${delay}ms` } : {}) } as React.CSSProperties}
     >
       {children}
     </div>

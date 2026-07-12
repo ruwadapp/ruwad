@@ -23,7 +23,10 @@ export function LandingNav() {
   return (
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-lg shadow-card' : 'bg-transparent'}`}>
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-        <span className={`text-xl font-extrabold transition-colors ${scrolled ? 'text-ruwad-navy' : 'text-white'}`}>رُوّاد</span>
+        <span className={`text-xl font-extrabold transition-colors flex items-center gap-1.5 ${scrolled ? 'text-ruwad-navy' : 'text-white'}`}>
+          <span className="w-7 h-7 rounded-full bg-ruwad-lime border-2 border-ruwad-navy flex items-center justify-center text-[11px] font-black text-ruwad-navy -rotate-6">ر</span>
+          رُوّاد
+        </span>
 
         <div className="hidden md:flex items-center gap-7">
           {LINKS.map((l) => (
@@ -37,7 +40,7 @@ export function LandingNav() {
           <Link href="/login" className={`text-sm font-semibold transition-colors ${scrolled ? 'text-ruwad-navy/70 hover:text-ruwad-blue' : 'text-white/90 hover:text-white'}`}>
             تسجيل الدخول
           </Link>
-          <Link href="/register" className="bg-ruwad-lime text-ruwad-navy text-sm font-bold px-5 py-2.5 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad">
+          <Link href="/register" className="bg-ruwad-lime text-ruwad-navy text-sm font-extrabold px-5 py-2.5 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-sm hover-pop">
             ابدأ مجاناً
           </Link>
         </div>
@@ -56,7 +59,7 @@ export function LandingNav() {
           ))}
           <div className="flex gap-2 mt-2">
             <Link href="/login" className="flex-1 text-center border-2 border-ruwad-gray text-ruwad-navy text-sm font-semibold py-2.5 rounded-ruwad-sm">دخول</Link>
-            <Link href="/register" className="flex-1 text-center bg-ruwad-lime text-ruwad-navy text-sm font-bold py-2.5 rounded-ruwad-sm">ابدأ مجاناً</Link>
+            <Link href="/register" className="flex-1 text-center bg-ruwad-lime text-ruwad-navy text-sm font-extrabold py-2.5 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-sm">ابدأ مجاناً</Link>
           </div>
         </div>
       )}

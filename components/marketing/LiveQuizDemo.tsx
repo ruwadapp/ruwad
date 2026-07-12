@@ -62,7 +62,7 @@ export function LiveQuizDemo() {
         <Flame size={13} className="animate-flame-flicker" /> مباشر الآن
       </div>
 
-      <div className="bg-white rounded-ruwad shadow-ruwad-lg p-6 sm:p-8 flex flex-col gap-5">
+      <div className="bg-white rounded-ruwad p-6 sm:p-8 flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-ruwad-navy/40">سؤال {qIndex + 1} من {DEMO_QUESTIONS.length}</span>
           <svg width="34" height="34" viewBox="0 0 80 80" className="text-ruwad-lime">
