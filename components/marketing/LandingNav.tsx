@@ -23,8 +23,9 @@ export function LandingNav() {
   return (
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-lg shadow-card' : 'bg-transparent'}`}>
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-        <span className={`text-xl font-extrabold transition-colors flex items-center gap-1.5 ${scrolled ? 'text-ruwad-navy' : 'text-white'}`}>
-          <span className="w-7 h-7 rounded-full bg-ruwad-lime border-2 border-ruwad-navy flex items-center justify-center text-[11px] font-black text-ruwad-navy -rotate-6">ر</span>
+        <span className={`text-xl font-extrabold transition-colors flex items-center gap-2 ${scrolled ? 'text-ruwad-navy' : 'text-white'}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/icon-192.png" alt="رُوّاد" className="w-8 h-8 rounded-full border-2 border-ruwad-navy" />
           رُوّاد
         </span>
 

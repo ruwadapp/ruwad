@@ -301,9 +301,13 @@ export function LandingPage() {
       {/* ===== FOOTER ===== */}
       <footer className="bg-ruwad-lime border-t-2 border-ruwad-navy py-10">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-right">
-            <p className="text-xl font-extrabold text-ruwad-navy">رُوّاد</p>
-            <p className="text-xs text-ruwad-navy/60 mt-1">منصة تدريب تفاعلية بروح المسابقة</p>
+          <div className="flex items-center gap-2 text-center sm:text-right">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/icon-192.png" alt="رُوّاد" className="w-9 h-9 rounded-full border-2 border-ruwad-navy" />
+            <div>
+              <p className="text-xl font-extrabold text-ruwad-navy">رُوّاد</p>
+              <p className="text-xs text-ruwad-navy/60 mt-0.5">منصة تدريب تفاعلية بروح المسابقة</p>
+            </div>
           </div>
           <div className="flex items-center gap-5 text-sm text-ruwad-navy/70 font-semibold">
             <a href="#features" className="hover:text-ruwad-navy transition">الميزات</a>
