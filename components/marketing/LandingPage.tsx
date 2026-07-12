@@ -314,6 +314,9 @@ export function LandingPage() {
             سواء كنت تدير مركز تدريب صغير أو معهداً متعدد الفروع، يمنحك رُوّاد أدوات إدارة الدورات التدريبية،
             الامتحانات الإلكترونية، الحضور الرقمي، والشهادات الموثّقة في نظام عربي واحد سهل الاستخدام.
           </p>
+          <Link href="/idarat-maahid" className="inline-block mt-5 text-ruwad-blue font-extrabold hover:underline">
+            اقرأ المزيد عن نظام إدارة المعاهد في رُوّاد ←
+          </Link>
         </Reveal>
       </section>
 
@@ -383,6 +386,8 @@ export function LandingPage() {
           <div className="flex items-center gap-5 text-sm text-ruwad-navy/70 font-semibold">
             <a href="#features" className="hover:text-ruwad-navy transition">الميزات</a>
             <a href="#plans" className="hover:text-ruwad-navy transition">الخطط</a>
+            <Link href="/idarat-maahid" className="hover:text-ruwad-navy transition">إدارة المعاهد</Link>
+            <Link href="/blog" className="hover:text-ruwad-navy transition">المدونة</Link>
             <a href="mailto:hello@ruwad.app" className="flex items-center gap-1.5 hover:text-ruwad-navy transition">
               <Mail size={14} /> راسلنا
             </a>

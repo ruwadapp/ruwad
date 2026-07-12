@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/land/', '/login', '/register'],
+        allow: ['/', '/land/', '/login', '/register', '/blog', '/idarat-maahid', '/ruwad-vs-manual'],
         disallow: [
           '/dashboard', '/home', '/admin', '/org', '/students', '/courses',
           '/exams', '/surveys', '/challenges', '/assignments', '/attendance',
