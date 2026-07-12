@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost } from '@/lib/types'
-import { Trash2, Pencil, Check, X, BookOpen, FileText, FileCheck, Trophy, ClipboardList, Award } from 'lucide-react'
+import { Trash2, Pencil, Check, X, BookOpen, FileText, FileCheck, Trophy, ClipboardList, Award, Link2 } from 'lucide-react'
 
 const CARD_ICON = { course: BookOpen, exam: FileText, assignment: FileCheck, challenge: Trophy, survey: ClipboardList, certificate: Award }
 const CARD_LABEL = { course: 'كورس', exam: 'امتحان', assignment: 'واجب', challenge: 'تحدٍ', survey: 'استبيان', certificate: 'شهادة' }
@@ -90,6 +90,11 @@ export function TrainerPostsList({ posts }: { posts: TrainerPost[] }) {
               {Icon && post.card_type && (
                 <span className="flex items-center gap-1 bg-ruwad-blue/10 text-ruwad-blue px-2 py-0.5 rounded-full">
                   <Icon size={11} /> {CARD_LABEL[post.card_type]}
+                </span>
+              )}
+              {post.link_url && post.link_label && (
+                <span title={post.link_url} className="flex items-center gap-1 bg-ruwad-navy/10 text-ruwad-navy px-2 py-0.5 rounded-full">
+                  <Link2 size={11} /> زر: {post.link_label}
                 </span>
               )}
               <span>{new Date(post.created_at).toLocaleString('ar')}</span>

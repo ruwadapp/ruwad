@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award, Flame } from 'lucide-react'
+import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award, Flame, ExternalLink } from 'lucide-react'
 import { PostLikeButton } from '@/components/shared/PostLikeButton'
 import { StoryShareButton } from '@/components/shared/StoryShareButton'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
@@ -209,6 +209,17 @@ export function RawaqFeed({
                 </div>
               )
             })()}
+
+            {post.link_url && post.link_label && (
+              <a
+                href={post.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 bg-ruwad-blue text-white font-bold px-5 py-3 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad"
+              >
+                <ExternalLink size={16} /> {post.link_label}
+              </a>
+            )}
 
             <div className="flex items-center justify-between -mx-1 pt-1 border-t border-ruwad-gray/30 mt-1">
               <PostLikeButton postId={post.id} initialLiked={likedSet.has(post.id)} initialCount={likeCounts[post.id] ?? 0} />

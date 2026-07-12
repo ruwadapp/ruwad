@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { PostCardType } from '@/lib/types'
-import { Send, BookOpen, FileText, FileCheck, Trophy, ClipboardList, X } from 'lucide-react'
+import { Send, BookOpen, FileText, FileCheck, Trophy, ClipboardList, X, Link2 } from 'lucide-react'
 
 interface EntityOption { id: string; title: string }
 
@@ -14,6 +14,18 @@ const CARD_TYPES: { type: PostCardType; label: string; icon: typeof BookOpen }[]
   { type: 'challenge', label: 'تحدٍ', icon: Trophy },
   { type: 'survey', label: 'استبيان', icon: ClipboardList },
 ]
+
+function normalizeUrl(raw: string): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+  try {
+    const u = new URL(withScheme)
+    return u.toString()
+  } catch {
+    return null
+  }
+}
 
 export function PostComposer({
   courses,
@@ -33,6 +45,9 @@ export function PostComposer({
   const [content, setContent] = useState('')
   const [cardType, setCardType] = useState<PostCardType | null>(null)
   const [cardRefId, setCardRefId] = useState('')
+  const [linkMode, setLinkMode] = useState(false)
+  const [linkLabel, setLinkLabel] = useState('')
+  const [linkUrl, setLinkUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -43,9 +58,19 @@ export function PostComposer({
   }
 
   function pickType(type: PostCardType) {
+    setLinkMode(false)
     if (cardType === type) { setCardType(null); setCardRefId(''); return }
     setCardType(type)
     setCardRefId('')
+  }
+
+  function toggleLinkMode() {
+    setCardType(null)
+    setCardRefId('')
+    setLinkMode((prev) => {
+      if (prev) { setLinkLabel(''); setLinkUrl('') }
+      return !prev
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,13 +78,28 @@ export function PostComposer({
     if (!content.trim()) { setError('اكتب نص المنشور أولاً'); return }
     if (cardType && !cardRefId) { setError('اختر العنصر المراد إرفاقه'); return }
 
+    let normalizedUrl: string | null = null
+    if (linkMode) {
+      if (!linkLabel.trim()) { setError('اكتب تسمية للزر (مثال: سجّل الآن)'); return }
+      normalizedUrl = normalizeUrl(linkUrl)
+      if (!normalizedUrl) { setError('الرابط غير صالح، تأكد من كتابته بشكل صحيح'); return }
+    }
+
     setLoading(true)
     setError(null)
 
+    const basePayload = {
+      content: content.trim(),
+      card_type: linkMode ? null : cardType,
+      card_ref_id: linkMode ? null : (cardType ? cardRefId : null),
+      link_url: linkMode ? normalizedUrl : null,
+      link_label: linkMode ? linkLabel.trim() : null,
+    }
+
     const { error: insertError } = await supabase.from('trainer_posts').insert(
       instituteId
-        ? { institute_id: instituteId, content: content.trim(), card_type: cardType, card_ref_id: cardType ? cardRefId : null }
-        : { trainer_id: (await supabase.auth.getUser()).data.user!.id, content: content.trim(), card_type: cardType, card_ref_id: cardType ? cardRefId : null }
+        ? { institute_id: instituteId, ...basePayload }
+        : { trainer_id: (await supabase.auth.getUser()).data.user!.id, ...basePayload }
     )
 
     if (insertError) { setError('حدث خطأ أثناء نشر المنشور'); setLoading(false); return }
@@ -67,6 +107,9 @@ export function PostComposer({
     setContent('')
     setCardType(null)
     setCardRefId('')
+    setLinkMode(false)
+    setLinkLabel('')
+    setLinkUrl('')
     setLoading(false)
     router.refresh()
   }
@@ -103,6 +146,15 @@ export function PostComposer({
             </button>
           )
         })}
+        <button
+          type="button"
+          onClick={toggleLinkMode}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border-2 transition ${
+            linkMode ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy border-ruwad-gray hover:border-ruwad-navy/40'
+          }`}
+        >
+          <Link2 size={13} /> رابط
+        </button>
       </div>
 
       {cardType && (
@@ -118,6 +170,33 @@ export function PostComposer({
           <button type="button" onClick={() => { setCardType(null); setCardRefId('') }} aria-label="إزالة البطاقة" className="text-ruwad-navy/50 hover:text-red-500 transition">
             <X size={16} />
           </button>
+        </div>
+      )}
+
+      {linkMode && (
+        <div className="flex flex-col gap-2 bg-ruwad-navy/5 rounded-ruwad-sm p-3">
+          <div className="flex items-center gap-2">
+            <input
+              value={linkLabel}
+              onChange={(e) => setLinkLabel(e.target.value)}
+              maxLength={40}
+              placeholder="تسمية الزر (مثال: سجّل الآن، شاهد التفاصيل)"
+              className="flex-1 border border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm outline-none focus:border-ruwad-navy"
+            />
+            <button type="button" onClick={toggleLinkMode} aria-label="إزالة الرابط" className="text-ruwad-navy/50 hover:text-red-500 transition shrink-0">
+              <X size={16} />
+            </button>
+          </div>
+          <input
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="الرابط الفعلي (مثال: https://example.com)"
+            dir="ltr"
+            className="border border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm outline-none focus:border-ruwad-navy text-left"
+          />
+          <p className="text-[11px] text-ruwad-navy/40">
+            الرابط الفعلي لن يظهر للطلاب — سيظهر فقط زر بالتسمية التي تكتبها.
+          </p>
         </div>
       )}
 
