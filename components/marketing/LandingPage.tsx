@@ -42,6 +42,25 @@ const PLANS = [
 
 const WHATSAPP_NUMBER = '963998285483'
 
+const FAQS = [
+  {
+    q: 'ما هو أفضل نظام لإدارة معهد تدريبي؟',
+    a: 'رُوّاد نظام عربي متكامل لإدارة المعاهد والتدريبات، يجمع الكورسات والمحاضرات، الامتحانات الذكية، التحديات الحيّة، الشهادات الموثّقة بـQR، والحضور الرقمي في لوحة تحكم واحدة لكل مدربي المعهد.',
+  },
+  {
+    q: 'كيف أدير تدريبات معهدي إلكترونياً؟',
+    a: 'أنشئ حساب معهد على رُوّاد، أضف مدربيك تحت مظلة واحدة، وابدأ بنشر التدريبات والامتحانات والتحديات — مع متابعة لحظية لتقدّم كل طالب وحضوره من لوحة تحكم موحّدة.',
+  },
+  {
+    q: 'هل يدعم رُوّاد إدارة عدة مدربين تحت معهد واحد؟',
+    a: 'نعم، خطة "معهد" في رُوّاد مصمّمة خصيصاً لهذا: لوحة تحكم لعدة مدربين، مشاركة موارد بينهم، وتقارير أداء شاملة على مستوى المعهد بالكامل.',
+  },
+  {
+    q: 'هل يوجد نظام حضور إلكتروني لمراكز التدريب؟',
+    a: 'نعم، رُوّاد يوفّر نظام حضور رقمي بكود جلسة من 6 أرقام وموافقة فورية من شاشة المدرب، مع إحصاء تلقائي للحضور والغياب لكل جلسة تدريبية.',
+  },
+]
+
 export function LandingPage() {
   return (
     <main dir="rtl" className="bg-white overflow-x-clip">
@@ -278,6 +297,51 @@ export function LandingPage() {
                   تواصل بخصوص هذه الخطة
                 </a>
               </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== INSTITUTE SEO CONTENT ===== */}
+      <section className="max-w-4xl mx-auto px-5 sm:px-8 pb-16">
+        <Reveal className="bg-[#F5F6FA] rounded-ruwad p-8 sm:p-10 border-2 border-ruwad-navy/10">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ruwad-navy mb-4">
+            نظام إدارة معاهد وتدريبات متكامل — بالعربية بالكامل
+          </h2>
+          <p className="text-ruwad-navy/70 leading-relaxed">
+            رُوّاد هو برنامج إدارة تدريبات ومعاهد مصمّم من الصفر للسوق العربي: يتيح لصاحب المعهد إدارة فريق كامل من
+            المدربين تحت مظلة واحدة، مع مشاركة الموارد بينهم ولوحة تحكم موحّدة لمتابعة كل تدريب ودورة يتم نشرها.
+            سواء كنت تدير مركز تدريب صغير أو معهداً متعدد الفروع، يمنحك رُوّاد أدوات إدارة الدورات التدريبية،
+            الامتحانات الإلكترونية، الحضور الرقمي، والشهادات الموثّقة في نظام عربي واحد سهل الاستخدام.
+          </p>
+        </Reveal>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQS.map((f) => ({
+              '@type': 'Question',
+              name: f.q,
+              acceptedAnswer: { '@type': 'Answer', text: f.a },
+            })),
+          }),
+        }}
+      />
+      <section id="faq" className="max-w-3xl mx-auto px-5 sm:px-8 pb-20 sm:pb-28">
+        <Reveal className="text-center max-w-xl mx-auto mb-12">
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">أسئلة شائعة</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">كل ما تريد معرفته عن إدارة معهدك على رُوّاد</h2>
+        </Reveal>
+        <div className="flex flex-col gap-4">
+          {FAQS.map((f) => (
+            <Reveal key={f.q} className="bg-white rounded-ruwad-sm p-6 border-2 border-ruwad-navy/10 shadow-card">
+              <h3 className="font-extrabold text-ruwad-navy text-lg">{f.q}</h3>
+              <p className="text-ruwad-navy/70 mt-2 leading-relaxed">{f.a}</p>
             </Reveal>
           ))}
         </div>
