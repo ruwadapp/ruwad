@@ -16,8 +16,10 @@ export function ForgotPasswordForm() {
     setLoading(true)
     setError(null)
 
+    // نستخدم النطاق العام الثابت إن وُجد حتى يطابق دائماً قائمة Redirect URLs المسموحة في Supabase
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin).replace(/\/$/, '')
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
     })
 
     // نعرض رسالة النجاح دوماً بغضّ النظر عن وجود البريد فعلاً في النظام أو عدمه —
