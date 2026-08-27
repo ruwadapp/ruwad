@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
     return redirectWithError(origin, next, type)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_link_invalid`)
+  // لا code ولا token_hash: غالباً التدفق الضمني (implicit) حيث تصل الجلسة في جزء #hash من الرابط
+  // وهذا الجزء لا يصل للسيرفر. نمرّر المستخدم لوجهته والمتصفح يلتقط الجلسة من الـ hash بنفسه.
+  return NextResponse.redirect(`${origin}${next}`)
 }
 
 // خلف Vercel قد يختلف origin الداخلي عن النطاق العام، لذا نعتمد على النطاق المعرَّف في البيئة أولاً
