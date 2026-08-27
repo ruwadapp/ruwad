@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createRecoveryClient } from '@/lib/supabase/client'
 import { ArrowRight, MailCheck, KeyRound } from 'lucide-react'
 
 export function ForgotPasswordForm() {
@@ -9,17 +9,18 @@ export function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+  const supabase = createRecoveryClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    // نستخدم النطاق العام الثابت إن وُجد حتى يطابق دائماً قائمة Redirect URLs المسموحة في Supabase
+    // نستخدم النطاق العام الثابت إن وُجد حتى يطابق دائماً قائمة Redirect URLs المسموحة في Supabase.
+    // التوجيه مباشرة لصفحة reset-password التي تلتقط الجلسة من الـ hash على المتصفح (implicit flow)
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin).replace(/\/$/, '')
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
+      redirectTo: `${appUrl}/reset-password`,
     })
 
     // نعرض رسالة النجاح دوماً بغضّ النظر عن وجود البريد فعلاً في النظام أو عدمه —

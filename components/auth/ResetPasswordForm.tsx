@@ -1,16 +1,38 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { ShieldAlert, CheckCircle2, ArrowRight } from 'lucide-react'
+import { createRecoveryClient } from '@/lib/supabase/client'
+import { ShieldAlert, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react'
 
-export function ResetPasswordForm({ hasValidSession }: { hasValidSession: boolean }) {
+export function ResetPasswordForm({ hasValidSession: initialHasSession }: { hasValidSession: boolean }) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+  const supabase = useMemo(() => createRecoveryClient(), [])
+
+  // الجلسة قد تأتي من السيرفر (كوكي) أو من الـ hash في رابط البريد (implicit flow) الذي يُعالج على المتصفح فقط،
+  // لذا نبدأ بحالة "جارٍ التحقق" ثم نحسم بعد أن يعالج العميل الرابط
+  const [hasValidSession, setHasValidSession] = useState<boolean | null>(initialHasSession ? true : null)
+
+  useEffect(() => {
+    if (initialHasSession) return
+    let settled = false
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        settled = true
+        setHasValidSession(true)
+      }
+    })
+    // مهلة احتياطية: إن لم تُلتقط جلسة من الرابط خلال ثوانٍ نعتبر الرابط غير صالح
+    const timer = setTimeout(async () => {
+      if (settled) return
+      const { data: { session } } = await supabase.auth.getSession()
+      setHasValidSession(!!session)
+    }, 2500)
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
+  }, [supabase, initialHasSession])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -41,7 +63,12 @@ export function ResetPasswordForm({ hasValidSession }: { hasValidSession: boolea
         </div>
 
         <div className="bg-white rounded-ruwad shadow-card p-8 flex flex-col gap-4">
-          {!hasValidSession && !done ? (
+          {hasValidSession === null && !done ? (
+            <div className="flex flex-col items-center gap-3 py-6 text-ruwad-navy/60">
+              <Loader2 size={28} className="animate-spin text-ruwad-blue" />
+              <p className="text-sm">جارٍ التحقق من الرابط...</p>
+            </div>
+          ) : !hasValidSession && !done ? (
             <>
               <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-1">
                 <ShieldAlert size={26} className="text-red-500" />
