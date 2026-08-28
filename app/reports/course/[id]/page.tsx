@@ -53,7 +53,7 @@ export default async function CourseReportPage({ params }: { params: Promise<{ i
   ] = await Promise.all([
     supabase.from('profiles').select('full_name').eq('id', course.trainer_id).single(),
     supabase.from('lectures').select('id, title, order_index, is_published').eq('course_id', id).order('order_index'),
-    supabase.from('enrollments').select('student_id, progress, status, created_at, student:profiles!student_id(full_name)').eq('course_id', id).eq('status', 'approved'),
+    supabase.from('enrollments').select('student_id, progress, status, enrolled_at, student:profiles!student_id(full_name)').eq('course_id', id).eq('status', 'approved'),
     supabase.from('exams').select('id, title, total_marks, is_active, exam_submissions(student_id, score, total_marks)').eq('course_id', id).order('created_at'),
     supabase.from('assignments').select('id, title, due_date, is_active, assignment_submissions(student_id, score)').eq('course_id', id).order('created_at'),
     supabase.from('challenges').select('id, title, is_active, challenge_submissions(student_id, score, percentage)').eq('course_id', id).order('created_at'),
@@ -65,7 +65,7 @@ export default async function CourseReportPage({ params }: { params: Promise<{ i
     id: e.student_id,
     name: (e.student as unknown as { full_name?: string })?.full_name ?? 'طالب',
     progress: e.progress ?? 0,
-    joinedAt: e.created_at,
+    joinedAt: e.enrolled_at,
   }))
   const studentIds = new Set(students.map((s) => s.id))
 
