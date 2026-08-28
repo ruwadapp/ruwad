@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight, Share2, Eye } from 'lucide-react'
 import { AvatarUpload } from './AvatarUpload'
+import { PushNotificationSetup } from './PushNotificationSetup'
 import { PointsCard, type PointsBreakdown } from './PointsCard'
 import { SkillsEditor } from '@/components/student/SkillsEditor'
 
@@ -223,6 +224,14 @@ export function ProfileClient({ profile, stats, points }: { profile: Profile; st
               <span className="font-mono font-bold text-ruwad-blue tracking-widest">{profile.user_code}</span>
             </div>
           )}
+        </div>
+
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
+          <h2 className="text-xs font-bold text-ruwad-navy/50 uppercase tracking-wider">الإشعارات</h2>
+          <p className="text-sm text-ruwad-navy/60 leading-relaxed">
+            فعّل إشعارات الجهاز ليصلك كل جديد فور حدوثه: دعوات التدريب، الشارات، الامتحانات، الواجبات، والمنشورات.
+          </p>
+          <PushNotificationSetup variant="light" />
         </div>
 
         {profile.role === 'trainer' && (
