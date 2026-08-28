@@ -178,7 +178,12 @@ export default async function CourseReportPage({ params }: { params: Promise<{ i
           .avoid-break { break-inside: avoid; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-        @page { size: A4; margin: 12mm; }
+        /* هامش الصفحة صفر يمنع المتصفح من طباعة ترويسته وتذييله (الرابط/التاريخ/رقم الصفحة)،
+           والهامش البصري ننقله لداخل ورقة التقرير نفسها */
+        @page { size: A4; margin: 0; }
+        @media print {
+          .report-sheet { padding: 10mm 12mm; }
+        }
         .rw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .rw-table th { background: ${NAVY}; color: #fff; padding: 8px 10px; text-align: right; font-weight: 700; }
         .rw-table th:first-child { border-radius: 0 8px 8px 0; }
