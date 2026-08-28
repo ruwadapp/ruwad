@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
+import { SocialLayout } from '@/components/shared/SocialLayout'
 import { TrainerSearch } from '@/components/student/TrainerSearch'
 import { RawaqFeed } from '@/components/student/RawaqFeed'
 import type { PostCardType } from '@/lib/types'
@@ -92,27 +93,30 @@ export default async function RawaqPage() {
   return (
     <>
       <Header title="الرواق" />
-      <main
-        className="p-6 flex flex-col gap-6 max-w-2xl mx-auto min-h-[calc(100vh-72px)]"
-        style={{ background: 'linear-gradient(180deg, #3A4EFB 0%, #33A4FA 100%)' }}
+      <SocialLayout
+        aside={
+          <>
+            <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5">
+              <div className="absolute -top-10 -right-10 w-36 h-36 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-ruwad-lime/20 rounded-full blur-2xl" />
+              <div className="relative">
+                <h2 className="text-lg font-extrabold text-white">جدارك الاجتماعي 🎉</h2>
+                <p className="text-xs text-white/80 mt-1 leading-relaxed">تابع مدربيك ومعاهدك المفضّلة وشاهد كل جديدهم هنا أولاً بأول</p>
+                <p className="relative mt-3 inline-flex items-center gap-1.5 bg-white/15 backdrop-blur text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  تتابع {followedIds.length + followedInstituteIds.length} حساباً
+                </p>
+              </div>
+            </div>
+            <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
+          </>
+        }
       >
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 flex items-center gap-3">
-          <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
-          <div className="relative">
-            <h2 className="text-xl font-extrabold text-white">جدارك الاجتماعي 🎉</h2>
-            <p className="text-sm text-white/80 mt-1">تابع مدربيك ومعاهدك المفضّلة وشاهد كل جديدهم هنا أولاً بأول</p>
-          </div>
-        </div>
-
-        <TrainerSearch followedIds={followedIds} followedInstituteIds={followedInstituteIds} />
-
         {!hasAnyFollow ? (
-          <div className="bg-white/15 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/90">
-            لا تتابع أي مدرب أو معهد بعد. استخدم البحث أعلاه لإيجادهم ومتابعتهم لتظهر منشوراتهم هنا.
+          <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/50 text-sm">
+            لا تتابع أي مدرب أو معهد بعد. استخدم البحث في الجانب لإيجادهم ومتابعتهم لتظهر منشوراتهم هنا.
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white/15 backdrop-blur rounded-ruwad shadow-sm border border-white/10 p-10 text-center text-white/90">
+          <div className="bg-white rounded-ruwad shadow-card p-10 text-center text-ruwad-navy/50 text-sm">
             لا توجد منشورات حتى الآن ممن تتابعهم.
           </div>
         ) : (
@@ -125,7 +129,7 @@ export default async function RawaqPage() {
             likeCounts={likeCounts}
           />
         )}
-      </main>
+      </SocialLayout>
     </>
   )
 }

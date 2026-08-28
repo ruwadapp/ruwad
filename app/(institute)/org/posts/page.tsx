@@ -3,13 +3,14 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { PostComposer } from '@/components/trainer/PostComposer'
 import { TrainerPostsList } from '@/components/trainer/TrainerPostsList'
-import { Users } from 'lucide-react'
+import { SocialLayout, ProfileCard } from '@/components/shared/SocialLayout'
+import { Lightbulb } from 'lucide-react'
 
 export default async function InstitutePostsPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: institute } = await supabase.from('institutes').select('id').eq('owner_id', user!.id).single()
+  const { data: institute } = await supabase.from('institutes').select('id, name, logo_url').eq('owner_id', user!.id).single()
   if (!institute) redirect('/org/dashboard')
 
   const [
@@ -17,11 +18,13 @@ export default async function InstitutePostsPage() {
     { data: shares },
     { data: surveys },
     { count: followersCount },
+    { count: trainersCount },
   ] = await Promise.all([
     supabase.from('trainer_posts').select('*').eq('institute_id', institute.id).order('created_at', { ascending: false }),
     supabase.from('resource_institute_shares').select('resource_type, resource_id').eq('institute_id', institute.id),
     supabase.from('surveys').select('id, title').eq('institute_id', institute.id).order('created_at', { ascending: false }),
     supabase.from('trainer_follows').select('id', { count: 'exact', head: true }).eq('institute_id', institute.id),
+    supabase.from('institute_members').select('id', { count: 'exact', head: true }).eq('institute_id', institute.id).eq('status', 'approved'),
   ])
 
   const idsByType: Record<string, string[]> = { courses: [], exams: [], assignments: [], challenges: [] }
@@ -34,23 +37,40 @@ export default async function InstitutePostsPage() {
     idsByType.challenges.length ? supabase.from('challenges').select('id, title').in('id', idsByType.challenges) : Promise.resolve({ data: [] }),
   ])
 
+  // عدّاد الإعجابات لكل منشور
+  const likeCounts: Record<string, number> = {}
+  const postIds = (posts ?? []).map((p) => p.id)
+  if (postIds.length > 0) {
+    const { data: likes } = await supabase.from('post_likes').select('post_id').in('post_id', postIds)
+    for (const l of likes ?? []) likeCounts[l.post_id] = (likeCounts[l.post_id] ?? 0) + 1
+  }
+
   return (
     <>
       <Header title="منشورات المعهد" />
-      <main className="p-6 flex flex-col gap-6 max-w-2xl">
-        <div className="bg-ruwad-gradient rounded-ruwad shadow-ruwad p-5 flex items-center gap-3 text-white">
-          <Users size={24} />
-          <div>
-            <p className="text-sm opacity-80">متابعو المعهد في الرواق</p>
-            <p className="text-2xl font-bold">{followersCount ?? 0}</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-ruwad-navy/60">
-          تظهر منشورات المعهد في "الرواق" لدى الطلاب الذين يتابعونه. يمكنك كتابة تحديث نصّي، أو إرفاقه ببطاقة
-          كورس/امتحان/واجب/تحدٍ من التي شاركها معك المدربون، أو باستبيان من استبيانات المعهد.
-        </p>
-
+      <SocialLayout
+        aside={
+          <>
+            <ProfileCard
+              name={institute.name ?? 'المعهد'}
+              role="معهد تدريبي"
+              avatarUrl={institute.logo_url}
+              stats={[
+                { label: 'متابِع', value: followersCount ?? 0 },
+                { label: 'منشور', value: posts?.length ?? 0 },
+                { label: 'مدرب', value: trainersCount ?? 0 },
+              ]}
+            />
+            <div className="bg-white rounded-ruwad shadow-card p-5 text-xs text-ruwad-navy/60 leading-relaxed">
+              <p className="flex items-center gap-1.5 font-bold text-ruwad-navy text-sm mb-2">
+                <Lightbulb size={15} className="text-ruwad-lime" style={{ fill: '#E3FF3B' }} /> كيف يعمل الرواق؟
+              </p>
+              تظهر منشورات المعهد لدى الطلاب الذين يتابعونه. اكتب تحديثاً نصّياً، أو أرفقه ببطاقة
+              كورس/امتحان/واجب/تحدٍ من التي شاركها معك المدربون، أو باستبيان من استبيانات المعهد.
+            </div>
+          </>
+        }
+      >
         <PostComposer
           instituteId={institute.id}
           courses={courses ?? []}
@@ -59,9 +79,13 @@ export default async function InstitutePostsPage() {
           challenges={challenges ?? []}
           surveys={surveys ?? []}
         />
-
-        <TrainerPostsList posts={posts ?? []} />
-      </main>
+        <TrainerPostsList
+          posts={posts ?? []}
+          authorName={institute.name ?? 'المعهد'}
+          authorAvatarUrl={institute.logo_url}
+          likeCounts={likeCounts}
+        />
+      </SocialLayout>
     </>
   )
 }
