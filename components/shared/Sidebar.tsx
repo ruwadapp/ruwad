@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut, Pencil,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -31,6 +31,7 @@ const studentNav = [
   { href: '/home', label: 'الرئيسية', icon: Home },
   { href: '/rawaq', label: 'الرواق', icon: Rss },
   { href: '/nearby', label: 'بالقرب مني', icon: MapPin },
+  { href: '/cv', label: 'سيرتي الذاتية', icon: FileBadge },
   { href: '/my-courses', label: 'التدريبات', icon: GraduationCap },
   { href: '/my-presentations', label: 'العروض التقديمية', icon: MonitorPlay },
   { href: '/my-exams', label: 'امتحاناتي', icon: FileText },
