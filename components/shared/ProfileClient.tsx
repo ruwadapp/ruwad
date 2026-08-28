@@ -6,6 +6,7 @@ import type { Profile } from '@/lib/types'
 import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight, Share2, Eye } from 'lucide-react'
 import { AvatarUpload } from './AvatarUpload'
 import { PushNotificationSetup } from './PushNotificationSetup'
+import { InstallAppButton } from './InstallAppButton'
 import { PointsCard, type PointsBreakdown } from './PointsCard'
 import { SkillsEditor } from '@/components/student/SkillsEditor'
 
@@ -232,6 +233,14 @@ export function ProfileClient({ profile, stats, points }: { profile: Profile; st
             فعّل إشعارات الجهاز ليصلك كل جديد فور حدوثه: دعوات التدريب، الشارات، الامتحانات، الواجبات، والمنشورات.
           </p>
           <PushNotificationSetup variant="light" />
+        </div>
+
+        <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
+          <h2 className="text-xs font-bold text-ruwad-navy/50 uppercase tracking-wider">تثبيت التطبيق</h2>
+          <p className="text-sm text-ruwad-navy/60 leading-relaxed">
+            ثبّت رُوّاد على جهازك ليعمل كتطبيق حقيقي: أيقونة على شاشتك، فتح أسرع، وإشعارات أفضل.
+          </p>
+          <InstallAppButton />
         </div>
 
         {profile.role === 'trainer' && (
