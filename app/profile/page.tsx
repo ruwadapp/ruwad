@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ProfileClient } from '@/components/shared/ProfileClient'
-import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
-import { SkillsEditor } from '@/components/student/SkillsEditor'
+import type { PointsBreakdown } from '@/components/shared/PointsCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,16 +62,5 @@ export default async function ProfilePage() {
     points = (pr?.[0] ?? null) as PointsBreakdown | null
   }
 
-  return (
-    <>
-      <ProfileClient profile={profile} stats={stats} />
-      {profile.role === 'student' && (
-        <div className="p-6 pt-0 max-w-2xl mx-auto w-full flex flex-col gap-5">
-          {points && <PointsCard points={points} />}
-          <SkillsEditor initialSkills={profile.skills ?? []} initialSpecialties={profile.specialties ?? []} />
-          <a href={`/s/${user.id}`} className="self-center text-sm font-semibold text-ruwad-blue hover:underline">عرض بروفايلي العام كما يراه الآخرون ←</a>
-        </div>
-      )}
-    </>
-  )
+  return <ProfileClient profile={profile} stats={stats} points={points} />
 }

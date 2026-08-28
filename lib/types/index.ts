@@ -8,6 +8,8 @@ export interface Profile {
   role: UserRole
   phone: string | null
   bio: string | null
+  skills?: string[] | null
+  specialties?: string[] | null
   user_code: string
   created_at: string
   updated_at: string

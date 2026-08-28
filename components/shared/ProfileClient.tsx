@@ -3,8 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
-import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight } from 'lucide-react'
+import { LogOut, Pencil, Check, X, User, BookOpen, Award, Building2, Shield, ArrowRight, Share2, Eye } from 'lucide-react'
 import { AvatarUpload } from './AvatarUpload'
+import { PointsCard, type PointsBreakdown } from './PointsCard'
+import { SkillsEditor } from '@/components/student/SkillsEditor'
 
 const ROLE_LABELS: Record<string, string> = {
   trainer: 'مدرب',
@@ -22,7 +24,7 @@ const ROLE_STYLES: Record<string, { bg: string; chipBg: string; chipText: string
 
 interface Stat { label: string; value: string | number }
 
-export function ProfileClient({ profile, stats }: { profile: Profile; stats: Stat[] }) {
+export function ProfileClient({ profile, stats, points }: { profile: Profile; stats: Stat[]; points?: PointsBreakdown | null }) {
   const [editing, setEditing]     = useState(false)
   const [name, setName]           = useState(profile.full_name)
   const [savedName, setSavedName] = useState(profile.full_name)
@@ -34,6 +36,25 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
   const [savingBio, setSavingBio] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const [shareMsg, setShareMsg] = useState<string | null>(null)
+
+  const isStudent = profile.role === 'student'
+  const publicUrl = typeof window !== 'undefined' ? `${window.location.origin}/s/${profile.id}` : `/s/${profile.id}`
+
+  async function shareProfile() {
+    const url = `${window.location.origin}/s/${profile.id}`
+    const shareData = { title: `بروفايل ${savedName} على رُوّاد`, text: `شاهد إنجازاتي ونقاطي على منصة رُوّاد 🎓`, url }
+    try {
+      if (navigator.share) { await navigator.share(shareData); return }
+    } catch { /* المستخدم ألغى المشاركة */ }
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareMsg('نُسخ رابط بروفايلك ✓')
+      setTimeout(() => setShareMsg(null), 2500)
+    } catch {
+      setShareMsg(url)
+    }
+  }
 
   const style    = ROLE_STYLES[profile.role] ?? ROLE_STYLES.student
   const RoleIcon = style.icon
@@ -96,6 +117,27 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
           <ArrowRight size={20} />
         </button>
 
+        {isStudent && (
+          <div className="absolute z-20 top-4 left-4 flex items-center gap-2">
+            <a
+              href={`/s/${profile.id}`}
+              aria-label="عرض بروفايلي العام"
+              title="عرض بروفايلي كما يراه الآخرون"
+              className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur flex items-center justify-center text-white transition"
+            >
+              <Eye size={19} />
+            </a>
+            <button
+              onClick={shareProfile}
+              aria-label="مشاركة بروفايلي"
+              title="مشاركة بروفايلي"
+              className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur flex items-center justify-center text-white transition"
+            >
+              <Share2 size={18} />
+            </button>
+          </div>
+        )}
+
         {(profile.role === 'trainer' || profile.role === 'institute_admin') ? (
           <div className="relative z-10">
             <AvatarUpload currentUrl={profile.avatar_url} fallbackLetter={initials} table="profiles" rowId={profile.id} column="avatar_url" size={80} />
@@ -134,10 +176,13 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
         </div>
         {error && <p className="relative z-10 text-red-300 text-xs">{error}</p>}
         <p className="relative z-10 text-white/60 text-sm">{profile.email}</p>
+        {shareMsg && <p className="relative z-10 text-ruwad-lime text-xs font-semibold bg-black/20 rounded-full px-3 py-1 mt-1">{shareMsg}</p>}
       </div>
 
       {/* ===== البطاقات — تنزل مباشرة بعد الهيدر بدون طفو مشكل ===== */}
       <div className="mx-4 sm:mx-6 flex flex-col gap-4 py-5 pb-28 md:pb-8">
+        {isStudent && points && <div className="-mt-14 relative z-10"><PointsCard points={points} /></div>}
+
         {stats.length > 0 && (
           <div className="bg-white rounded-ruwad shadow-ruwad-lg p-6 grid grid-cols-3 gap-4">
             {stats.map((s, i) => (
@@ -210,6 +255,10 @@ export function ProfileClient({ profile, stats }: { profile: Profile; stats: Sta
               </div>
             )}
           </div>
+        )}
+
+        {isStudent && (
+          <SkillsEditor initialSkills={profile.skills ?? []} initialSpecialties={profile.specialties ?? []} />
         )}
 
         <button

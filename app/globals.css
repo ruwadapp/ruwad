@@ -202,3 +202,29 @@ textarea:focus-visible {
 .animate-bob {
   animation: bob 7s ease-in-out infinite;
 }
+
+/* ===== بطاقة النقاط: لمعان ونجوم ===== */
+@keyframes pointsShine {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(320%) skewX(-20deg); }
+}
+.animate-points-shine { animation: pointsShine 3.5s ease-in-out infinite; }
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: .25; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+.animate-star-twinkle { animation: starTwinkle 2.4s ease-in-out infinite; }
+
+@keyframes countPop {
+  0% { transform: scale(.6); opacity: 0; }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-count-pop { animation: countPop .7s cubic-bezier(.2,.9,.3,1.4) both; }
+
+@keyframes badgeFloat {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-6px) rotate(6deg); }
+}
+.animate-badge-float { animation: badgeFloat 3s ease-in-out infinite; }

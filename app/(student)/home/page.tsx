@@ -6,22 +6,25 @@ import {
   FileCheck, ScanLine, KeyRound, ArrowLeft, Sparkles, Flame,
 } from 'lucide-react'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
+import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
 
 export default async function StudentHomePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   const uid = user!.id
 
-  const [{ data: profile }, { data: enrollments }, { count: badgesCount }, attendanceStatsArr, { data: recentBadge }] =
+  const [{ data: profile }, { data: enrollments }, { count: badgesCount }, attendanceStatsArr, { data: recentBadge }, pointsArr] =
     await Promise.all([
       supabase.from('profiles').select('full_name').eq('id', uid).single(),
       supabase.from('enrollments').select('*, course:courses(title)').eq('student_id', uid).eq('status', 'approved').order('progress', { ascending: false }),
       supabase.from('student_badges').select('id', { count: 'exact', head: true }).eq('student_id', uid),
       supabase.rpc('get_student_attendance_stats', { p_student_id: uid }),
       supabase.from('student_badges').select('earned_at, badge:badges(name, icon)').eq('student_id', uid).order('earned_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.rpc('student_points', { p_student_id: uid }),
     ])
 
   const attendance = attendanceStatsArr.data?.[0] as { attendance_rate: number } | undefined
+  const points = (pointsArr.data?.[0] ?? null) as PointsBreakdown | null
   const courseIds = (enrollments ?? []).map((e) => e.course_id)
 
   // ===== الكورس الجاري حالياً + المحاضرة التالية =====
@@ -81,6 +84,12 @@ export default async function StudentHomePage() {
     <>
       <Header title="الرئيسية" />
       <main className="p-6 flex flex-col gap-6">
+        {points && points.total > 0 && (
+          <Link href="/profile" className="block transition hover:-translate-y-0.5">
+            <PointsCard points={points} compact />
+          </Link>
+        )}
+
         {/* ===== الترحيب + إحصاءات مصغّرة ===== */}
         <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7">
           <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
