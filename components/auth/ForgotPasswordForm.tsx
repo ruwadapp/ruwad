@@ -1,38 +1,42 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { createRecoveryClient } from '@/lib/supabase/client'
-import { ArrowRight, MailCheck, KeyRound } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, CheckCircle2, KeyRound, Eye, EyeOff } from 'lucide-react'
 
+// إعادة تعيين مباشرة بلا بريد: البريد القديم + كلمة مرور جديدة + تأكيد → حفظ.
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [show, setShow] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createRecoveryClient()
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError(null)
 
-    // نستخدم النطاق العام الثابت إن وُجد حتى يطابق دائماً قائمة Redirect URLs المسموحة في Supabase.
-    // التوجيه مباشرة لصفحة reset-password التي تلتقط الجلسة من الـ hash على المتصفح (implicit flow)
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin).replace(/\/$/, '')
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${appUrl}/reset-password`,
-    })
+    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل.'); return }
+    if (password !== confirm) { setError('كلمتا المرور غير متطابقتين.'); return }
 
-    // نعرض رسالة النجاح دوماً بغضّ النظر عن وجود البريد فعلاً في النظام أو عدمه —
-    // هذا سلوك أمني معتاد يمنع استخدام النموذج للتحقق من البريد الإلكتروني المسجَّل
-    if (resetError && resetError.status && resetError.status >= 500) {
-      setError('حدث خطأ أثناء الإرسال، حاول مرة أخرى')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/direct-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), newPassword: password }),
+      })
+      const data = await res.json()
       setLoading(false)
-      return
+      if (!res.ok) { setError(data.error ?? 'تعذّر تحديث كلمة المرور، حاول مجدداً.'); return }
+      setDone(true)
+    } catch {
+      setLoading(false)
+      setError('تعذّر الاتصال، حاول مجدداً.')
     }
-
-    setSent(true)
-    setLoading(false)
   }
 
   return (
@@ -45,18 +49,21 @@ export function ForgotPasswordForm() {
         </div>
 
         <div className="bg-white rounded-ruwad shadow-card p-8 flex flex-col gap-4">
-          {sent ? (
+          {done ? (
             <>
-              <div className="w-14 h-14 rounded-full bg-ruwad-blue/10 flex items-center justify-center mb-1">
-                <MailCheck size={26} className="text-ruwad-blue" />
+              <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mb-1">
+                <CheckCircle2 size={26} className="text-green-600" />
               </div>
-              <h2 className="text-xl font-bold text-ruwad-navy">تحقّق من بريدك</h2>
+              <h2 className="text-xl font-bold text-ruwad-navy">تم تغيير كلمة المرور</h2>
               <p className="text-sm text-ruwad-navy/60 leading-relaxed">
-                إذا كان البريد <span className="font-semibold text-ruwad-navy">{email}</span> مسجَّلاً لدينا، سيصلك رابط لإعادة تعيين كلمة المرور خلال دقائق. تحقّق من مجلد الرسائل غير المرغوبة أيضاً إن لم تجده.
+                يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.
               </p>
-              <Link href="/login" className="text-sm font-semibold text-ruwad-blue flex items-center gap-1.5 mt-2">
-                <ArrowRight size={15} /> رجوع لتسجيل الدخول
-              </Link>
+              <button
+                onClick={() => router.push('/login')}
+                className="bg-ruwad-blue text-white px-6 py-3 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad mt-2"
+              >
+                الذهاب لتسجيل الدخول
+              </button>
             </>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -64,8 +71,8 @@ export function ForgotPasswordForm() {
                 <KeyRound size={26} className="text-ruwad-blue" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-ruwad-navy">استعادة كلمة المرور</h2>
-                <p className="text-sm text-ruwad-navy/60 mt-1">أدخل بريدك الإلكتروني المسجَّل وسنرسل لك رابطاً لإعادة تعيينها.</p>
+                <h2 className="text-xl font-bold text-ruwad-navy">إعادة تعيين كلمة المرور</h2>
+                <p className="text-sm text-ruwad-navy/60 mt-1">أدخل بريدك المسجَّل وكلمة المرور الجديدة مباشرةً.</p>
               </div>
 
               {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
@@ -83,12 +90,43 @@ export function ForgotPasswordForm() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="password" className="text-sm font-medium text-ruwad-navy">كلمة المرور الجديدة</label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={show ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 pl-10 outline-none focus:border-ruwad-blue transition"
+                    placeholder="6 أحرف على الأقل"
+                  />
+                  <button type="button" onClick={() => setShow(!show)} className="absolute left-3 top-1/2 -translate-y-1/2 text-ruwad-navy/40 hover:text-ruwad-navy" aria-label="إظهار كلمة المرور">
+                    {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="confirm" className="text-sm font-medium text-ruwad-navy">تأكيد كلمة المرور</label>
+                <input
+                  id="confirm"
+                  type={show ? 'text' : 'password'}
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="border border-ruwad-gray rounded-ruwad-sm px-4 py-2.5 outline-none focus:border-ruwad-blue transition"
+                  placeholder="أعد كتابة كلمة المرور"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
                 className="bg-ruwad-blue text-white px-6 py-3 rounded-ruwad-sm font-semibold hover:opacity-90 transition shadow-ruwad disabled:opacity-50 mt-1"
               >
-                {loading ? 'جارٍ الإرسال...' : 'إرسال رابط الاستعادة'}
+                {loading ? 'جارٍ الحفظ...' : 'حفظ كلمة المرور الجديدة'}
               </button>
 
               <Link href="/login" className="text-center text-sm font-semibold text-ruwad-navy/60 hover:text-ruwad-blue transition flex items-center justify-center gap-1.5">
