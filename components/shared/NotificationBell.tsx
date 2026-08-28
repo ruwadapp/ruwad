@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, BookOpen, FileText, Zap, FileCheck, UserPlus, Award, ShieldCheck, CheckCheck, Megaphone } from 'lucide-react'
+import { Bell, BookOpen, FileText, Zap, FileCheck, UserPlus, Award, ShieldCheck, CheckCheck, Megaphone, Mail, Check, X } from 'lucide-react'
 
 interface Notification {
   id: string
@@ -27,6 +27,8 @@ const TYPE_ICON: Record<string, { icon: typeof Bell; color: string }> = {
   attendance: { icon: CheckCheck, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   announcement: { icon: Megaphone, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   general: { icon: Bell, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
+  course_invitation: { icon: Mail, color: 'bg-ruwad-lime/40 text-ruwad-navy' },
+  course_invitation_accepted: { icon: CheckCheck, color: 'bg-green-100 text-green-600' },
 }
 
 // درجة الأهمية تطغى على لون الأيقونة الافتراضي حسب النوع — أحمر=عاجل، أصفر/ليموني=مهم
@@ -50,6 +52,8 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [role, setRole] = useState<string>('student')
   const [open, setOpen] = useState(false)
+  const [inviteBusy, setInviteBusy] = useState<string | null>(null)
+  const [inviteDone, setInviteDone] = useState<Record<string, 'accepted' | 'declined' | 'gone'>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -116,7 +120,35 @@ export function NotificationBell() {
       case 'badge': return isTrainer ? '/badges' : '/my-badges'
       case 'certificate': return isTrainer ? '/students' : '/my-certificates'
       case 'announcement': return isTrainer ? '/dashboard' : '/home'
+      case 'course_invitation': return '/my-courses'
+      case 'course_invitation_accepted': return isTrainer ? '/students' : '/org/students'
       default: return isTrainer ? '/dashboard' : '/home'
+    }
+  }
+
+  async function respondInvitation(n: Notification, accept: boolean) {
+    if (!n.reference_id) return
+    setInviteBusy(n.id)
+    const { data: inv } = await supabase
+      .from('course_invitations')
+      .select('id')
+      .eq('course_id', n.reference_id)
+      .eq('status', 'pending')
+      .maybeSingle()
+    if (!inv) {
+      setInviteDone((prev) => ({ ...prev, [n.id]: 'gone' }))
+      setInviteBusy(null)
+      return
+    }
+    const { error } = await supabase.rpc('respond_course_invitation', { p_invitation_id: inv.id, p_accept: accept })
+    setInviteBusy(null)
+    if (!error) {
+      setInviteDone((prev) => ({ ...prev, [n.id]: accept ? 'accepted' : 'declined' }))
+      if (!n.is_read) {
+        await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+        setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)))
+      }
+      router.refresh()
     }
   }
 
@@ -163,10 +195,13 @@ export function NotificationBell() {
                 const { icon: Icon, color } = TYPE_ICON[n.type] ?? TYPE_ICON.general
                 const toneColor = n.tone ? TONE_COLOR[n.tone] : null
                 return (
-                  <button
+                  <div
                     key={n.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleClick(n)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-right border-b border-ruwad-gray/20 hover:bg-ruwad-gray/10 transition ${
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleClick(n) }}
+                    className={`w-full flex items-start gap-3 px-4 py-3 text-right border-b border-ruwad-gray/20 hover:bg-ruwad-gray/10 transition cursor-pointer ${
                       !n.is_read ? 'bg-ruwad-blue/5' : ''
                     }`}
                   >
@@ -182,8 +217,34 @@ export function NotificationBell() {
                       </span>
                       <p className="text-xs text-ruwad-navy/60 mt-0.5 line-clamp-2">{n.message}</p>
                       <p className="text-[11px] text-ruwad-navy/35 mt-1">{timeAgo(n.created_at)}</p>
+                      {n.type === 'course_invitation' && (
+                        inviteDone[n.id] ? (
+                          <span className={`inline-block text-[11px] font-bold rounded-full px-2.5 py-1 mt-2 ${
+                            inviteDone[n.id] === 'accepted' ? 'bg-green-50 text-green-600' : 'bg-ruwad-gray/40 text-ruwad-navy/60'
+                          }`}>
+                            {inviteDone[n.id] === 'accepted' ? '✓ التحقت بالتدريب' : inviteDone[n.id] === 'declined' ? 'رُفضت الدعوة' : 'انتهت هذه الدعوة'}
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); respondInvitation(n, true) }}
+                              disabled={inviteBusy === n.id}
+                              className="flex items-center gap-1 bg-ruwad-blue text-white text-[11px] font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition disabled:opacity-50"
+                            >
+                              <Check size={11} /> {inviteBusy === n.id ? 'جارٍ...' : 'قبول والالتحاق'}
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); respondInvitation(n, false) }}
+                              disabled={inviteBusy === n.id}
+                              className="flex items-center gap-1 text-[11px] font-bold text-ruwad-navy/50 px-2.5 py-1.5 rounded-full hover:bg-ruwad-gray/30 transition disabled:opacity-50"
+                            >
+                              <X size={11} /> رفض
+                            </button>
+                          </span>
+                        )
+                      )}
                     </span>
-                  </button>
+                  </div>
                 )
               })
             )}
