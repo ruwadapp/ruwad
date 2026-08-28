@@ -15,6 +15,7 @@ export default async function ProfilePage() {
   if (!profile) redirect('/login')
 
   let stats: { label: string; value: string | number }[] = []
+  let points: PointsBreakdown | null = null
 
   if (profile.role === 'trainer') {
     const [{ count: coursesCount }, { count: studentsCount }, { count: examsCount }] = await Promise.all([
@@ -28,11 +29,13 @@ export default async function ProfilePage() {
       { label: 'الامتحانات', value: examsCount ?? 0 },
     ]
   } else if (profile.role === 'student') {
-    const [{ count: coursesCount }, { count: badgesCount }, { data: submissions }] = await Promise.all([
+    const [{ count: coursesCount }, { count: badgesCount }, { data: submissions }, { data: pointsRows }] = await Promise.all([
       supabase.from('enrollments').select('id', { count: 'exact', head: true }).eq('student_id', user.id).eq('status', 'approved'),
       supabase.from('student_badges').select('id', { count: 'exact', head: true }).eq('student_id', user.id),
       supabase.from('exam_submissions').select('percentage').eq('student_id', user.id).not('graded_at', 'is', null),
+      supabase.rpc('student_points', { p_student_id: user.id }),
     ])
+    points = (pointsRows?.[0] ?? null) as PointsBreakdown | null
     const avg = submissions && submissions.length > 0
       ? Math.round(submissions.reduce((s, r) => s + (r.percentage ?? 0), 0) / submissions.length)
       : null
@@ -53,13 +56,6 @@ export default async function ProfilePage() {
         { label: 'الطلاب', value: studentsCount ?? 0 },
       ]
     }
-  }
-
-  // نقاط الطالب لعرضها في بروفايله
-  let points: PointsBreakdown | null = null
-  if (profile.role === 'student') {
-    const { data: pr } = await supabase.rpc('student_points', { p_student_id: user.id })
-    points = (pr?.[0] ?? null) as PointsBreakdown | null
   }
 
   return <ProfileClient profile={profile} stats={stats} points={points} />
