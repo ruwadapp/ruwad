@@ -11,7 +11,9 @@ export default async function NewAssignmentPage() {
     <>
       <Header title="واجب جديد" />
       <main className="p-6">
-        <AssignmentForm courses={courses ?? []} />
+        <div className="max-w-3xl mx-auto w-full">
+          <AssignmentForm courses={courses ?? []} />
+        </div>
       </main>
     </>
   )

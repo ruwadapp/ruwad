@@ -73,7 +73,7 @@ export function ChallengeForm({ initialChallenge, courses }: { initialChallenge?
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 max-w-2xl border-t-4 border-ruwad-lime">
+    <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 w-full border-t-4 border-ruwad-lime">
       {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>}
 
       {initialChallenge && (

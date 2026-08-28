@@ -6,7 +6,9 @@ export default function NewSurveyPage() {
     <>
       <Header title="استبيان جديد" />
       <main className="p-6">
-        <SurveyForm />
+        <div className="max-w-3xl mx-auto w-full">
+          <SurveyForm />
+        </div>
       </main>
     </>
   )

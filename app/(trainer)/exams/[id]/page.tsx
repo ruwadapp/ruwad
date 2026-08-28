@@ -76,8 +76,11 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ id:
             <BarChart3 size={18} /> عرض النتائج
           </Link>
         </div>
-        <ExamForm initialExam={exam} courses={courses ?? []} />
-        <QuestionManager examId={id} questions={questions ?? []} />
+        {/* النموذج ومدير الأسئلة جنباً إلى جنب على الشاشات الواسعة لملء المساحة وتقليل التمرير */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <ExamForm initialExam={exam} courses={courses ?? []} />
+          <QuestionManager examId={id} questions={questions ?? []} />
+        </div>
       </main>
     </>
   )

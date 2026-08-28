@@ -51,7 +51,9 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
           <DeleteButton table="assignments" id={id} redirectTo="/assignments" label="حذف الواجب" />
         </div>
 
-        <AssignmentForm initialAssignment={assignment} courses={courses ?? []} />
+        <div className="max-w-3xl mx-auto w-full">
+          <AssignmentForm initialAssignment={assignment} courses={courses ?? []} />
+        </div>
 
         <div className="bg-white rounded-ruwad shadow-card p-6">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">

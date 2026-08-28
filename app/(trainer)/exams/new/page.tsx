@@ -11,7 +11,9 @@ export default async function NewExamPage() {
     <>
       <Header title="امتحان جديد" />
       <main className="p-6">
-        <ExamForm courses={courses ?? []} />
+        <div className="max-w-3xl mx-auto w-full">
+          <ExamForm courses={courses ?? []} />
+        </div>
       </main>
     </>
   )

@@ -73,8 +73,10 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
             <BarChart3 size={18} /> عرض النتائج
           </Link>
         </div>
-        <SurveyForm initialSurvey={survey} />
-        <SurveyQuestionManager surveyId={id} questions={questions ?? []} initialSections={sections ?? []} />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <SurveyForm initialSurvey={survey} />
+          <SurveyQuestionManager surveyId={id} questions={questions ?? []} initialSections={sections ?? []} />
+        </div>
       </main>
     </>
   )

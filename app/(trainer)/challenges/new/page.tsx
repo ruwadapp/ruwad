@@ -11,7 +11,9 @@ export default async function NewChallengePage() {
     <>
       <Header title="تحدي جديد" />
       <main className="p-6">
-        <ChallengeForm courses={courses ?? []} />
+        <div className="max-w-3xl mx-auto w-full">
+          <ChallengeForm courses={courses ?? []} />
+        </div>
       </main>
     </>
   )

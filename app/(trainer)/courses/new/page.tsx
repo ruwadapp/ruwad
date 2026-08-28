@@ -6,7 +6,9 @@ export default function NewCoursePage() {
     <>
       <Header title="كورس جديد" />
       <main className="p-6">
-        <CourseForm />
+        <div className="max-w-3xl mx-auto w-full">
+          <CourseForm />
+        </div>
       </main>
     </>
   )

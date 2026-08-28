@@ -68,7 +68,7 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
   }
 
   return (
-    <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 max-w-2xl">
+    <form onSubmit={handleSave} className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-4 w-full">
       {error && (
         <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">{error}</div>
       )}

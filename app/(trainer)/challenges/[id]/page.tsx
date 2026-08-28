@@ -62,8 +62,11 @@ export default async function ChallengeDetailPage({ params }: { params: Promise<
             هذا تحدي "سباق إجابات" — لا توجد جلسة مباشرة يديرها المدرب؛ كل طالب يبدأ ويُجيب بوقته الخاص من صفحة التحدي لديه، ويظهر ترتيب الجميع في سجل النتائج.
           </div>
         )}
-        <ChallengeForm initialChallenge={challenge} courses={courses ?? []} />
-        <ChallengeQuestionManager challengeId={id} questions={questions ?? []} />
+        {/* النموذج ومدير الأسئلة جنباً إلى جنب على الشاشات الواسعة لملء المساحة وتقليل التمرير */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <ChallengeForm initialChallenge={challenge} courses={courses ?? []} />
+          <ChallengeQuestionManager challengeId={id} questions={questions ?? []} />
+        </div>
       </main>
     </>
   )
