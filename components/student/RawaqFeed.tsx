@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { TrainerPost, PostCardType } from '@/lib/types'
-import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award, Flame, ExternalLink } from 'lucide-react'
+import { Building2, BookOpen, FileText, FileCheck, Trophy, ClipboardList, CheckCircle2, Clock, Zap, Award, Flame, ExternalLink, Globe } from 'lucide-react'
 import { PostLikeButton } from '@/components/shared/PostLikeButton'
 import { StoryShareButton } from '@/components/shared/StoryShareButton'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
@@ -70,29 +70,38 @@ export function RawaqFeed({
         const name = post.institute_id ? (post.institute?.name ?? 'معهد') : (post.trainer?.full_name ?? 'مدرّب')
         const pictureUrl = post.institute_id ? post.institute?.logo_url : post.trainer?.avatar_url
         return (
-          <div key={post.id} className="relative overflow-hidden bg-white rounded-ruwad shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col gap-3">
-            <div className={`absolute top-0 right-0 left-0 h-1.5 ${post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'}`} />
-            <Link href={profileHref} className="flex items-center gap-2.5 group">
-              {pictureUrl ? (
-                <span className="relative w-11 h-11 rounded-full shrink-0 overflow-hidden shadow-ruwad group-hover:scale-105 transition-transform">
-                  <Image src={pictureUrl} alt={name} fill sizes="44px" className="object-cover" />
-                </span>
-              ) : (
-                <span
-                  className={`w-11 h-11 rounded-full text-white flex items-center justify-center shrink-0 font-bold shadow-ruwad group-hover:scale-105 transition-transform ${
-                    post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'
-                  }`}
-                >
-                  {post.institute_id ? <Building2 size={18} /> : name.charAt(0)}
-                </span>
-              )}
-              <div>
-                <p className="font-bold text-ruwad-navy text-sm group-hover:text-ruwad-blue transition-colors">{name}</p>
-                <p className="text-xs text-ruwad-navy/40">{timeAgo(post.created_at)}</p>
+          <article key={post.id} className="bg-white rounded-ruwad shadow-card overflow-hidden">
+            {/* رأس المنشور */}
+            <div className="flex items-center gap-3 px-4 pt-4">
+              <Link href={profileHref} className="shrink-0">
+                {pictureUrl ? (
+                  <span className="relative w-11 h-11 rounded-full block overflow-hidden ring-2 ring-ruwad-gray/40">
+                    <Image src={pictureUrl} alt={name} fill sizes="44px" className="object-cover" />
+                  </span>
+                ) : (
+                  <span className={`w-11 h-11 rounded-full text-white flex items-center justify-center font-bold ${post.institute_id ? 'bg-ruwad-dark' : 'bg-ruwad-gradient'}`}>
+                    {post.institute_id ? <Building2 size={18} /> : name.charAt(0)}
+                  </span>
+                )}
+              </Link>
+              <div className="flex-1 min-w-0">
+                <Link href={profileHref} className="font-bold text-ruwad-navy text-sm hover:underline flex items-center gap-1.5">
+                  <span className="truncate">{name}</span>
+                  {post.institute_id
+                    ? <span className="text-[10px] font-semibold bg-ruwad-navy/10 text-ruwad-navy/70 px-1.5 py-0.5 rounded-full shrink-0">معهد</span>
+                    : <span className="text-[10px] font-semibold bg-ruwad-blue/10 text-ruwad-blue px-1.5 py-0.5 rounded-full shrink-0">مدرّب</span>}
+                </Link>
+                <p className="flex items-center gap-1 text-[11px] text-ruwad-navy/40 mt-0.5">
+                  {timeAgo(post.created_at)} · <Globe size={10} />
+                </p>
               </div>
-            </Link>
+            </div>
 
-            <p className="text-ruwad-navy whitespace-pre-wrap leading-relaxed">{post.content}</p>
+            {/* نص المنشور */}
+            {post.content && <p className="text-ruwad-navy whitespace-pre-wrap leading-relaxed px-4 py-3 text-[15px]">{post.content}</p>}
+
+            {/* المرفقات وأزرار التفاعل داخل حشوة موحّدة */}
+            <div className="px-4 pb-1 flex flex-col gap-3">
 
             {post.card_type === 'course' && card && (() => {
               const c = card as CourseCard
@@ -221,7 +230,18 @@ export function RawaqFeed({
               </a>
             )}
 
-            <div className="flex items-center justify-between -mx-1 pt-1 border-t border-ruwad-gray/30 mt-1">
+            </div>
+
+            {/* عدّاد الإعجابات */}
+            {(likeCounts[post.id] ?? 0) > 0 && (
+              <div className="px-4 pt-2 flex items-center gap-1.5 text-xs text-ruwad-navy/50">
+                <span className="w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[9px]">♥</span>
+                {likeCounts[post.id]}
+              </div>
+            )}
+
+            {/* شريط الإجراءات بعرض كامل بأسلوب فيسبوك */}
+            <div className="grid grid-cols-2 border-t border-ruwad-gray/40 mt-2 text-sm [&>*]:w-full [&>*_button]:w-full [&>*_button]:justify-center [&>*_button]:py-2.5 [&>*_button]:rounded-none [&>*_button]:hover:bg-ruwad-gray/15">
               <PostLikeButton postId={post.id} initialLiked={likedSet.has(post.id)} initialCount={likeCounts[post.id] ?? 0} />
               <StoryShareButton
                 authorName={name}
@@ -231,7 +251,7 @@ export function RawaqFeed({
                 cardTypeLabel={CARD_TYPE_LABELS[post.card_type ?? ''] ?? null}
               />
             </div>
-          </div>
+          </article>
         )
       })}
     </div>
