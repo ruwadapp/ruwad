@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ProfileClient } from '@/components/shared/ProfileClient'
+import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
+import { SkillsEditor } from '@/components/student/SkillsEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,5 +56,23 @@ export default async function ProfilePage() {
     }
   }
 
-  return <ProfileClient profile={profile} stats={stats} />
+  // نقاط الطالب لعرضها في بروفايله
+  let points: PointsBreakdown | null = null
+  if (profile.role === 'student') {
+    const { data: pr } = await supabase.rpc('student_points', { p_student_id: user.id })
+    points = (pr?.[0] ?? null) as PointsBreakdown | null
+  }
+
+  return (
+    <>
+      <ProfileClient profile={profile} stats={stats} />
+      {profile.role === 'student' && (
+        <div className="p-6 pt-0 max-w-2xl mx-auto w-full flex flex-col gap-5">
+          {points && <PointsCard points={points} />}
+          <SkillsEditor initialSkills={profile.skills ?? []} initialSpecialties={profile.specialties ?? []} />
+          <a href={`/s/${user.id}`} className="self-center text-sm font-semibold text-ruwad-blue hover:underline">عرض بروفايلي العام كما يراه الآخرون ←</a>
+        </div>
+      )}
+    </>
+  )
 }

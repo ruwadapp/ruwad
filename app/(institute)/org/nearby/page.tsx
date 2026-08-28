@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { LocationCapture } from '@/components/shared/LocationCapture'
@@ -79,7 +80,7 @@ export default async function InstituteNearbyPage() {
                           s.full_name.charAt(0)
                         )}
                       </div>
-                      <p className="font-bold text-ruwad-navy text-sm truncate flex-1">{s.full_name}</p>
+                      <Link href={`/s/${s.id}`} className="font-bold text-ruwad-navy text-sm truncate flex-1 hover:text-ruwad-blue hover:underline">{s.full_name}</Link>
                       <InviteToCourseButton studentId={s.id} courses={sharedCourses ?? []} />
                     </div>
                   ))}
