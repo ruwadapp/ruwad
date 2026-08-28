@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EntityCard } from '@/components/shared/EntityCard'
+import { EntityCard, gradientForSeed } from '@/components/shared/EntityCard'
 import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, BookOpen } from 'lucide-react'
 
@@ -39,11 +39,11 @@ export default async function CoursesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {courses.map((course, idx) => (
+            {courses.map((course) => (
               <EntityCard
                 key={course.id}
                 href={`/courses/${course.id}`}
-                gradient={(['blue', 'navy', 'lime', 'blueReverse'] as const)[idx % 4]}
+                gradient={gradientForSeed(course.id)}
                 title={course.title}
                 description={course.description}
                 badge={{

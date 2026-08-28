@@ -67,6 +67,13 @@ const STAT_ICONS: Record<StatIconName, LucideIcon> = {
 
 interface StatItem { icon: StatIconName; label: string }
 
+// اختيار تدرّج شبه عشوائي لكن ثابت لكل عنصر (مشتق من معرّفه) حتى لا يتغيّر بين الزيارات
+export function gradientForSeed(seed: string): EntityCardGradient {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+  return (['blue', 'navy', 'lime', 'blueReverse'] as const)[h % 4]
+}
+
 interface EntityCardProps {
   href: string
   gradient: EntityCardGradient
@@ -138,7 +145,7 @@ export function EntityCard({
       <div className="absolute -top-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
       <div className="relative flex items-start justify-between gap-2">
-        <h3 className={`font-bold text-base line-clamp-1 ${style.text}`}>{title}</h3>
+        <h3 className={`font-bold text-base line-clamp-2 leading-snug min-h-[2.6em] ${style.text}`}>{title}</h3>
         {badge && (
           <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${style.chip} ${style.chipText}`}>
             {badge.text}
@@ -147,7 +154,7 @@ export function EntityCard({
       </div>
 
       {description && (
-        <p className={`relative text-xs line-clamp-1 ${style.subtext}`}>{description}</p>
+        <p className={`relative text-xs line-clamp-2 ${style.subtext}`}>{description}</p>
       )}
 
       {stats.length > 0 && (

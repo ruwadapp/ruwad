@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EntityCard } from '@/components/shared/EntityCard'
+import { EntityCard, gradientForSeed } from '@/components/shared/EntityCard'
 import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, FileText, Zap, Award } from 'lucide-react'
 
@@ -72,11 +72,11 @@ export default async function ExamsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {exams.map((exam, idx) => (
+            {exams.map((exam) => (
               <EntityCard
                 key={exam.id}
                 href={`/exams/${exam.id}`}
-                gradient={(['blue', 'navy', 'lime', 'blueReverse'] as const)[idx % 4]}
+                gradient={gradientForSeed(exam.id)}
                 title={exam.title}
                 description={exam.description}
                 badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}
