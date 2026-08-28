@@ -121,6 +121,7 @@ export default async function InstituteTrainerDetailPage({ params }: { params: P
                 <EntitySummaryCard
                   key={c.id}
                   href={isShared.courses(c.id) ? `/courses/${c.id}` : undefined}
+                  reportHref={isShared.courses(c.id) ? `/reports/course/${c.id}` : undefined}
                   title={c.title}
                   shared={isShared.courses(c.id)}
                   badge={<StatusBadge active={c.status === 'published'} activeLabel="منشور" inactiveLabel="مسودة" />}
@@ -256,6 +257,7 @@ function StatusBadge({ active, activeLabel, inactiveLabel }: { active: boolean; 
  */
 function EntitySummaryCard({
   href,
+  reportHref,
   title,
   shared,
   meta,
@@ -263,6 +265,7 @@ function EntitySummaryCard({
   accent = false,
 }: {
   href?: string
+  reportHref?: string
   title: string
   shared?: boolean
   meta: string
@@ -290,5 +293,18 @@ function EntitySummaryCard({
     </div>
   )
 
-  return href ? <Link href={href}>{content}</Link> : content
+  const card = href ? <Link href={href}>{content}</Link> : content
+
+  // رابط التقرير يوضع كشقيق للرابط الرئيسي (رابط داخل رابط غير صالح في HTML)
+  return reportHref ? (
+    <div className="relative">
+      {card}
+      <Link
+        href={reportHref}
+        className="absolute bottom-3 left-3 inline-flex items-center gap-1 text-[11px] font-bold text-white bg-ruwad-navy rounded-full px-3 py-1 hover:opacity-90"
+      >
+        <FileCheck size={11} /> تقرير PDF
+      </Link>
+    </div>
+  ) : card
 }

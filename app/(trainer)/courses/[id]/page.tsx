@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
@@ -9,7 +10,7 @@ import { RelatedCourseItems } from '@/components/shared/RelatedCourseItems'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 import { ShareManager } from '@/components/shared/ShareManager'
 import { getTrainerInstitutes, getResourceShares } from '@/lib/utils/getTrainerInstitutes'
-import { Building2 } from 'lucide-react'
+import { Building2, FileText } from 'lucide-react'
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -43,6 +44,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           {institutes.length > 0 && (
             <ShareManager resourceType="courses" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
           )}
+          <Link href={`/reports/course/${id}`} className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition items-center gap-2">
+            <FileText size={16} /> تقرير PDF
+          </Link>
           <DeleteButton table="courses" id={id} redirectTo="/courses" label="حذف الكورس" />
           <CourseLandingLinkButton courseId={id} published={course.status === 'published'} />
         </div>
