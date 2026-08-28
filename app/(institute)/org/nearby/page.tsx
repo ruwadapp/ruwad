@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { LocationCapture } from '@/components/shared/LocationCapture'
+import { InviteToCourseButton } from '@/components/shared/InviteToCourseButton'
 import { MapPin, GraduationCap, UserRound } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -15,9 +16,18 @@ export default async function InstituteNearbyPage() {
   if (!institute) redirect('/org/dashboard')
   const hasLocation = institute.latitude != null && institute.longitude != null
 
-  const [{ data: students }, { data: trainers }] = hasLocation
-    ? await Promise.all([supabase.rpc('nearby_students'), supabase.rpc('nearby_trainers')])
-    : [{ data: [] }, { data: [] }]
+  const [{ data: students }, { data: trainers }, { data: shares }] = hasLocation
+    ? await Promise.all([
+        supabase.rpc('nearby_students'),
+        supabase.rpc('nearby_trainers'),
+        supabase.from('resource_institute_shares').select('resource_id').eq('institute_id', institute.id).eq('resource_type', 'courses'),
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }]
+
+  const sharedCourseIds = (shares ?? []).map((x) => x.resource_id)
+  const { data: sharedCourses } = sharedCourseIds.length
+    ? await supabase.from('courses').select('id, title').in('id', sharedCourseIds)
+    : { data: [] }
 
   const byBand = new Map<string, { id: string; full_name: string; avatar_url: string | null }[]>()
   for (const s of (students ?? []) as { id: string; full_name: string; avatar_url: string | null; band: string }[]) {
@@ -69,7 +79,8 @@ export default async function InstituteNearbyPage() {
                           s.full_name.charAt(0)
                         )}
                       </div>
-                      <p className="font-bold text-ruwad-navy text-sm truncate">{s.full_name}</p>
+                      <p className="font-bold text-ruwad-navy text-sm truncate flex-1">{s.full_name}</p>
+                      <InviteToCourseButton studentId={s.id} courses={sharedCourses ?? []} />
                     </div>
                   ))}
                 </div>

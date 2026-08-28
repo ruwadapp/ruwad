@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { LocationCapture } from '@/components/shared/LocationCapture'
+import { InviteToCourseButton } from '@/components/shared/InviteToCourseButton'
 import { MapPin, GraduationCap } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,12 @@ export default async function TrainerNearbyPage() {
   const { data: myLoc } = await supabase.from('user_locations').select('visible').eq('user_id', user!.id).maybeSingle()
   const hasLocation = !!myLoc
 
-  const { data: students } = hasLocation ? await supabase.rpc('nearby_students') : { data: [] }
+  const [{ data: students }, { data: myCourses }] = hasLocation
+    ? await Promise.all([
+        supabase.rpc('nearby_students'),
+        supabase.from('courses').select('id, title').eq('trainer_id', user!.id).order('created_at', { ascending: false }),
+      ])
+    : [{ data: [] }, { data: [] }]
 
   // تجميع حسب النطاق
   const byBand = new Map<string, { id: string; full_name: string; avatar_url: string | null }[]>()
@@ -64,7 +70,8 @@ export default async function TrainerNearbyPage() {
                           s.full_name.charAt(0)
                         )}
                       </div>
-                      <p className="font-bold text-ruwad-navy text-sm truncate">{s.full_name}</p>
+                      <p className="font-bold text-ruwad-navy text-sm truncate flex-1">{s.full_name}</p>
+                      <InviteToCourseButton studentId={s.id} courses={myCourses ?? []} />
                     </div>
                   ))}
                 </div>

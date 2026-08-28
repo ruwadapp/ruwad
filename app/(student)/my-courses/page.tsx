@@ -2,17 +2,26 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CourseCodeJoin } from '@/components/student/CourseCodeJoin'
+import { CourseInvitationsList } from '@/components/student/CourseInvitationsList'
 import { BookOpen, Clock, XCircle, GraduationCap, TrendingUp } from 'lucide-react'
 
 export default async function MyCoursesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('*, course:courses(*, lectures(count))')
-    .eq('student_id', user!.id)
-    .order('enrolled_at', { ascending: false })
+  const [{ data: enrollments }, { data: invitations }] = await Promise.all([
+    supabase
+      .from('enrollments')
+      .select('*, course:courses(*, lectures(count))')
+      .eq('student_id', user!.id)
+      .order('enrolled_at', { ascending: false }),
+    supabase
+      .from('course_invitations')
+      .select('id, course_id, created_at, course:courses(title), inviter:profiles!inviter_id(full_name)')
+      .eq('student_id', user!.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+  ])
 
   const approved = (enrollments ?? []).filter((e) => e.status === 'approved')
   const pending = (enrollments ?? []).filter((e) => e.status === 'pending')
@@ -27,6 +36,7 @@ export default async function MyCoursesPage() {
     <>
       <Header title="التدريبات" />
       <main className="p-6 flex flex-col gap-8">
+        <CourseInvitationsList invitations={(invitations ?? []) as never[]} />
         {/* ===== هيدر إحصائي ===== */}
         <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7">
           <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
