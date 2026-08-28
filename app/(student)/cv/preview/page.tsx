@@ -65,7 +65,7 @@ export default async function CVPreviewPage() {
     <div dir={dir} lang={lang} style={{ background: '#EEF0F7', minHeight: '100vh' }}>
       <style>{`
         @media print {
-          .no-print { display: none !important; }
+          .no-print, nav, aside, [class*="fixed"] { display: none !important; }
           body, html { background: #fff !important; }
           .cv-sheet { box-shadow: none !important; margin: 0 !important; max-width: none !important; border-radius: 0 !important; }
           .cv-sheet { padding-bottom: 8mm; }
@@ -73,7 +73,8 @@ export default async function CVPreviewPage() {
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         @page { size: A4; margin: 0; }
-        .cv-h2 { display: flex; align-items: center; gap: 8px; color: ${NAVY}; font-size: 15px; font-weight: 800; margin: 0 0 10px; }
+        section { break-inside: auto; }
+        .cv-h2 { break-after: avoid; display: flex; align-items: center; gap: 8px; color: ${NAVY}; font-size: 14px; font-weight: 800; letter-spacing: .3px; margin: 0 0 12px; }
         .cv-h2::before { content: ''; width: 4px; height: 16px; background: ${BLUE}; border-radius: 4px; display: inline-block; }
         .cv-chip { display: inline-block; background: ${BLUE}14; color: ${BLUE}; font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 4px 12px; }
       `}</style>
@@ -99,7 +100,7 @@ export default async function CVPreviewPage() {
           </div>
         </div>
 
-        <div style={{ padding: '26px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ padding: '30px 40px', display: 'flex', flexDirection: 'column', gap: 30 }}>
           {/* النبذة */}
           {has.summary && (
             <section className="avoid-break">
@@ -110,11 +111,11 @@ export default async function CVPreviewPage() {
 
           {/* التحصيل العلمي */}
           {has.education && (
-            <section className="avoid-break">
+            <section >
               <h2 className="cv-h2">{L.education}</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {(cv.education ?? []).filter((e) => e.degree || e.institution).map((e, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderRight: dir === 'rtl' ? `2px solid ${GRAY}` : undefined, borderLeft: dir === 'ltr' ? `2px solid ${GRAY}` : undefined, padding: dir === 'rtl' ? '2px 12px 2px 0' : '2px 0 2px 12px' }}>
+                  <div key={i} className="avoid-break" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderRight: dir === 'rtl' ? `2px solid ${GRAY}` : undefined, borderLeft: dir === 'ltr' ? `2px solid ${GRAY}` : undefined, padding: dir === 'rtl' ? '2px 12px 2px 0' : '2px 0 2px 12px' }}>
                     <div>
                       <p style={{ fontWeight: 800, color: NAVY, fontSize: 13.5, margin: 0 }}>{e.degree}</p>
                       <p style={{ color: `${NAVY}99`, fontSize: 12, margin: '3px 0 0' }}>{e.institution}</p>
@@ -138,11 +139,11 @@ export default async function CVPreviewPage() {
 
           {/* الخبرة العملية */}
           {has.work && (
-            <section className="avoid-break">
+            <section >
               <h2 className="cv-h2">{L.work}</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {(cv.work ?? []).filter((w) => w.position || w.org).map((w, i) => (
-                  <div key={i}>
+                  <div key={i} className="avoid-break">
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                       <p style={{ fontWeight: 800, color: NAVY, fontSize: 13.5, margin: 0 }}>
                         {w.position}{w.org ? <span style={{ color: `${NAVY}99`, fontWeight: 600 }}> — {w.org}</span> : null}
@@ -158,11 +159,11 @@ export default async function CVPreviewPage() {
 
           {/* شهادات رُوّاد الموثّقة + QR */}
           {has.certs && (
-            <section className="avoid-break">
+            <section >
               <h2 className="cv-h2">{L.ruwadCerts}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {certsWithQr.map((c) => (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, border: `1.5px solid ${LIME}`, background: `linear-gradient(135deg, ${LIME}22 0%, #fff 70%)`, borderRadius: 14, padding: '10px 12px' }}>
+                  <div key={c.id} className="avoid-break" style={{ display: 'flex', alignItems: 'center', gap: 12, border: `1.5px solid ${LIME}`, background: `linear-gradient(135deg, ${LIME}22 0%, #fff 70%)`, borderRadius: 14, padding: '10px 12px' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={c.qr} alt="QR" style={{ width: 58, height: 58, borderRadius: 8, flexShrink: 0 }} />
                     <div style={{ minWidth: 0 }}>
@@ -180,7 +181,7 @@ export default async function CVPreviewPage() {
 
           {/* التدريبات الخارجية */}
           {has.trainings && (
-            <section className="avoid-break">
+            <section >
               <h2 className="cv-h2">{L.trainings}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(cv.trainings ?? []).filter((t) => t.title).map((t, i) => (
