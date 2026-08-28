@@ -76,7 +76,9 @@ export function gradientForSeed(seed: string): EntityCardGradient {
 
 interface EntityCardProps {
   href: string
-  gradient: EntityCardGradient
+  gradient?: EntityCardGradient
+  /** بديل عن gradient: لون شبه عشوائي ثابت مشتق من هذا المعرّف */
+  seed?: string
   title: string
   description?: string | null
   badge?: { text: string; active: boolean }
@@ -92,6 +94,7 @@ interface EntityCardProps {
 export function EntityCard({
   href,
   gradient,
+  seed,
   title,
   description,
   badge,
@@ -106,7 +109,7 @@ export function EntityCard({
   const [deleting, setDeleting] = useState(false)
   const router = useRouter()
   const supabase = createClient()
-  const style = GRADIENTS[gradient]
+  const style = GRADIENTS[gradient ?? gradientForSeed(seed ?? deleteId)]
 
   function goToContent() {
     router.push(href)

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EntityCard, gradientForSeed } from '@/components/shared/EntityCard'
+import { EntityCard } from '@/components/shared/EntityCard'
 import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, FileCheck, Users, Clock } from 'lucide-react'
 
@@ -73,7 +73,7 @@ export default async function AssignmentsPage() {
                 <EntityCard
                   key={a.id}
                   href={`/assignments/${a.id}`}
-                  gradient={gradientForSeed(a.id)}
+                  seed={a.id}
                   title={a.title}
                   description={a.description}
                   stats={[

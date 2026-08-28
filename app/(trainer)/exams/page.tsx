@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EntityCard, gradientForSeed } from '@/components/shared/EntityCard'
+import { EntityCard } from '@/components/shared/EntityCard'
 import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, FileText, Zap, Award } from 'lucide-react'
 
@@ -76,7 +76,7 @@ export default async function ExamsPage() {
               <EntityCard
                 key={exam.id}
                 href={`/exams/${exam.id}`}
-                gradient={gradientForSeed(exam.id)}
+                seed={exam.id}
                 title={exam.title}
                 description={exam.description}
                 badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}
