@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3, LogOut, Pencil,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
@@ -21,6 +21,7 @@ const trainerNav = [
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/badges', label: 'الشارات', icon: Award },
   { href: '/posts', label: 'منشوراتي', icon: Rss },
+  { href: '/nearby-students', label: 'بالقرب مني', icon: MapPin },
   { href: '/notifications/send', label: 'إرسال إشعار', icon: Megaphone },
   { href: '/analytics', label: 'التحليلات', icon: BarChart3 },
   { href: '/institute', label: 'المعهد', icon: Building2 },
@@ -29,6 +30,7 @@ const trainerNav = [
 const studentNav = [
   { href: '/home', label: 'الرئيسية', icon: Home },
   { href: '/rawaq', label: 'الرواق', icon: Rss },
+  { href: '/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/my-courses', label: 'التدريبات', icon: GraduationCap },
   { href: '/my-presentations', label: 'العروض التقديمية', icon: MonitorPlay },
   { href: '/my-exams', label: 'امتحاناتي', icon: FileText },
@@ -45,6 +47,7 @@ const instituteNav = [
   { href: '/org/trainers', label: 'المدربون', icon: Users },
   { href: '/org/students', label: 'الطلاب', icon: GraduationCap },
   { href: '/org/analytics', label: 'الإحصائيات', icon: BarChart3 },
+  { href: '/org/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/org/surveys', label: 'الاستبيانات', icon: ClipboardList },
   { href: '/org/posts', label: 'منشوراتي', icon: Rss },
   { href: '/org/members', label: 'الأعضاء', icon: UserCog },
