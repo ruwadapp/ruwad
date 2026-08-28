@@ -62,10 +62,14 @@ export default async function CVPreviewPage() {
   }
 
   return (
-    <div dir={dir} lang={lang} style={{ background: '#EEF0F7', minHeight: '100vh' }}>
+    <div dir={dir} lang={lang} className="cv-root" style={{ background: '#EEF0F7', minHeight: '100vh' }}>
       <style>{`
         @media print {
           .no-print, nav, aside, [class*="fixed"] { display: none !important; }
+          html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+          .cv-root { min-height: 0 !important; background: #fff !important; }
+          .cv-sheet > div:last-child { padding-bottom: 0 !important; }
+          .cv-sheet section:last-of-type, .cv-sheet > div:last-child > div:last-child { margin-bottom: 0 !important; page-break-after: avoid; }
           body, html { background: #fff !important; }
           .cv-sheet { box-shadow: none !important; margin: 0 !important; max-width: none !important; border-radius: 0 !important; }
           .cv-sheet { padding-bottom: 8mm; }
