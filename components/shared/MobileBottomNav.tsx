@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss,
+  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -29,6 +29,7 @@ const trainerNav: NavItem[] = [
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
   { href: '/badges', label: 'الشارات', icon: 'Award' },
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
+  { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/analytics', label: 'التحليلات', icon: 'BarChart3' },
   { href: '/institute', label: 'المعهد', icon: 'Building2' },
 ]
@@ -36,6 +37,7 @@ const trainerNav: NavItem[] = [
 const studentNav: NavItem[] = [
   { href: '/home', label: 'الرئيسية', icon: 'Home' },
   { href: '/rawaq', label: 'الرواق', icon: 'Rss' },
+  { href: '/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/my-courses', label: 'التدريبات', icon: 'GraduationCap' },
   { href: '/my-exams', label: 'امتحاناتي', icon: 'FileText' },
   { href: '/my-challenges', label: 'التحديات', icon: 'Trophy' },
@@ -51,6 +53,8 @@ const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
+  { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
+  { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/org/members', label: 'الأعضاء', icon: 'UserCog' },
