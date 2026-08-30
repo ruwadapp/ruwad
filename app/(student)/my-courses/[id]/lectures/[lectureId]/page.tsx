@@ -37,6 +37,16 @@ export default async function StudentLecturePage({
     .eq('student_id', user!.id)
 
   const completedIds = new Set((progressRows ?? []).filter((p) => p.completed).map((p) => p.lecture_id))
+
+  // ===== فرض التسلسل: لا تُفتح محاضرة قبل إتمام كل ما قبلها (إن كان الكورس متسلسلاً) =====
+  const { data: courseSeq } = await supabase.from('courses').select('sequential_learning').eq('id', id).single()
+  if (courseSeq?.sequential_learning ?? true) {
+    const { data: allLectures } = await supabase
+      .from('lectures').select('id').eq('course_id', id).eq('is_published', true).order('order_index')
+    const myIdx = (allLectures ?? []).findIndex((l) => l.id === lectureId)
+    const blocked = (allLectures ?? []).slice(0, myIdx).some((l) => !completedIds.has(l.id))
+    if (blocked) redirect(`/my-courses/${id}`)
+  }
   const courseTitle = (enrollment.course as unknown as { title?: string })?.title ?? ''
 
   return (

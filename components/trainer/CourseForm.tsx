@@ -15,6 +15,7 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>(
     (initialCourse?.status as 'draft' | 'published' | 'archived') ?? 'draft'
   )
+  const [sequential, setSequential] = useState<boolean>(initialCourse?.sequential_learning ?? true)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -35,7 +36,7 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
     if (initialCourse) {
       const { error: updateError } = await supabase
         .from('courses')
-        .update({ title, description, status })
+        .update({ title, description, status, sequential_learning: sequential })
         .eq('id', initialCourse.id)
 
       if (updateError) {
@@ -53,7 +54,7 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
     } else {
       const { data, error: insertError } = await supabase
         .from('courses')
-        .insert({ trainer_id: user.id, title, description, status })
+        .insert({ trainer_id: user.id, title, description, status, sequential_learning: sequential })
         .select()
         .single()
 
@@ -142,6 +143,22 @@ export function CourseForm({ initialCourse }: CourseFormProps) {
             : 'الكورس المنشور يظهر للطلاب ويمكنهم التسجيل فيه.'}
         </p>
       </div>
+
+      <label className="flex items-center justify-between gap-3 border border-ruwad-gray/60 rounded-ruwad-sm px-4 py-3 cursor-pointer">
+        <span>
+          <span className="block text-sm font-bold text-ruwad-navy">التعلم المتسلسل 🗺️</span>
+          <span className="block text-[11px] text-ruwad-navy/50 mt-0.5">الطالب يفتح محطات الرحلة بالترتيب — لا محاضرة قبل إتمام سابقتها</span>
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={sequential}
+          onClick={() => setSequential(!sequential)}
+          className={`relative inline-flex items-center h-7 w-[52px] rounded-full transition-colors duration-300 shrink-0 ${sequential ? 'bg-ruwad-blue' : 'bg-ruwad-gray'}`}
+        >
+          <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all duration-300 ${sequential ? 'right-[26px]' : 'right-1'}`} />
+        </button>
+      </label>
 
       <button
         type="submit"

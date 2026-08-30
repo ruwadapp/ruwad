@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { CheckCircle2, Circle, Video, FileText, Clock, XCircle, PlayCircle } from 'lucide-react'
+import { CheckCircle2, Circle, Video, FileText, Clock, XCircle, PlayCircle, Lock } from 'lucide-react'
+import { CourseViewTabs } from '@/components/student/CourseViewTabs'
+import { CourseJourneyMap, type JourneyNode } from '@/components/student/CourseJourneyMap'
 
 export default async function StudentCourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -59,6 +61,51 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
   const firstIncompleteIdx = (lectures ?? []).findIndex((l) => !completedIds.has(l.id))
   const courseProgress = enrollment.progress ?? 0
 
+  // ===== بيانات رحلة الخريطة =====
+  const [
+    { data: courseExams }, { data: courseAssignments }, { data: courseChallenges },
+    { data: examSubs }, { data: assignSubs }, { data: challengeSubs },
+    { data: certificate }, { data: treasureRows },
+  ] = await Promise.all([
+    supabase.from('exams').select('id, title').eq('course_id', id).eq('is_active', true).order('created_at'),
+    supabase.from('assignments').select('id, title').eq('course_id', id).order('created_at'),
+    supabase.from('challenges').select('id, title').eq('course_id', id).order('created_at'),
+    supabase.from('exam_submissions').select('exam_id').eq('student_id', user!.id).not('submitted_at', 'is', null),
+    supabase.from('assignment_submissions').select('assignment_id').eq('student_id', user!.id).not('submitted_at', 'is', null),
+    supabase.from('challenge_submissions').select('challenge_id').eq('student_id', user!.id).not('submitted_at', 'is', null),
+    supabase.from('certificates').select('id').eq('course_id', id).eq('student_id', user!.id).maybeSingle(),
+    supabase.from('treasure_claims').select('node_index').eq('course_id', id).eq('student_id', user!.id),
+  ])
+  const submittedExams = new Set((examSubs ?? []).map((x) => x.exam_id))
+  const submittedAssigns = new Set((assignSubs ?? []).map((x) => x.assignment_id))
+  const submittedChallenges = new Set((challengeSubs ?? []).map((x) => x.challenge_id))
+
+  const journeyNodes: JourneyNode[] = [
+    ...(lectures ?? []).map((l) => ({
+      key: `lec-${l.id}`, kind: 'lecture' as const, title: l.title,
+      href: `/my-courses/${id}/lectures/${l.id}`, completed: completedIds.has(l.id),
+    })),
+    ...(courseAssignments ?? []).map((a) => ({
+      key: `asg-${a.id}`, kind: 'assignment' as const, title: a.title,
+      href: '/my-assignments', completed: submittedAssigns.has(a.id),
+    })),
+    ...(courseChallenges ?? []).map((c) => ({
+      key: `ch-${c.id}`, kind: 'challenge' as const, title: c.title,
+      href: '/my-challenges', completed: submittedChallenges.has(c.id),
+    })),
+    ...(courseExams ?? []).map((e) => ({
+      key: `ex-${e.id}`, kind: 'exam' as const, title: e.title,
+      href: `/my-exams/${e.id}`, completed: submittedExams.has(e.id),
+    })),
+    {
+      key: 'summit', kind: 'certificate' as const, title: 'شهادة إتمام الكورس',
+      href: '/my-certificates', completed: !!certificate,
+    },
+  ]
+  const sequential = enrollment.course.sequential_learning ?? true
+  // في العرض المتسلسل: المحاضرات بعد أول ناقصة تُقفل في عرض القائمة أيضاً
+  const lockedFromIdx = sequential && firstIncompleteIdx !== -1 ? firstIncompleteIdx + 1 : Infinity
+
   return (
     <div className="flex flex-col">
       <div className="relative overflow-hidden bg-ruwad-gradient px-6 py-10">
@@ -81,6 +128,16 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
       </div>
 
       <main className="p-6 max-w-3xl mx-auto w-full -mt-2">
+        <CourseViewTabs
+          journey={
+            <CourseJourneyMap
+              courseId={id}
+              nodes={journeyNodes}
+              sequential={sequential}
+              claimedIndexes={(treasureRows ?? []).map((t) => t.node_index)}
+            />
+          }
+          list={
         <div className="bg-white rounded-ruwad shadow-card p-6">
           <h2 className="text-lg font-bold text-ruwad-navy mb-4">المحاضرات</h2>
           {!lectures || lectures.length === 0 ? (
@@ -90,6 +147,15 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
               {lectures.map((lecture, idx) => {
                 const done = completedIds.has(lecture.id)
                 const isUpNext = idx === firstIncompleteIdx
+                const locked = idx >= lockedFromIdx
+                if (locked) return (
+                  <div key={lecture.id} title="أكمل المحاضرة السابقة أولاً" className="flex items-center gap-3 p-4 rounded-ruwad-sm border-2 border-ruwad-gray/40 bg-ruwad-gray/10 opacity-60 cursor-not-allowed">
+                    <Lock size={20} className="text-ruwad-navy/30 shrink-0" />
+                    <span className="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center shrink-0 bg-ruwad-gray/40 text-ruwad-navy/40">{idx + 1}</span>
+                    <span className="flex-1 min-w-0 font-medium text-ruwad-navy/45 truncate">{lecture.title}</span>
+                    <span className="text-[10px] font-bold text-ruwad-navy/35 shrink-0">أكمل السابقة أولاً</span>
+                  </div>
+                )
                 return (
                   <Link
                     key={lecture.id}
@@ -132,6 +198,8 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
             </div>
           )}
         </div>
+          }
+        />
       </main>
     </div>
   )

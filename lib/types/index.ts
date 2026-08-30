@@ -28,6 +28,7 @@ export interface Course {
   updated_at: string
   lectures?: Lecture[]
   enrollments_count?: number
+  sequential_learning?: boolean
 }
 
 export interface Lecture {
