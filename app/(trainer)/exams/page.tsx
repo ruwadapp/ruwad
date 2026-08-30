@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { EntityCard } from '@/components/shared/EntityCard'
+import { ExamsGrid, type ExamGridItem } from '@/components/trainer/ExamsGrid'
 import { getTrainerInstitutes, getResourceSharesMap } from '@/lib/utils/getTrainerInstitutes'
 import { Plus, FileText, Zap, Award } from 'lucide-react'
 
@@ -17,6 +17,21 @@ export default async function ExamsPage() {
     .order('created_at', { ascending: false })
 
   const sharesMap = await getResourceSharesMap(supabase, 'exams', (exams ?? []).map((e) => e.id))
+
+  const { data: myCourses } = await supabase
+    .from('courses').select('id, title').eq('trainer_id', user!.id).order('created_at', { ascending: false })
+
+  const gridItems: ExamGridItem[] = (exams ?? []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    description: e.description,
+    is_active: e.is_active,
+    exam_code: e.exam_code,
+    course_id: e.course_id,
+    created_at: e.created_at,
+    questionsCount: e.questions?.[0]?.count ?? 0,
+    submissionsCount: e.exam_submissions?.[0]?.count ?? 0,
+  }))
 
   const examIds = (exams ?? []).map((e) => e.id)
   const { data: allSubs } = examIds.length
@@ -71,27 +86,7 @@ export default async function ExamsPage() {
             <p className="text-ruwad-navy/60">لا توجد امتحانات حتى الآن.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {exams.map((exam) => (
-              <EntityCard
-                key={exam.id}
-                href={`/exams/${exam.id}`}
-                seed={exam.id}
-                title={exam.title}
-                description={exam.description}
-                badge={{ text: exam.is_active ? 'نشط' : 'متوقف', active: exam.is_active }}
-                stats={[
-                  { icon: 'file', label: `${exam.questions?.[0]?.count ?? 0} سؤال` },
-                  { icon: 'users', label: `${exam.exam_submissions?.[0]?.count ?? 0} مشارك` },
-                ]}
-                shareCode={exam.exam_code}
-                deleteTable="exams"
-                deleteId={exam.id}
-                deleteConfirmText="حذف الامتحان سيحذف معه كل أسئلته ونتائج الطلاب فيه نهائياً. متابعة؟"
-                instituteShare={exam.course_id ? undefined : { resourceType: 'exams', institutes, sharedInstituteIds: sharesMap[exam.id] ?? [] }}
-              />
-            ))}
-          </div>
+          <ExamsGrid exams={gridItems} courses={myCourses ?? []} institutes={institutes} sharesMap={sharesMap} />
         )}
       </main>
     </>
