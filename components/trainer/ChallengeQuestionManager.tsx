@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ChallengeQuestion } from '@/lib/types'
-import { Plus, Trash2, Zap, Pencil, Timer } from 'lucide-react'
+import { Plus, Trash2, Zap, Pencil, Timer, Upload } from 'lucide-react'
 
 type CQType = 'multiple_choice' | 'true_false' | 'short_answer'
 const TYPE_LABELS: Record<CQType, string> = {
@@ -26,8 +26,154 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
   const [timeLimit, setTimeLimit] = useState('20')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importSummary, setImportSummary] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // ===== استيراد أسئلة اختيار من متعدد عبر JSON أو CSV (نفس صيغة ملفات الامتحانات) =====
+  // حقول إضافية اختيارية خاصة بالتحدي: marks/points (افتراضي 10) و time/time_limit بالثواني (افتراضي 20)
+  type ImportedRow = {
+    text: string
+    options: { id: string; text: string }[]
+    correct: string
+    marks: number
+    timeLimit: number
+  }
+
+  const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
+
+  function parseCsvLine(line: string): string[] {
+    const cells: string[] = []
+    let cur = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++ }
+        else if (ch === '"') { inQuotes = false }
+        else { cur += ch }
+      } else {
+        if (ch === '"') inQuotes = true
+        else if (ch === ',') { cells.push(cur); cur = '' }
+        else cur += ch
+      }
+    }
+    cells.push(cur)
+    return cells.map((c) => c.trim())
+  }
+
+  function normalizeRow(rowNum: string, text: string, options: { id: string; text: string }[], rawCorrect: string, marksRaw: unknown, timeRaw: unknown): ImportedRow {
+    if (!text) throw new Error(`${rowNum}: نص السؤال مفقود`)
+    if (options.length < 2) throw new Error(`${rowNum}: يجب توفير خيارين على الأقل`)
+    const up = rawCorrect.trim().toUpperCase()
+    const correct = options.find((o) => o.id === up)
+      ? up
+      : options.find((o) => o.text.toLowerCase() === rawCorrect.trim().toLowerCase())?.id ?? ''
+    if (!correct) throw new Error(`${rowNum}: الإجابة الصحيحة "${rawCorrect}" غير مطابقة لأي خيار`)
+    const marksNum = Number(marksRaw)
+    const timeNum = Number(timeRaw)
+    return {
+      text,
+      options,
+      correct,
+      marks: Number.isFinite(marksNum) && marksNum > 0 ? marksNum : 10,
+      timeLimit: Number.isFinite(timeNum) && timeNum >= 5 ? timeNum : 20,
+    }
+  }
+
+  function parseCsv(content: string): ImportedRow[] {
+    const lines = content.split(/\r?\n/).filter((l) => l.trim() !== '')
+    if (lines.length < 2) throw new Error('الملف لا يحتوي بيانات كافية')
+    const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
+    const idx = (name: string) => header.indexOf(name)
+    const qIdx = idx('question') !== -1 ? idx('question') : idx('question_text')
+    if (qIdx === -1) throw new Error('يجب أن يحتوي الملف على عمود "question"')
+    const correctIdx = idx('correct') !== -1 ? idx('correct') : idx('correct_answer')
+    const marksIdx = idx('marks') !== -1 ? idx('marks') : idx('points')
+    const timeIdx = idx('time') !== -1 ? idx('time') : idx('time_limit')
+    const optionIdxs = LETTERS
+      .map((l, i) => idx(`option_${l.toLowerCase()}`) !== -1 ? idx(`option_${l.toLowerCase()}`) : idx(`option${i + 1}`))
+      .filter((i) => i !== -1)
+
+    return lines.slice(1).map((line, rowNum) => {
+      const cells = parseCsvLine(line)
+      const options = optionIdxs
+        .map((oi, i) => ({ id: LETTERS[i], text: (cells[oi] ?? '').trim() }))
+        .filter((o) => o.text !== '')
+      return normalizeRow(`السطر ${rowNum + 2}`, cells[qIdx]?.trim() ?? '', options,
+        (correctIdx !== -1 ? cells[correctIdx] : '') ?? '',
+        marksIdx !== -1 ? cells[marksIdx] : undefined,
+        timeIdx !== -1 ? cells[timeIdx] : undefined)
+    })
+  }
+
+  function parseJson(content: string): ImportedRow[] {
+    let raw: unknown
+    try { raw = JSON.parse(content) } catch { throw new Error('الملف ليس JSON صالحاً') }
+    const arr = Array.isArray(raw) ? raw : (raw as { questions?: unknown[] })?.questions
+    if (!Array.isArray(arr)) throw new Error('يجب أن يكون الملف مصفوفة أسئلة أو يحتوي على مفتاح "questions"')
+
+    return arr.map((item, rowNum) => {
+      const obj = item as Record<string, unknown>
+      let options: { id: string; text: string }[] = []
+      const rawOptions = obj.options
+      if (Array.isArray(rawOptions)) {
+        options = rawOptions.map((o, i) => {
+          if (typeof o === 'string') return { id: LETTERS[i], text: o.trim() }
+          const oo = o as { id?: string; text?: string }
+          return { id: (oo.id ?? LETTERS[i]).toString().toUpperCase(), text: String(oo.text ?? '').trim() }
+        }).filter((o) => o.text !== '')
+      } else if (rawOptions && typeof rawOptions === 'object') {
+        options = Object.entries(rawOptions as Record<string, string>)
+          .map(([id, text]) => ({ id: id.toUpperCase(), text: String(text).trim() }))
+          .filter((o) => o.text !== '')
+      }
+      return normalizeRow(`العنصر ${rowNum + 1}`,
+        String(obj.question ?? obj.question_text ?? '').trim(), options,
+        String(obj.correct ?? obj.correct_answer ?? ''),
+        obj.marks ?? obj.points, obj.time ?? obj.time_limit ?? obj.time_limit_seconds)
+    })
+  }
+
+  async function handleImportFile(file: File) {
+    setImportError(null)
+    setImportSummary(null)
+    setImporting(true)
+    try {
+      const content = await file.text()
+      const isJson = file.name.toLowerCase().endsWith('.json')
+      const rows = isJson ? parseJson(content) : parseCsv(content)
+      if (rows.length === 0) throw new Error('لم يتم العثور على أسئلة في الملف')
+
+      const payload = rows.map((r, i) => ({
+        challenge_id: challengeId,
+        question_text: r.text,
+        question_type: 'multiple_choice' as CQType,
+        options: r.options,
+        correct_answer: r.correct,
+        marks: r.marks,
+        time_limit_seconds: r.timeLimit,
+        order_index: items.length + i,
+      }))
+
+      const { data, error: insertError } = await supabase.from('challenge_questions').insert(payload).select()
+      if (insertError || !data) throw new Error('حدث خطأ أثناء حفظ الأسئلة في قاعدة البيانات')
+
+      const updated = [...items, ...data]
+      setItems(updated)
+      await syncTotalMarks(updated)
+      setImportSummary(`تم استيراد ${data.length} سؤال بنجاح ✓`)
+      router.refresh()
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'حدث خطأ غير متوقع أثناء الاستيراد')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   async function syncTotalMarks(newQuestions: ChallengeQuestion[]) {
     const total = newQuestions.reduce((s, q) => s + q.marks, 0)
@@ -138,11 +284,30 @@ export function ChallengeQuestionManager({ challengeId, questions }: { challenge
           أسئلة التحدي <span className="text-sm text-ruwad-navy/50 font-normal">({items.reduce((s, q) => s + q.marks, 0)} نقطة)</span>
         </h2>
         {!formOpen && (
-          <button onClick={() => setFormOpen(true)} className="bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5">
-            <Plus size={16} /> سؤال جديد
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,.csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f) }}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="border-2 border-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:bg-ruwad-lime/20 transition flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Upload size={16} /> {importing ? 'جارٍ الاستيراد...' : 'استيراد JSON / CSV'}
+            </button>
+            <button onClick={() => setFormOpen(true)} className="bg-ruwad-lime text-ruwad-navy px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5">
+              <Plus size={16} /> سؤال جديد
+            </button>
+          </div>
         )}
       </div>
+
+      {importError && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-2.5 mb-3">{importError}</div>}
+      {importSummary && <div className="bg-green-50 text-green-600 text-sm rounded-ruwad-sm px-4 py-2.5 mb-3">{importSummary}</div>}
 
       {formOpen && (
         <form onSubmit={saveQuestion} className="flex flex-col gap-3 border-2 border-ruwad-lime/60 rounded-ruwad-sm p-4 mb-4">
