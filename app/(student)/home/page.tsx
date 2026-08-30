@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import {
   BookOpen, Award, CalendarCheck, PlayCircle, Radio, FileText,
-  FileCheck, ScanLine, KeyRound, ArrowLeft, Sparkles, Flame,
+  FileCheck, ScanLine, KeyRound, ArrowLeft, Flame,
 } from 'lucide-react'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
 import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
@@ -16,7 +16,7 @@ export default async function StudentHomePage() {
   const [{ data: profile }, { data: enrollments }, { count: badgesCount }, attendanceStatsArr, { data: recentBadge }, pointsArr] =
     await Promise.all([
       supabase.from('profiles').select('full_name').eq('id', uid).single(),
-      supabase.from('enrollments').select('*, course:courses(title)').eq('student_id', uid).eq('status', 'approved').order('progress', { ascending: false }),
+      supabase.from('enrollments').select('*, course:courses(title, trainer_id)').eq('student_id', uid).eq('status', 'approved').order('progress', { ascending: false }),
       supabase.from('student_badges').select('id', { count: 'exact', head: true }).eq('student_id', uid),
       supabase.rpc('get_student_attendance_stats', { p_student_id: uid }),
       supabase.from('student_badges').select('earned_at, badge:badges(name, icon)').eq('student_id', uid).order('earned_at', { ascending: false }).limit(1).maybeSingle(),
@@ -78,7 +78,55 @@ export default async function StudentHomePage() {
     pendingAssignments = courseAssignments.filter((a) => !submittedIds.has(a.id)).slice(0, 3)
   }
 
-  const needsAttentionCount = unfinishedExams.length + pendingAssignments.length
+  // ===== جلسة حضور مفتوحة الآن لكورسات الطالب (ولم يسجّل فيها بعد) =====
+  let openAttendance: { session_code: string; title: string; courseTitle: string } | null = null
+  if (courseIds.length) {
+    const { data: openSessions } = await supabase
+      .from('attendance_sessions')
+      .select('id, title, session_code, course_id')
+      .in('course_id', courseIds)
+      .eq('is_active', true)
+      .is('closed_at', null)
+      .order('activated_at', { ascending: false })
+    if (openSessions && openSessions.length > 0) {
+      const { data: myRecs } = await supabase
+        .from('attendance_records')
+        .select('session_id')
+        .eq('student_id', uid)
+        .in('session_id', openSessions.map((x) => x.id))
+      const done = new Set((myRecs ?? []).map((r) => r.session_id))
+      const first = openSessions.find((x) => !done.has(x.id))
+      if (first) {
+        openAttendance = {
+          session_code: first.session_code,
+          title: first.title,
+          courseTitle: (enrollments ?? []).find((e) => e.course_id === first.course_id)?.course?.title ?? '',
+        }
+      }
+    }
+  }
+
+  // ===== استبيانات نشطة من مدربي كورساتك لم تُجب عنها =====
+  const trainerIdsOfMyCourses = [...new Set((enrollments ?? []).map((e) => e.course?.trainer_id).filter(Boolean))] as string[]
+  let pendingSurveys: { id: string; title: string; share_token: string }[] = []
+  if (trainerIdsOfMyCourses.length) {
+    const { data: activeSurveys } = await supabase
+      .from('surveys')
+      .select('id, title, share_token, ends_at')
+      .in('trainer_id', trainerIdsOfMyCourses)
+      .eq('is_active', true)
+    const notEnded = (activeSurveys ?? []).filter((x) => !x.ends_at || new Date(x.ends_at) > new Date())
+    if (notEnded.length) {
+      const { data: myResponses } = await supabase
+        .from('survey_responses')
+        .select('survey_id')
+        .eq('respondent_id', uid)
+        .in('survey_id', notEnded.map((x) => x.id))
+      const answered = new Set((myResponses ?? []).map((r) => r.survey_id))
+      pendingSurveys = notEnded.filter((x) => !answered.has(x.id)).slice(0, 2)
+    }
+  }
+
 
   return (
     <>
@@ -134,6 +182,101 @@ export default async function StudentHomePage() {
           </FireCardFrame>
         )}
 
+        {/* ===== جلسة حضور مفتوحة الآن ===== */}
+        {openAttendance && (
+          <div className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg p-[2px]" style={{ background: 'linear-gradient(120deg,#16a34a,#4ade80,#16a34a)' }}>
+            <div className="relative bg-gradient-to-l from-green-600 via-emerald-500 to-green-500 rounded-[10px] p-5 flex items-center justify-between gap-4 text-white overflow-hidden">
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-white/40 animate-ping" />
+                  <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur"><CalendarCheck size={24} /></span>
+                </span>
+                <div className="min-w-0">
+                  <p className="font-bold flex items-center gap-1.5">جلسة حضور مفتوحة الآن <Radio size={15} className="animate-pulse" /></p>
+                  <p className="text-sm opacity-90 truncate">{openAttendance.title}{openAttendance.courseTitle ? ` — ${openAttendance.courseTitle}` : ''}</p>
+                </div>
+              </div>
+              <Link href={`/qr/${openAttendance.session_code}`} className="bg-white text-green-600 font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0 hover:opacity-90 transition">
+                سجّل حضورك
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ===== امتحانات نشطة بانتظارك ===== */}
+        {unfinishedExams.map((e) => (
+          <div key={e.id} className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg bg-gradient-to-l from-ruwad-blue via-indigo-500 to-ruwad-blue-light p-5 flex items-center justify-between gap-4 text-white">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-ruwad-lime/20 rounded-full blur-2xl" />
+            <div className="relative flex items-center gap-3 min-w-0">
+              <span className="w-12 h-12 rounded-full bg-white/15 backdrop-blur flex items-center justify-center shrink-0"><FileText size={22} /></span>
+              <div className="min-w-0">
+                <p className="font-bold">امتحان نشط بانتظارك ✍️</p>
+                <p className="text-sm opacity-90 truncate">{e.title}</p>
+              </div>
+            </div>
+            <Link href={`/my-exams/${e.id}`} className="relative bg-white text-ruwad-blue font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0 hover:opacity-90 transition">
+              ابدأ الآن
+            </Link>
+          </div>
+        ))}
+
+        {/* ===== استبيانات تنتظر رأيك ===== */}
+        {pendingSurveys.map((sv) => (
+          <div key={sv.id} className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg bg-ruwad-navy p-5 flex items-center justify-between gap-4 text-white">
+            <div className="absolute -top-10 -right-10 w-36 h-36 bg-ruwad-lime/25 rounded-full blur-3xl" />
+            <div className="relative flex items-center gap-3 min-w-0">
+              <span className="w-12 h-12 rounded-full bg-ruwad-lime text-ruwad-navy flex items-center justify-center shrink-0 text-xl">📋</span>
+              <div className="min-w-0">
+                <p className="font-bold">استبيان يحتاج رأيك</p>
+                <p className="text-sm opacity-80 truncate">{sv.title}</p>
+              </div>
+            </div>
+            <Link href={`/survey/${sv.share_token}`} className="relative bg-ruwad-lime text-ruwad-navy font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0 hover:opacity-90 transition">
+              شارك برأيك
+            </Link>
+          </div>
+        ))}
+
+        {/* ===== مهامك (الواجبات) ===== */}
+        {pendingAssignments.length > 0 && (
+          <div className="bg-white rounded-ruwad shadow-card p-6">
+            <h2 className="text-lg font-bold text-ruwad-navy mb-1 flex items-center gap-2">
+              <FileCheck size={20} className="text-ruwad-blue" /> مهامك
+            </h2>
+            <p className="text-xs text-ruwad-navy/45 mb-4">واجبات بانتظار تسليمك — أنجزها واكسب نقاطك ✅</p>
+            <div className="flex flex-col gap-2.5">
+              {pendingAssignments.map((a, i) => {
+                const overdue = a.due_date && new Date(a.due_date) < new Date()
+                const dueSoon = a.due_date && !overdue && new Date(a.due_date).getTime() - Date.now() < 3 * 86400_000
+                return (
+                  <Link
+                    key={a.id}
+                    href="/my-assignments"
+                    className={`flex items-center gap-3 p-3.5 rounded-ruwad-sm border-2 transition hover:-translate-y-0.5 hover:shadow-card ${
+                      overdue ? 'border-red-200 bg-red-50/50' : dueSoon ? 'border-amber-200 bg-amber-50/50' : 'border-ruwad-gray/50 bg-[#FAFBFF]'
+                    }`}
+                  >
+                    <span className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-extrabold shrink-0 ${
+                      overdue ? 'border-red-400 text-red-500' : 'border-ruwad-blue text-ruwad-blue'
+                    }`}>{i + 1}</span>
+                    <span className="flex-1 text-sm font-bold text-ruwad-navy truncate">{a.title}</span>
+                    {a.due_date && (
+                      <span className={`text-[11px] font-bold rounded-full px-2.5 py-1 shrink-0 ${
+                        overdue ? 'bg-red-100 text-red-600' : dueSoon ? 'bg-amber-100 text-amber-600' : 'bg-ruwad-blue/10 text-ruwad-blue'
+                      }`}>
+                        {overdue ? 'متأخر!' : new Date(a.due_date).toLocaleDateString('ar', { day: 'numeric', month: 'short' })}
+                      </span>
+                    )}
+                    <ArrowLeft size={15} className="text-ruwad-navy/30 shrink-0" />
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ===== استمر من حيث توقفت ===== */}
         <div className="bg-white rounded-ruwad shadow-card p-6">
           <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
@@ -166,32 +309,6 @@ export default async function StudentHomePage() {
           )}
         </div>
 
-        {/* ===== يحتاج اهتمامك ===== */}
-        {needsAttentionCount > 0 && (
-          <div className="bg-white rounded-ruwad shadow-card p-6">
-            <h2 className="text-lg font-bold text-ruwad-navy mb-4 flex items-center gap-2">
-              <Sparkles size={20} className="text-amber-500" /> يحتاج اهتمامك ({needsAttentionCount})
-            </h2>
-            <div className="flex flex-col gap-2">
-              {unfinishedExams.map((e) => (
-                <Link key={e.id} href={`/my-exams/${e.id}`} className="flex items-center gap-3 p-3 rounded-ruwad-sm border border-ruwad-gray/60 hover:bg-ruwad-gray/10 transition">
-                  <FileText size={18} className="text-ruwad-blue shrink-0" />
-                  <span className="flex-1 text-sm font-medium text-ruwad-navy truncate">{e.title}</span>
-                  <span className="text-xs text-ruwad-navy/40 shrink-0">امتحان جديد</span>
-                </Link>
-              ))}
-              {pendingAssignments.map((a) => (
-                <Link key={a.id} href="/my-assignments" className="flex items-center gap-3 p-3 rounded-ruwad-sm border border-ruwad-gray/60 hover:bg-ruwad-gray/10 transition">
-                  <FileCheck size={18} className="text-ruwad-navy shrink-0" />
-                  <span className="flex-1 text-sm font-medium text-ruwad-navy truncate">{a.title}</span>
-                  <span className="text-xs text-ruwad-navy/40 shrink-0">
-                    {a.due_date ? `موعده ${new Date(a.due_date).toLocaleDateString('ar')}` : 'واجب'}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ===== آخر إنجاز + إجراءات سريعة ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
