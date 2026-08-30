@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase,
+  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -31,6 +31,7 @@ const trainerNav: NavItem[] = [
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
+  { href: '/training-requests', label: 'طلبات التدريب', icon: 'Target' },
   { href: '/analytics', label: 'التحليلات', icon: 'BarChart3' },
   { href: '/institute', label: 'المعهد', icon: 'Building2' },
 ]
@@ -40,6 +41,7 @@ const studentNav: NavItem[] = [
   { href: '/rawaq', label: 'الرواق', icon: 'Rss' },
   { href: '/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/opportunities', label: 'الفرص', icon: 'Briefcase' },
+  { href: '/request-training', label: 'اطلب تدريباً', icon: 'Target' },
   { href: '/cv', label: 'سيرتي الذاتية', icon: 'FileBadge' },
   { href: '/my-courses', label: 'التدريبات', icon: 'GraduationCap' },
   { href: '/my-exams', label: 'امتحاناتي', icon: 'FileText' },
@@ -59,6 +61,7 @@ const instituteNav: NavItem[] = [
   { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
+  { href: '/org/training-requests', label: 'طلبات التدريب', icon: 'Target' },
   { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/org/members', label: 'الأعضاء', icon: 'UserCog' },
