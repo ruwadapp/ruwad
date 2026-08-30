@@ -9,10 +9,20 @@ self.addEventListener('push', (event) => {
   }
   const options = {
     body: data.body || '',
-    icon: ICONS[data.tone] || '/icons/icon-192.png',
-    badge: '/icons/icon-48.png',
+    // أيقونة الهوية الملوّنة الكاملة (تدرّج أزرق + النجمة) بدل النسخة بيضاء الخلفية الباهتة
+    icon: ICONS[data.tone] || '/icons/icon-notify-192.png',
+    // شارة أحادية اللون (صورة ظلّية) — الشكل الصحيح لشريط الحالة في أندرويد
+    badge: '/icons/badge-96.png',
     dir: 'rtl',
     lang: 'ar',
+    vibrate: data.tone === 'urgent' ? [180, 80, 180, 80, 180] : [120, 60, 120],
+    timestamp: Date.now(),
+    // إشعارات النوع نفسه تُستبدل بأحدثها بدل تكديس المركز، مع تنبيه متجدد
+    tag: data.type ? `ruwad-${data.type}` : undefined,
+    renotify: !!data.type,
+    // صورة كبيرة اختيارية (للدعايات مستقبلاً)
+    image: data.image || undefined,
+    actions: [{ action: 'open', title: 'فتح' }],
     data: { url: data.url || '/' },
   }
 

@@ -16,6 +16,18 @@ function matchesRoute(path: string, prefixes: string[]) {
 }
 
 export async function middleware(request: NextRequest) {
+  // توحيد النطاق: أي زيارة عبر نطاق vercel.app تُحوَّل للنطاق الرسمي —
+  // كي تُسجَّل اشتراكات الإشعارات على النطاق الصحيح ويظهر اسمه في الإشعار بدل vercel.app
+  // (نستثني /api لأن قاعدة البيانات تستدعي مسار الدفع عبر نطاق vercel مباشرة)
+  const host = request.headers.get('host') ?? ''
+  if (host.endsWith('.vercel.app') && !request.nextUrl.pathname.startsWith('/api')) {
+    const url = new URL(request.url)
+    url.host = 'www.ruwaad.app'
+    url.protocol = 'https:'
+    url.port = ''
+    return NextResponse.redirect(url, 308)
+  }
+
   const { user, response } = await updateSession(request)
   const path = request.nextUrl.pathname
 

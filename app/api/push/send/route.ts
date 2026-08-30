@@ -35,13 +35,13 @@ export async function POST(req: NextRequest) {
     process.env.VAPID_PRIVATE_KEY
   )
 
-  const { subscriptions, title, body, type, reference_id, role, tone } = await req.json()
+  const { subscriptions, title, body, type, reference_id, role, tone, image } = await req.json()
   if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
     return NextResponse.json({ sent: 0, failed: 0, cleaned: 0 })
   }
 
   const url = destinationFor(type, reference_id, role ?? 'student')
-  const payload = JSON.stringify({ title, body, url, tone })
+  const payload = JSON.stringify({ title, body, url, tone, type, image })
 
   // نستخدم مفتاح الخدمة إن وُجد، وإلا نتراجع لمفتاح anon مع دالة RPC آمنة لحذف الاشتراكات الميتة
   // بهذا لا يتعطّل تنظيف الاشتراكات الميتة إطلاقاً حتى لو غاب SUPABASE_SERVICE_ROLE_KEY في البيئة
