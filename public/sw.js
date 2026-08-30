@@ -45,3 +45,27 @@ self.addEventListener('notificationclick', (event) => {
     })
   )
 })
+
+// عند تدوير المتصفح للاشتراك (أو إبطاله) نعيد الاشتراك ونحفظه ذاتياً —
+// بدون هذا يموت اشتراك الجهاز بصمت وتتوقف الإشعارات حتى يعيد المستخدم تفعيلها يدوياً
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const res = await fetch('/api/push/vapid')
+        const { key } = await res.json()
+        if (!key) return
+        const sub = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key,
+        })
+        await fetch('/api/push/save', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub.toJSON()),
+        })
+      } catch (e) { /* سيصلحه فتح صفحة الحساب لاحقاً */ }
+    })()
+  )
+})
