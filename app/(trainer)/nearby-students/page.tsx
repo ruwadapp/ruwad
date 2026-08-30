@@ -62,8 +62,8 @@ export default async function TrainerNearbyPage() {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {list.map((s) => (
-                    <div key={s.id} className="bg-white rounded-ruwad shadow-card p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-ruwad-navy text-white flex items-center justify-center font-bold shrink-0 overflow-hidden">
+                    <div key={s.id} className="bg-white rounded-ruwad shadow-card p-5 flex flex-col items-center text-center gap-3">
+                      <div className="w-14 h-14 rounded-full bg-ruwad-gradient text-white flex items-center justify-center font-bold text-xl shrink-0 overflow-hidden ring-2 ring-ruwad-gray/40">
                         {s.avatar_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={s.avatar_url} alt={s.full_name} className="w-full h-full object-cover" />
@@ -71,8 +71,13 @@ export default async function TrainerNearbyPage() {
                           s.full_name.charAt(0)
                         )}
                       </div>
-                      <Link href={`/s/${s.id}`} className="font-bold text-ruwad-navy text-sm truncate flex-1 hover:text-ruwad-blue hover:underline">{s.full_name}</Link>
-                      <InviteToCourseButton studentId={s.id} courses={myCourses ?? []} />
+                      <Link href={`/s/${s.id}`} className="font-bold text-ruwad-navy text-sm leading-snug hover:text-ruwad-blue transition break-words w-full">
+                        {s.full_name}
+                      </Link>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <InviteToCourseButton studentId={s.id} courses={myCourses ?? []} />
+                        <InviteToCourseButton studentId={s.id} courses={myCourses ?? []} mode="promo" />
+                      </div>
                     </div>
                   ))}
                 </div>

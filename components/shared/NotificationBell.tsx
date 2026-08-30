@@ -28,6 +28,7 @@ const TYPE_ICON: Record<string, { icon: typeof Bell; color: string }> = {
   announcement: { icon: Megaphone, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   general: { icon: Bell, color: 'bg-ruwad-gray/40 text-ruwad-navy' },
   course_invitation: { icon: Mail, color: 'bg-ruwad-lime/40 text-ruwad-navy' },
+  course_promo: { icon: Megaphone, color: 'bg-ruwad-blue/10 text-ruwad-blue' },
   course_invitation_accepted: { icon: CheckCheck, color: 'bg-green-100 text-green-600' },
 }
 
@@ -121,6 +122,7 @@ export function NotificationBell() {
       case 'certificate': return isTrainer ? '/students' : '/my-certificates'
       case 'announcement': return isTrainer ? '/dashboard' : '/home'
       case 'course_invitation': return '/my-courses'
+      case 'course_promo': return '/home'
       case 'course_invitation_accepted': return isTrainer ? '/students' : '/org/students'
       default: return isTrainer ? '/dashboard' : '/home'
     }

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
 import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
+import { DismissNotifButton } from '@/components/student/DismissNotifButton'
 
 export default async function StudentHomePage() {
   const supabase = await createServerSupabaseClient()
@@ -76,6 +77,27 @@ export default async function StudentHomePage() {
       .from('assignment_submissions').select('assignment_id').eq('student_id', uid).in('assignment_id', courseAssignments.map((a) => a.id))
     const submittedIds = new Set((subs ?? []).map((s) => s.assignment_id))
     pendingAssignments = courseAssignments.filter((a) => !submittedIds.has(a.id)).slice(0, 3)
+  }
+
+  // ===== دعايات كورسات موجّهة لك (غير مقروءة) =====
+  const { data: promoNotifs } = await supabase
+    .from('notifications')
+    .select('id, message, reference_id, created_at')
+    .eq('user_id', uid)
+    .eq('type', 'course_promo')
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+    .limit(2)
+  let promoCards: { notifId: string; message: string; courseId: string; title: string; description: string | null; code: string | null }[] = []
+  if (promoNotifs && promoNotifs.length > 0) {
+    const ids = promoNotifs.map((n) => n.reference_id).filter(Boolean) as string[]
+    const { data: promoCourses } = ids.length
+      ? await supabase.from('courses').select('id, title, description, course_code').in('id', ids)
+      : { data: [] }
+    promoCards = promoNotifs.flatMap((n) => {
+      const c = (promoCourses ?? []).find((x) => x.id === n.reference_id)
+      return c ? [{ notifId: n.id, message: n.message, courseId: c.id, title: c.title, description: c.description, code: c.course_code }] : []
+    })
   }
 
   // ===== جلسة حضور مفتوحة الآن لكورسات الطالب (ولم يسجّل فيها بعد) =====
@@ -173,6 +195,33 @@ export default async function StudentHomePage() {
             </div>
           </FireCardFrame>
         )}
+
+        {/* ===== كورس مقترح لك (دعاية) ===== */}
+        {promoCards.map((pc) => (
+          <div key={pc.notifId} className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg p-[2px] bg-gradient-to-l from-ruwad-lime via-ruwad-blue-light to-ruwad-blue">
+            <div className="relative bg-white rounded-[10px] p-5 overflow-hidden">
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-ruwad-blue/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-ruwad-lime/30 rounded-full blur-2xl" />
+              <div className="relative flex items-start gap-3">
+                <span className="w-12 h-12 rounded-ruwad-sm bg-ruwad-gradient text-white flex items-center justify-center shrink-0 text-xl shadow-ruwad">✨</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-bold text-ruwad-blue bg-ruwad-blue/10 rounded-full px-2.5 py-0.5 inline-block">كورس مقترح لك بالقرب منك</p>
+                  <h3 className="font-extrabold text-ruwad-navy mt-1.5 leading-snug">{pc.title}</h3>
+                  {pc.description && <p className="text-xs text-ruwad-navy/55 line-clamp-2 mt-1 leading-relaxed">{pc.description}</p>}
+                  <p className="text-[11px] text-ruwad-navy/40 mt-1.5">{pc.message}</p>
+                </div>
+              </div>
+              <div className="relative flex items-center gap-2 mt-4">
+                {pc.code && (
+                  <Link href={`/qr/${pc.code}`} className="flex-1 text-center bg-ruwad-blue text-white font-bold text-sm px-4 py-2.5 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad">
+                    اطّلع على الكورس وانضم
+                  </Link>
+                )}
+                <DismissNotifButton notifId={pc.notifId} />
+              </div>
+            </div>
+          </div>
+        ))}
 
         {/* ===== جلسة حضور مفتوحة الآن ===== */}
         {openAttendance && (

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BookOpen, Check, Send, X } from 'lucide-react'
+import { BookOpen, Check, Send, X, Megaphone } from 'lucide-react'
 
 const RESULT_MSG: Record<string, string> = {
   ok: 'أُرسلت الدعوة ✓',
@@ -9,7 +9,9 @@ const RESULT_MSG: Record<string, string> = {
   already_invited: 'مدعو بالفعل',
   not_allowed: 'غير مسموح',
   course_not_found: 'الكورس غير موجود',
+  recently_promoted: 'أُرسلت له مؤخراً',
 }
+const PROMO_RESULT_MSG: Record<string, string> = { ...RESULT_MSG, ok: 'أُرسلت الدعاية ✓' }
 
 // زر "دعوة إلى تدريب" بجانب الطالب في "بالقرب مني":
 // يفتح قائمة صغيرة بالتدريبات المتاحة، وإرسال الدعوة يمر عبر دالة آمنة
@@ -17,9 +19,12 @@ const RESULT_MSG: Record<string, string> = {
 export function InviteToCourseButton({
   studentId,
   courses,
+  mode = 'invite',
 }: {
   studentId: string
   courses: { id: string; title: string }[]
+  /** invite: دعوة التحاق رسمية | promo: دعاية تسويقية تظهر ببطاقة على رئيسية الطالب */
+  mode?: 'invite' | 'promo'
 }) {
   const [open, setOpen] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -30,12 +35,14 @@ export function InviteToCourseButton({
 
   async function invite(courseId: string) {
     setBusyId(courseId)
-    const { data, error } = await supabase.rpc('invite_student_to_course', {
+    const rpcName = mode === 'promo' ? 'send_course_promo' : 'invite_student_to_course'
+    const { data, error } = await supabase.rpc(rpcName, {
       p_student_id: studentId,
       p_course_id: courseId,
     })
     setBusyId(null)
-    setResult(error ? 'تعذّر الإرسال' : RESULT_MSG[data as string] ?? 'تعذّر الإرسال')
+    const msgs = mode === 'promo' ? PROMO_RESULT_MSG : RESULT_MSG
+    setResult(error ? 'تعذّر الإرسال' : msgs[data as string] ?? 'تعذّر الإرسال')
     setOpen(false)
   }
 
@@ -52,9 +59,11 @@ export function InviteToCourseButton({
     <div className="relative shrink-0">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-[11px] font-bold text-white bg-ruwad-blue rounded-full px-3 py-1.5 hover:opacity-90 transition"
+        className={`flex items-center gap-1 text-[11px] font-bold rounded-full px-3 py-1.5 hover:opacity-90 transition ${
+          mode === 'promo' ? 'text-ruwad-navy bg-ruwad-lime' : 'text-white bg-ruwad-blue'
+        }`}
       >
-        <Send size={11} /> دعوة إلى تدريب
+        {mode === 'promo' ? <><Megaphone size={11} /> إرسال دعاية</> : <><Send size={11} /> دعوة إلى تدريب</>}
       </button>
       {open && (
         <div className="absolute left-0 top-9 z-30 bg-white rounded-ruwad-sm shadow-ruwad border border-ruwad-gray/40 py-1 w-60 max-h-64 overflow-y-auto">
