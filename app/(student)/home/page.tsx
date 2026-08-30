@@ -79,6 +79,27 @@ export default async function StudentHomePage() {
     pendingAssignments = courseAssignments.filter((a) => !submittedIds.has(a.id)).slice(0, 3)
   }
 
+  // ===== أحدث فرصة عمل لم يشاهدها الطالب بعد =====
+  const { data: latestJobs } = await supabase
+    .from('job_opportunities')
+    .select('id, position_title, employer_name, deadline, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5)
+  let newJob: { id: string; position_title: string; employer_name: string } | null = null
+  {
+    const today = new Date(new Date().toDateString())
+    const activeJobs = (latestJobs ?? []).filter((j) => !j.deadline || new Date(j.deadline) >= today)
+    if (activeJobs.length) {
+      const { data: seen } = await supabase
+        .from('job_opportunity_views')
+        .select('opportunity_id')
+        .eq('student_id', uid)
+        .in('opportunity_id', activeJobs.map((j) => j.id))
+      const seenSet = new Set((seen ?? []).map((v) => v.opportunity_id))
+      newJob = activeJobs.find((j) => !seenSet.has(j.id)) ?? null
+    }
+  }
+
   // ===== دعايات كورسات موجّهة لك (غير مقروءة) =====
   const { data: promoNotifs } = await supabase
     .from('notifications')
@@ -194,6 +215,25 @@ export default async function StudentHomePage() {
               </Link>
             </div>
           </FireCardFrame>
+        )}
+
+        {/* ===== فرصة عمل جديدة ===== */}
+        {newJob && (
+          <Link
+            href="/opportunities"
+            className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg bg-ruwad-navy p-4 flex items-center gap-3 text-white hover:-translate-y-0.5 transition-transform"
+          >
+            <div className="absolute -top-8 -left-8 w-28 h-28 bg-ruwad-lime/25 rounded-full blur-2xl" />
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-ruwad-lime/50 animate-ping" />
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-ruwad-lime text-ruwad-navy text-lg">💼</span>
+            </span>
+            <span className="relative flex-1 min-w-0">
+              <span className="block font-bold text-sm">فرصة عمل جديدة! <span className="text-ruwad-lime">{newJob.position_title}</span></span>
+              <span className="block text-xs text-white/70 truncate mt-0.5">لدى {newJob.employer_name} — اضغط للتفاصيل والتقديم</span>
+            </span>
+            <ArrowLeft size={16} className="relative shrink-0 text-ruwad-lime" />
+          </Link>
         )}
 
         {/* ===== كورس مقترح لك (دعاية) ===== */}
