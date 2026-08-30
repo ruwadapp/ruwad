@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Lecture } from '@/lib/types'
-import { Plus, Trash2, Video, FileText, GripVertical, Pencil } from 'lucide-react'
+import { Plus, Trash2, Video, FileText, GripVertical, Pencil, Eye, EyeOff } from 'lucide-react'
 
 export function LectureManager({ courseId, lectures }: { courseId: string; lectures: Lecture[] }) {
   const [items, setItems] = useState(lectures)
@@ -73,16 +73,26 @@ export function LectureManager({ courseId, lectures }: { courseId: string; lectu
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                  <button
-                    onClick={() => togglePublish(lecture)}
-                    title="اضغط لتبديل حالة النشر"
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition shrink-0 whitespace-nowrap ${
+                  <span
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 whitespace-nowrap ${
                       lecture.is_published
                         ? 'bg-ruwad-lime text-ruwad-navy'
                         : 'bg-ruwad-gray/50 text-ruwad-navy/60'
                     }`}
                   >
-                    {lecture.is_published ? 'منشورة' : 'مسودة'}
+                    {lecture.is_published ? 'مرئية للطلاب' : 'مخفية'}
+                  </span>
+                  <button
+                    onClick={() => togglePublish(lecture)}
+                    aria-label={lecture.is_published ? 'إخفاء المحاضرة عن الطلاب' : 'إظهار المحاضرة للطلاب'}
+                    title={lecture.is_published ? 'إخفاء المحاضرة عن الطلاب' : 'إظهار المحاضرة للطلاب'}
+                    className={`p-2 rounded-ruwad-sm transition shrink-0 ${
+                      lecture.is_published
+                        ? 'text-ruwad-navy hover:bg-ruwad-navy/10'
+                        : 'text-ruwad-navy/40 hover:bg-ruwad-gray/40'
+                    }`}
+                  >
+                    {lecture.is_published ? <Eye size={16} /> : <EyeOff size={16} />}
                   </button>
                   <Link
                     href={`/courses/${courseId}/lectures/${lecture.id}/edit`}
