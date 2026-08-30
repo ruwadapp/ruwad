@@ -115,7 +115,7 @@ export function JobsManager({ initialJobs }: { initialJobs: JobOpp[] }) {
             </button>
           )}
         </div>
-        <p className="text-xs text-ruwad-navy/50 mb-4">تظهر الفرصة لكل طلاب رُوّاد فور نشرها، مع تنبيه على شاشتهم الرئيسية.</p>
+        <p className="text-xs text-ruwad-navy/50 mb-4">تظهر الفرصة لكل طلاب رُوّاد فور نشرها مع تنبيه على شاشتهم الرئيسية. وبعد انتهاء موعد التقديم بيومين تُحذف الفرصة نهائياً بشكل تلقائي.</p>
 
         {formOpen && (
           <div className="flex flex-col gap-3">
