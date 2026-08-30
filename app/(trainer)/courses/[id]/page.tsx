@@ -34,27 +34,32 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     <>
       <Header title={course.title} />
       <main className="p-6 flex flex-col gap-6">
-        <Link
-          href={`/journey/${id}`}
-          className="self-start flex items-center gap-2 bg-ruwad-navy text-white text-sm font-bold px-5 py-2.5 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad mb-2"
-        >
-          🗺️ تنظيم رحلة الكورس
-        </Link>
         {actingAsInstituteAdmin && (
           <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm font-semibold rounded-ruwad-sm px-4 py-3 flex items-center gap-2">
             <Building2 size={16} /> تُعدّل هذا الكورس بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع معهدك. أي
             امتحان أو واجب أو تحدٍ مرتبط به قابل للتعديل أيضاً.
           </div>
         )}
-        <div className="flex flex-col sm:flex-row sm:justify-end gap-3 [&>*]:w-full sm:[&>*]:w-auto [&>*]:flex [&>*]:justify-center">
+        {/* ===== شريط أدوات الكورس الموحّد ===== */}
+        <div className="bg-white rounded-ruwad shadow-card p-3 flex flex-col sm:flex-row sm:items-center gap-2 [&>*]:w-full sm:[&>*]:w-auto [&>*]:flex [&>*]:items-center [&>*]:justify-center">
+          <Link
+            href={`/journey/${id}`}
+            className="gap-2 bg-ruwad-blue text-white text-sm font-bold px-5 py-2.5 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad"
+          >
+            🗺️ تنظيم رحلة الكورس
+          </Link>
+          <Link
+            href={`/reports/course/${id}`}
+            className="gap-2 text-sm font-bold text-ruwad-navy border-2 border-ruwad-gray bg-white px-5 py-2.5 rounded-ruwad-sm hover:border-ruwad-navy transition"
+          >
+            <FileText size={15} /> تقرير PDF
+          </Link>
           {institutes.length > 0 && (
             <ShareManager resourceType="courses" resourceId={id} institutes={institutes} initialSharedInstituteIds={sharedInstituteIds} />
           )}
-          <Link href={`/reports/course/${id}`} className="bg-ruwad-navy text-white px-5 py-2.5 rounded-ruwad-sm font-semibold hover:opacity-90 transition items-center gap-2">
-            <FileText size={16} /> تقرير PDF
-          </Link>
-          <DeleteButton table="courses" id={id} redirectTo="/courses" label="حذف الكورس" />
           <CourseLandingLinkButton courseId={id} published={course.status === 'published'} />
+          <span className="hidden sm:block flex-1" />
+          <DeleteButton table="courses" id={id} redirectTo="/courses" label="حذف الكورس" />
         </div>
         <CourseForm initialCourse={course} />
         <LectureManager courseId={id} lectures={lectures ?? []} />
