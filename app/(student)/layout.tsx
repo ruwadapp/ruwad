@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/shared/Sidebar'
 import { MobileBottomNav } from '@/components/shared/MobileBottomNav'
+import { PointsToast } from '@/components/student/PointsToast'
 import { PageTransition } from '@/components/shared/PageTransition'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
       <Sidebar profile={profile} />
       <div className="flex-1 min-w-0 pb-24 md:pb-0"><PageTransition>{children}</PageTransition></div>
       <MobileBottomNav profile={profile} />
+      <PointsToast />
     </div>
   )
 }
