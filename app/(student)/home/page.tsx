@@ -138,29 +138,21 @@ export default async function StudentHomePage() {
           </Link>
         )}
 
-        {/* ===== الترحيب + إحصاءات مصغّرة ===== */}
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-7">
-          <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
-          <h1 className="relative text-2xl font-extrabold text-white">مرحباً {profile?.full_name?.split(' ')[0] ?? ''} 👋</h1>
-          <p className="relative text-white/70 text-sm mt-1">استمر في رحلتك التعليمية اليوم</p>
-
-          <div className="relative grid grid-cols-3 gap-3 mt-5">
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-3 text-center">
-              <BookOpen size={18} className="text-white mx-auto mb-1" />
-              <p className="text-lg font-bold text-white">{enrollments?.length ?? 0}</p>
-              <p className="text-[11px] text-white/70">كورس</p>
-            </div>
-            <div className="bg-white/15 backdrop-blur rounded-ruwad-sm p-3 text-center">
-              <Award size={18} className="text-white mx-auto mb-1" />
-              <p className="text-lg font-bold text-white">{badgesCount ?? 0}</p>
-              <p className="text-[11px] text-white/70">شارة</p>
-            </div>
-            <div className="bg-ruwad-lime rounded-ruwad-sm p-3 text-center">
-              <CalendarCheck size={18} className="text-ruwad-navy mx-auto mb-1" />
-              <p className="text-lg font-bold text-ruwad-navy">{attendance ? `${attendance.attendance_rate}%` : '—'}</p>
-              <p className="text-[11px] text-ruwad-navy/70">حضور</p>
-            </div>
+        {/* ===== ترحيب مدمج: سطر واحد مع إحصاءات كحبوب ===== */}
+        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="absolute -top-10 -right-10 w-36 h-36 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-ruwad-lime/20 rounded-full blur-2xl" />
+          <h1 className="relative text-lg font-extrabold text-white">مرحباً {profile?.full_name?.split(' ')[0] ?? ''} 👋</h1>
+          <div className="relative flex items-center gap-2">
+            <span className="flex items-center gap-1.5 bg-white/15 backdrop-blur rounded-full px-3 py-1.5 text-white text-xs font-bold">
+              <BookOpen size={13} /> {enrollments?.length ?? 0} كورس
+            </span>
+            <span className="flex items-center gap-1.5 bg-white/15 backdrop-blur rounded-full px-3 py-1.5 text-white text-xs font-bold">
+              <Award size={13} /> {badgesCount ?? 0} شارة
+            </span>
+            <span className="flex items-center gap-1.5 bg-ruwad-lime rounded-full px-3 py-1.5 text-ruwad-navy text-xs font-bold">
+              <CalendarCheck size={13} /> {attendance ? `${attendance.attendance_rate}%` : '—'} حضور
+            </span>
           </div>
         </div>
 
