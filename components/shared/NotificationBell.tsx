@@ -75,20 +75,44 @@ export function NotificationBell() {
     let channel: ReturnType<typeof supabase.channel> | null = null
     let cancelled = false
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user || cancelled) return
-      // اسم قناة فريد لكل تركيب يمنع خطأ "cannot add postgres_changes callbacks after subscribe()"
-      // الذي يحدث عند إعادة استخدام قناة تحمل نفس الاسم وسبق أن استُدعي عليها subscribe()
-      channel = supabase
-        .channel(`notifications:${user.id}:${Math.random().toString(36).slice(2)}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev])
-        })
-        .subscribe()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session || cancelled) return
+      // حاسم للوصول الفوري: تمرير رمز جلسة المستخدم لقناة الـ WebSocket صراحةً.
+      // بدونه قد يشترك العميل كمجهول، ومع سياسات RLS يرفض الخادم تسليم أي حدث بصمت،
+      // فلا تظهر الإشعارات إلا عند إعادة تحميل الصفحة.
+      supabase.realtime.setAuth(session.access_token)
+
+      const subscribeChannel = () => {
+        // اسم قناة فريد لكل تركيب يمنع خطأ "cannot add postgres_changes callbacks after subscribe()"
+        channel = supabase
+          .channel(`notifications:${session.user.id}:${Math.random().toString(36).slice(2)}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${session.user.id}` }, (payload) => {
+            setNotifications((prev) => (prev.some((n) => n.id === (payload.new as Notification).id) ? prev : [payload.new as Notification, ...prev]))
+          })
+          .subscribe((status) => {
+            // انقطاع الاتصال (نوم الجهاز، تبديل الشبكة): إعادة اشتراك تلقائية بعد لحظة
+            if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !cancelled) {
+              if (channel) supabase.removeChannel(channel)
+              setTimeout(() => { if (!cancelled) subscribeChannel() }, 2000)
+            }
+          })
+      }
+      subscribeChannel()
     })
+
+    // شبكة أمان: مزامنة دورية خفيفة كل 20 ثانية (والصفحة ظاهرة فقط) —
+    // تضمن وصولاً شبه فوري حتى لو حُجب الـ WebSocket في بعض الشبكات
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') load()
+    }, 20000)
+    // وعند العودة للتبويب بعد غياب: مزامنة فورية
+    const onVisible = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', onVisible)
 
     return () => {
       cancelled = true
+      clearInterval(poll)
+      document.removeEventListener('visibilitychange', onVisible)
       if (channel) supabase.removeChannel(channel)
     }
   }, [load, supabase])
