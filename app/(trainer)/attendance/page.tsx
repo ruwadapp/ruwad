@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CreateSessionForm } from '@/components/trainer/CreateSessionForm'
+import { SessionToggle } from '@/components/trainer/SessionToggle'
 import { CalendarCheck, Circle, BarChart3, BookOpen, Layers, Users } from 'lucide-react'
 
 export default async function AttendancePage() {
@@ -112,7 +113,8 @@ export default async function AttendancePage() {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-bold text-ruwad-navy leading-snug line-clamp-2 group-hover:text-ruwad-blue transition-colors">{session.title}</h3>
+                          <h3 className="font-bold text-ruwad-navy leading-snug line-clamp-2 group-hover:text-ruwad-blue transition-colors flex-1">{session.title}</h3>
+                          <SessionToggle sessionId={session.id} initialActive={session.is_active} />
                           <span
                             className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
                               session.is_active ? 'bg-green-50 text-green-600' : session.closed_at ? 'bg-ruwad-gray/40 text-ruwad-navy/50' : 'bg-amber-50 text-amber-600'
