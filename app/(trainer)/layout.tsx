@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/shared/Sidebar'
 import { MobileBottomNav } from '@/components/shared/MobileBottomNav'
 import { PageTransition } from '@/components/shared/PageTransition'
+import { OnboardingPermissions } from '@/components/shared/OnboardingPermissions'
 
 export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
@@ -15,11 +16,14 @@ export default async function TrainerLayout({ children }: { children: React.Reac
   // التعديل الفعلية محكومة بـ RLS داخل كل صفحة، وليس بهذا الحارس فقط.
   if (profile?.role !== 'trainer' && profile?.role !== 'institute_admin') redirect('/home')
 
+  const { data: myLoc } = await supabase.from('user_locations').select('visible').eq('user_id', user.id).maybeSingle()
+
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">
       <Sidebar profile={profile} />
       <div className="flex-1 min-w-0 pb-24 md:pb-0"><PageTransition>{children}</PageTransition></div>
       <MobileBottomNav profile={profile} />
+      <OnboardingPermissions locationMode="user" hasLocation={!!myLoc} locationVisible={myLoc?.visible ?? true} />
     </div>
   )
 }
