@@ -34,6 +34,12 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     <>
       <Header title={course.title} />
       <main className="p-6 flex flex-col gap-6">
+        <Link
+          href={`/journey/${id}`}
+          className="self-start flex items-center gap-2 bg-ruwad-navy text-white text-sm font-bold px-5 py-2.5 rounded-ruwad-sm hover:opacity-90 transition shadow-ruwad mb-2"
+        >
+          🗺️ تنظيم رحلة الكورس
+        </Link>
         {actingAsInstituteAdmin && (
           <div className="bg-ruwad-blue/10 text-ruwad-blue text-sm font-semibold rounded-ruwad-sm px-4 py-3 flex items-center gap-2">
             <Building2 size={16} /> تُعدّل هذا الكورس بصفتك مدير المعهد، بما أن المدرب فعّل مشاركته مع معهدك. أي

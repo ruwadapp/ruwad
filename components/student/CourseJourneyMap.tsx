@@ -9,10 +9,12 @@ import {
 
 export interface JourneyNode {
   key: string
-  kind: 'lecture' | 'assignment' | 'exam' | 'challenge' | 'certificate'
+  kind: 'lecture' | 'assignment' | 'exam' | 'challenge' | 'certificate' | 'treasure'
   title: string
   href: string
   completed: boolean
+  /** لكنوز الترتيب المخصص: معرّف عنصر الرحلة للمطالبة */
+  treasureItemId?: string
 }
 
 const KIND_META = {
@@ -43,16 +45,22 @@ export function CourseJourneyMap({
   nodes,
   sequential,
   claimedIndexes,
+  claimedItemIds = [],
+  customOrder = false,
   preview = false,
 }: {
   courseId: string
   nodes: JourneyNode[]
   sequential: boolean
   claimedIndexes: number[]
+  claimedItemIds?: string[]
+  /** ترتيب مخصص من المنظِّم: الكنوز عناصر صريحة داخل nodes ولا تُدرج تلقائياً */
+  customOrder?: boolean
   preview?: boolean
 }) {
   const [claimed, setClaimed] = useState<Set<number>>(new Set(claimedIndexes))
-  const [claiming, setClaiming] = useState<number | null>(null)
+  const [claimedItems, setClaimedItems] = useState<Set<string>>(new Set(claimedItemIds))
+  const [claiming, setClaiming] = useState<number | string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -64,8 +72,19 @@ export function CourseJourneyMap({
     let currentAssigned = false
 
     for (const n of nodes) {
-      // كنز قبل هذه المحطة؟ (بعد كل TREASURE_EVERY محطات، وليس قبل القمة مباشرة كتكرار)
-      if (realCount > 0 && realCount % TREASURE_EVERY === 0 && n.kind !== 'certificate') {
+      if (customOrder && n.kind === 'treasure') {
+        out.push({
+          type: 'treasure',
+          node: n,
+          index: out.length,
+          unlocked: !sequential || prevRealCompleted,
+          isCurrent: false,
+          claimed: claimedItems.has(n.treasureItemId ?? ''),
+        })
+        continue
+      }
+      // كنز تلقائي قبل هذه المحطة؟ (الوضع التلقائي فقط)
+      if (!customOrder && realCount > 0 && realCount % TREASURE_EVERY === 0 && n.kind !== 'certificate') {
         const idx = out.length
         out.push({
           type: 'treasure',
@@ -83,10 +102,11 @@ export function CourseJourneyMap({
       realCount++
     }
     return out
-  }, [nodes, sequential, claimed])
+  }, [nodes, sequential, claimed, claimedItems, customOrder])
 
-  const doneCount = nodes.filter((n) => n.completed).length
-  const pct = nodes.length ? Math.round((doneCount / nodes.length) * 100) : 0
+  const stations = nodes.filter((n) => n.kind !== 'treasure')
+  const doneCount = stations.filter((n) => n.completed).length
+  const pct = stations.length ? Math.round((doneCount / stations.length) * 100) : 0
 
   // ===== هندسة المسار المتعرّج =====
   const W = 340
@@ -105,16 +125,19 @@ export function CourseJourneyMap({
     return d
   }, [renderNodes.length])
 
-  async function claimTreasure(idx: number) {
+  async function claimTreasure(rn: RenderNode) {
     if (preview || claiming !== null) return
-    setClaiming(idx)
-    const { data, error } = await supabase.rpc('claim_treasure', { p_course_id: courseId, p_node_index: idx })
+    const itemId = rn.node?.treasureItemId
+    const key = itemId ?? rn.index
+    setClaiming(key)
+    const { data, error } = itemId
+      ? await supabase.rpc('claim_treasure_item', { p_item_id: itemId })
+      : await supabase.rpc('claim_treasure', { p_course_id: courseId, p_node_index: rn.index })
     setClaiming(null)
-    if (!error && data === 'ok') {
-      setClaimed((prev) => new Set(prev).add(idx))
-      router.refresh() // popup النقاط يصل عبر البث اللحظي تلقائياً
-    } else if (data === 'already_claimed') {
-      setClaimed((prev) => new Set(prev).add(idx))
+    if (!error && (data === 'ok' || data === 'already_claimed')) {
+      if (itemId) setClaimedItems((prev) => new Set(prev).add(itemId))
+      else setClaimed((prev) => new Set(prev).add(rn.index))
+      if (data === 'ok') router.refresh() // popup النقاط يصل عبر البث اللحظي تلقائياً
     }
   }
 
@@ -126,7 +149,7 @@ export function CourseJourneyMap({
           <Star size={18} className="fill-current" />
         </span>
         <div className="flex-1">
-          <p className="text-sm font-bold text-ruwad-navy">أنجزت {doneCount} من {nodes.length} محطة</p>
+          <p className="text-sm font-bold text-ruwad-navy">أنجزت {doneCount} من {stations.length} محطة</p>
           <div className="h-2.5 bg-ruwad-gray/40 rounded-full overflow-hidden mt-1.5">
             <div className="h-full bg-ruwad-gradient rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
           </div>
@@ -151,8 +174,8 @@ export function CourseJourneyMap({
               return (
                 <button
                   key={`t-${rn.index}`}
-                  onClick={() => canClaim && claimTreasure(rn.index)}
-                  disabled={!canClaim || claiming === rn.index}
+                  onClick={() => canClaim && claimTreasure(rn)}
+                  disabled={!canClaim || claiming !== null}
                   className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 transition-transform ${canClaim ? 'hover:scale-110 cursor-pointer' : ''}`}
                   style={{ left: x, top: y }}
                   aria-label="كنز مخفي"
@@ -163,14 +186,14 @@ export function CourseJourneyMap({
                     <Gem size={20} className={`-rotate-45 ${rn.claimed ? 'text-ruwad-navy/30' : rn.unlocked ? 'text-white drop-shadow' : 'text-ruwad-navy/25'}`} />
                   </span>
                   <span className={`text-[10px] font-bold ${rn.claimed ? 'text-ruwad-navy/35' : rn.unlocked ? 'text-amber-600' : 'text-ruwad-navy/30'}`}>
-                    {rn.claimed ? 'حصلت عليه ✓' : rn.unlocked ? (claiming === rn.index ? 'جارٍ الفتح...' : 'كنز! اضغط') : 'كنز مخفي'}
+                    {rn.claimed ? 'حصلت عليه ✓' : rn.unlocked ? (claiming !== null ? 'جارٍ الفتح...' : 'كنز! اضغط') : 'كنز مخفي'}
                   </span>
                 </button>
               )
             }
 
             const n = rn.node!
-            const meta = KIND_META[n.kind]
+            const meta = KIND_META[n.kind as Exclude<JourneyNode['kind'], 'treasure'>]
             const Icon = meta.icon
             const size = meta.size
             const isCert = n.kind === 'certificate'

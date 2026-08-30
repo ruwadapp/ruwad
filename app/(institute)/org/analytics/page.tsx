@@ -279,6 +279,7 @@ export default async function InstituteAnalyticsPage() {
                       <td className="py-3 px-3">{c.attRate != null ? `${c.attRate}%` : '—'}</td>
                       <td className="py-3 pr-3">
                         <Link href={`/reports/course/${c.id}`} className="text-xs font-bold text-white bg-ruwad-navy rounded-full px-3 py-1 hover:opacity-90">PDF</Link>
+                        <Link href={`/journey/${c.id}`} className="text-xs font-bold text-ruwad-blue bg-ruwad-blue/10 rounded-full px-3 py-1 hover:bg-ruwad-blue/20">🗺️ الرحلة</Link>
                       </td>
                     </tr>
                   ))}

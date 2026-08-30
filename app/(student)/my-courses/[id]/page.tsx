@@ -65,7 +65,7 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
   const [
     { data: courseExams }, { data: courseAssignments }, { data: courseChallenges },
     { data: examSubs }, { data: assignSubs }, { data: challengeSubs },
-    { data: certificate }, { data: treasureRows },
+    { data: certificate }, { data: treasureRows }, { data: journeyOrder },
   ] = await Promise.all([
     supabase.from('exams').select('id, title').eq('course_id', id).eq('is_active', true).order('created_at'),
     supabase.from('assignments').select('id, title').eq('course_id', id).order('created_at'),
@@ -74,34 +74,70 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
     supabase.from('assignment_submissions').select('assignment_id').eq('student_id', user!.id).not('submitted_at', 'is', null),
     supabase.from('challenge_submissions').select('challenge_id').eq('student_id', user!.id).not('submitted_at', 'is', null),
     supabase.from('certificates').select('id').eq('course_id', id).eq('student_id', user!.id).maybeSingle(),
-    supabase.from('treasure_claims').select('node_index').eq('course_id', id).eq('student_id', user!.id),
+    supabase.from('treasure_claims').select('node_index, item_id').eq('course_id', id).eq('student_id', user!.id),
+    supabase.from('journey_items').select('id, item_type, item_id').eq('course_id', id).order('order_index'),
   ])
   const submittedExams = new Set((examSubs ?? []).map((x) => x.exam_id))
   const submittedAssigns = new Set((assignSubs ?? []).map((x) => x.assignment_id))
   const submittedChallenges = new Set((challengeSubs ?? []).map((x) => x.challenge_id))
 
-  const journeyNodes: JourneyNode[] = [
-    ...(lectures ?? []).map((l) => ({
-      key: `lec-${l.id}`, kind: 'lecture' as const, title: l.title,
+  // مصانع العقد لكل نوع
+  const nodeFor = {
+    lecture: (l: { id: string; title: string }): JourneyNode => ({
+      key: `lec-${l.id}`, kind: 'lecture', title: l.title,
       href: `/my-courses/${id}/lectures/${l.id}`, completed: completedIds.has(l.id),
-    })),
-    ...(courseAssignments ?? []).map((a) => ({
-      key: `asg-${a.id}`, kind: 'assignment' as const, title: a.title,
+    }),
+    assignment: (a: { id: string; title: string }): JourneyNode => ({
+      key: `asg-${a.id}`, kind: 'assignment', title: a.title,
       href: '/my-assignments', completed: submittedAssigns.has(a.id),
-    })),
-    ...(courseChallenges ?? []).map((c) => ({
-      key: `ch-${c.id}`, kind: 'challenge' as const, title: c.title,
+    }),
+    challenge: (c: { id: string; title: string }): JourneyNode => ({
+      key: `ch-${c.id}`, kind: 'challenge', title: c.title,
       href: '/my-challenges', completed: submittedChallenges.has(c.id),
-    })),
-    ...(courseExams ?? []).map((e) => ({
-      key: `ex-${e.id}`, kind: 'exam' as const, title: e.title,
+    }),
+    exam: (e: { id: string; title: string }): JourneyNode => ({
+      key: `ex-${e.id}`, kind: 'exam', title: e.title,
       href: `/my-exams/${e.id}`, completed: submittedExams.has(e.id),
-    })),
-    {
-      key: 'summit', kind: 'certificate' as const, title: 'شهادة إتمام الكورس',
-      href: '/my-certificates', completed: !!certificate,
-    },
-  ]
+    }),
+  }
+  const summitNode: JourneyNode = {
+    key: 'summit', kind: 'certificate', title: 'شهادة إتمام الكورس',
+    href: '/my-certificates', completed: !!certificate,
+  }
+
+  const byId = {
+    lecture: new Map((lectures ?? []).map((x) => [x.id, x])),
+    assignment: new Map((courseAssignments ?? []).map((x) => [x.id, x])),
+    challenge: new Map((courseChallenges ?? []).map((x) => [x.id, x])),
+    exam: new Map((courseExams ?? []).map((x) => [x.id, x])),
+  }
+
+  const hasCustomOrder = (journeyOrder ?? []).length > 0
+  let journeyNodes: JourneyNode[]
+  if (hasCustomOrder) {
+    // ===== الترتيب الذي نظّمه المدرب/المعهد (مع إلحاق أي محتوى أحدث لم يُرتَّب بعد) =====
+    journeyNodes = []
+    const placed = new Set<string>()
+    for (const it of journeyOrder ?? []) {
+      if (it.item_type === 'treasure') {
+        journeyNodes.push({ key: `tr-${it.id}`, kind: 'treasure', title: 'كنز مخفي', href: '#', completed: false, treasureItemId: it.id })
+      } else {
+        const src = byId[it.item_type as keyof typeof byId]?.get(it.item_id ?? '')
+        if (src) { journeyNodes.push(nodeFor[it.item_type as keyof typeof nodeFor](src)); placed.add(it.item_id!) }
+      }
+    }
+    for (const [type, map] of Object.entries(byId) as [keyof typeof byId, Map<string, { id: string; title: string }>][])
+      for (const [xid, x] of map) if (!placed.has(xid)) journeyNodes.push(nodeFor[type](x))
+    journeyNodes.push(summitNode)
+  } else {
+    journeyNodes = [
+      ...(lectures ?? []).map(nodeFor.lecture),
+      ...(courseAssignments ?? []).map(nodeFor.assignment),
+      ...(courseChallenges ?? []).map(nodeFor.challenge),
+      ...(courseExams ?? []).map(nodeFor.exam),
+      summitNode,
+    ]
+  }
   const sequential = enrollment.course.sequential_learning ?? true
   // في العرض المتسلسل: المحاضرات بعد أول ناقصة تُقفل في عرض القائمة أيضاً
   const lockedFromIdx = sequential && firstIncompleteIdx !== -1 ? firstIncompleteIdx + 1 : Infinity
@@ -134,7 +170,9 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
               courseId={id}
               nodes={journeyNodes}
               sequential={sequential}
-              claimedIndexes={(treasureRows ?? []).map((t) => t.node_index)}
+              claimedIndexes={(treasureRows ?? []).map((t) => t.node_index).filter((x): x is number => x != null)}
+              claimedItemIds={(treasureRows ?? []).map((t) => t.item_id).filter((x): x is string => x != null)}
+              customOrder={hasCustomOrder}
             />
           }
           list={
