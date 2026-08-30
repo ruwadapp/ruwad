@@ -73,7 +73,13 @@ export async function POST(req: NextRequest) {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
+          payload,
+          {
+            // حاسم للوصول الفوري والشاشة مقفلة: بدون "high" يؤجّل أندرويد وiOS
+            // الرسائل عادية الأولوية أثناء وضع توفير الطاقة ويجمّعانها لدفعات متأخرة
+            urgency: 'high',
+            TTL: 60 * 60 * 24, // صلاحية يوم: إن كان الجهاز مطفأً تصل فور عودته
+          }
         )
         sent++
       } catch (err: unknown) {
