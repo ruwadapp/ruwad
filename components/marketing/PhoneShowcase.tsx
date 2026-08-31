@@ -1,42 +1,24 @@
 'use client'
 import { useState } from 'react'
 import { ChevronRight, ChevronLeft, GraduationCap, Flame, Award, QrCode } from 'lucide-react'
+import { useLang } from './LangProvider'
 
-// محتوى نائب (Placeholder) — استبدله بصور/نصوص حقيقية لاحقاً بسهولة
-const SLIDES = [
-  {
-    badge: 'المحاضرات',
-    title: 'كل موادّك في مكان واحد',
-    desc: 'فيديو، مرفقات، وعروض تقديمية — يتابع الطالب تقدّمه محاضرة بمحاضرة.',
-    bg: 'bg-ruwad-gradient',
-    icon: GraduationCap,
-  },
-  {
-    badge: 'التحديات الحيّة',
-    title: 'مسابقة حقيقية بين طلابك',
-    desc: 'سؤال واحد، توقيت مشترك، والأسرع في الإجابة الصحيحة يتصدّر اللوحة فوراً.',
-    bg: 'bg-ruwad-navy',
-    icon: Flame,
-  },
-  {
-    badge: 'الشهادات',
-    title: 'إنجاز يُوثَّق ويُشارَك',
-    desc: 'شهادة أنيقة برمز QR تُصدَر تلقائياً وتُنشر في الرواق فور الإتمام.',
-    bg: 'bg-ruwad-blue',
-    icon: Award,
-  },
-  {
-    badge: 'الحضور',
-    title: 'تسجيل حضور بلمسة واحدة',
-    desc: 'كود من 6 أرقام، وموافقة فورية من شاشة المدرب — بلا أوراق.',
-    bg: 'bg-ruwad-navy',
-    icon: QrCode,
-  },
+// الشكل والأيقونة ثابتان؛ النصوص تأتي من قاموس اللغة
+const SLIDE_STYLE = [
+  { bg: 'bg-ruwad-gradient', icon: GraduationCap },
+  { bg: 'bg-ruwad-navy', icon: Flame },
+  { bg: 'bg-ruwad-blue', icon: Award },
+  { bg: 'bg-ruwad-navy', icon: QrCode },
 ]
 
 export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
+  const { t, dir } = useLang()
   const [index, setIndex] = useState(0)
+  const SLIDES = t.phone.slides.map((s, i) => ({ ...s, ...SLIDE_STYLE[i] }))
   const slide = SLIDES[index]
+  // سهم "السابق" يشير دائماً نحو بداية السطر، و"التالي" نحو نهايته
+  const PrevIcon = dir === 'rtl' ? ChevronRight : ChevronLeft
+  const NextIcon = dir === 'rtl' ? ChevronLeft : ChevronRight
 
   function next() { setIndex((i) => (i + 1) % SLIDES.length) }
   function prev() { setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length) }
@@ -53,7 +35,7 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
               <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur flex items-center justify-center border-2 border-white/30">
                 <slide.icon size={28} className="text-white" />
               </div>
-              <span className="text-white/70 text-[11px] font-bold">تمثيل توضيحي</span>
+              <span className="text-white/70 text-[11px] font-bold">{t.phone.placeholder}</span>
             </div>
           </div>
         </div>
@@ -69,25 +51,25 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
           <div className="flex items-center gap-2 mt-1">
             <button
               onClick={prev}
-              aria-label="السابق"
+              aria-label={t.phone.prev}
               className={`w-8 h-8 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm flex items-center justify-center shrink-0`}
             >
-              <ChevronRight size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+              <PrevIcon size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
             </button>
             {SLIDES.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setIndex(i)}
-                aria-label={`الشريحة ${i + 1}`}
+                aria-label={`${t.phone.slide} ${i + 1}`}
                 className={`h-2 rounded-full border-2 ${dark ? 'border-white' : 'border-ruwad-navy'} transition-all ${i === index ? 'w-5 bg-ruwad-lime' : dark ? 'w-2 bg-transparent' : 'w-2 bg-white'}`}
               />
             ))}
             <button
               onClick={next}
-              aria-label="التالي"
+              aria-label={t.phone.next}
               className={`w-8 h-8 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm flex items-center justify-center shrink-0`}
             >
-              <ChevronLeft size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+              <NextIcon size={14} className={dark ? 'text-white' : 'text-ruwad-navy'} />
             </button>
           </div>
         </div>
@@ -100,10 +82,10 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
       {/* السهم الأيمن (السابق بالعربي RTL) */}
       <button
         onClick={prev}
-        aria-label="السابق"
+        aria-label={t.phone.prev}
         className={`${compact ? 'hidden' : 'hidden lg:flex'} w-11 h-11 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm hover-pop items-center justify-center shrink-0`}
       >
-        <ChevronRight size={20} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+        <PrevIcon size={20} className={dark ? 'text-white' : 'text-ruwad-navy'} />
       </button>
 
       {/* موك أب الهاتف */}
@@ -115,30 +97,30 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
             <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur flex items-center justify-center border-2 border-white/30">
               <slide.icon size={28} className="text-white" />
             </div>
-            <span className="text-white/70 text-[11px] font-bold">تمثيل توضيحي</span>
+            <span className="text-white/70 text-[11px] font-bold">{t.phone.placeholder}</span>
           </div>
         </div>
       </div>
 
       {/* السهم الأيسر (التالي) + المحتوى */}
-      <div className={`flex flex-col items-center ${compact ? '' : 'lg:items-start'} gap-4 max-w-sm text-center ${compact ? '' : 'lg:text-right'}`}>
+      <div className={`flex flex-col items-center ${compact ? '' : 'lg:items-start'} gap-4 max-w-sm text-center ${compact ? '' : 'lg:text-start'}`}>
         <div className="flex items-center gap-3">
           <button
             onClick={prev}
-            aria-label="السابق"
+            aria-label={t.phone.prev}
             className={`${compact ? 'flex' : 'lg:hidden flex'} w-9 h-9 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm items-center justify-center`}
           >
-            <ChevronRight size={16} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+            <PrevIcon size={16} className={dark ? 'text-white' : 'text-ruwad-navy'} />
           </button>
           <span className="inline-block bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-3.5 py-1.5 rounded-full border-2 border-ruwad-navy">
             {slide.badge}
           </span>
           <button
             onClick={next}
-            aria-label="التالي"
+            aria-label={t.phone.next}
             className={`${compact ? 'flex' : 'lg:hidden flex'} w-9 h-9 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm items-center justify-center`}
           >
-            <ChevronLeft size={16} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+            <NextIcon size={16} className={dark ? 'text-white' : 'text-ruwad-navy'} />
           </button>
         </div>
 
@@ -150,7 +132,7 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
             <button
               key={i}
               onClick={() => setIndex(i)}
-              aria-label={`الشريحة ${i + 1}`}
+              aria-label={`${t.phone.slide} ${i + 1}`}
               className={`h-2.5 rounded-full border-2 ${dark ? 'border-white' : 'border-ruwad-navy'} transition-all ${i === index ? 'w-7 bg-ruwad-lime' : dark ? 'w-2.5 bg-transparent' : 'w-2.5 bg-white'}`}
             />
           ))}
@@ -159,10 +141,10 @@ export function PhoneShowcase({ dark = false, compact = false }: { dark?: boolea
 
       <button
         onClick={next}
-        aria-label="التالي"
+        aria-label={t.phone.next}
         className={`${compact ? 'hidden' : 'hidden lg:flex'} w-11 h-11 rounded-full ${dark ? 'bg-ruwad-navy border-white' : 'bg-white border-ruwad-navy'} border-2 shadow-hard-sm hover-pop items-center justify-center shrink-0`}
       >
-        <ChevronLeft size={20} className={dark ? 'text-white' : 'text-ruwad-navy'} />
+        <NextIcon size={20} className={dark ? 'text-white' : 'text-ruwad-navy'} />
       </button>
     </div>
   )

@@ -1,69 +1,54 @@
+'use client'
 import Link from 'next/link'
 import {
   BookOpen, FileCheck2, Flame, Award, QrCode, Users2, Bell, Download,
-  CheckCircle2, MessageCircle, Mail, ArrowLeft, Star,
+  CheckCircle2, MessageCircle, Mail, ArrowLeft, ArrowRight, Star,
 } from 'lucide-react'
 import { LandingNav } from './LandingNav'
+import { LangProvider, useLang } from './LangProvider'
 import { LiveQuizDemo } from './LiveQuizDemo'
 import { PhoneShowcase } from './PhoneShowcase'
 import { Reveal } from './Reveal'
 import { ParallaxLayer } from './ParallaxLayer'
 
-const FEATURES = [
-  { icon: BookOpen, title: 'كورسات ومحاضرات', desc: 'فيديو، مرفقات، وعروض تقديمية — وتتبّع تلقائي لتقدّم كل طالب.', bg: 'bg-white', r: -2 },
-  { icon: FileCheck2, title: 'امتحانات ذكية', desc: 'أربعة أنواع أسئلة، وتصحيح تلقائي فوري بدون أي جهد يدوي.', bg: 'bg-ruwad-lime', r: 2 },
-  { icon: Flame, title: 'تحديات حيّة', desc: 'كل الطلاب يجاوبون بنفس اللحظة، والأسرع في الإجابة الصحيحة يتصدّر اللوحة فوراً.', bg: 'bg-white', r: 1.5 },
-  { icon: Award, title: 'شهادات موثّقة', desc: 'تصميم أنيق برمز QR، تُصدَر وتُشارَك تلقائياً عند الإنجاز.', bg: 'bg-white', r: -1.5 },
-  { icon: QrCode, title: 'حضور بلمسة واحدة', desc: 'كود جلسة من 6 أرقام، وموافقة فورية من شاشة المدرب.', bg: 'bg-white', r: 2.5 },
-  { icon: Users2, title: 'الرواق الاجتماعي', desc: 'مساحة تفاعل بين المدرب وطلابه — منشورات وتفاعلات حقيقية.', bg: 'bg-ruwad-lime', r: -2 },
-  { icon: Bell, title: 'إشعارات لحظية', desc: 'لا يفوت أي طالب موعد امتحان أو تحديث مهم بعد الآن.', bg: 'bg-white', r: 1 },
-  { icon: Download, title: 'تقارير جاهزة', desc: 'صدّر نتائج أي امتحان أو تحدٍّ إلى Excel بضغطة واحدة.', bg: 'bg-white', r: -1 },
+const FEATURE_STYLE = [
+  { icon: BookOpen, bg: 'bg-white', r: -2 },
+  { icon: FileCheck2, bg: 'bg-ruwad-lime', r: 2 },
+  { icon: Flame, bg: 'bg-white', r: 1.5 },
+  { icon: Award, bg: 'bg-white', r: -1.5 },
+  { icon: QrCode, bg: 'bg-white', r: 2.5 },
+  { icon: Users2, bg: 'bg-ruwad-lime', r: -2 },
+  { icon: Bell, bg: 'bg-white', r: 1 },
+  { icon: Download, bg: 'bg-white', r: -1 },
 ]
 
-const FACTS = [
-  { num: '4', label: 'أنواع أسئلة امتحان' },
-  { num: '6', label: 'أنواع أسئلة استبيان' },
-  { num: '6', label: 'أرقام كود الحضور فقط' },
-  { num: '1', label: 'QR لكل شهادة موثّقة' },
-]
-
-const STEPS = [
-  { title: 'أنشئ حسابك', desc: 'تسجيل مجاني خلال أقل من دقيقة، بلا بطاقة ائتمان.' },
-  { title: 'صمّم تدريبك', desc: 'محاضرات، امتحانات، وتحديات — كلها بواجهة عربية سهلة.' },
-  { title: 'شارك رابطك', desc: 'صفحة تسويقية جاهزة تلقائياً لكل تدريب تنشره.' },
-  { title: 'تابع لحظياً', desc: 'حضور، درجات، وتقدّم كل طالب أمامك في لحظتها.' },
-]
-
-const PLANS = [
-  { name: 'مدرب مستقل', tagline: 'لمن يبدأ رحلته بنفسه', features: ['كورس وامتحانات غير محدودة', 'شهادات موثّقة بـQR', 'صفحة تسويقية تلقائية', 'تحديات حيّة تفاعلية'], r: -2, highlighted: false },
-  { name: 'معهد', tagline: 'لفريق مدربين تحت مظلة واحدة', features: ['كل ميزات المدرب المستقل', 'لوحة تحكم لعدة مدربين', 'مشاركة موارد بين المدربين', 'تقارير أداء شاملة'], r: 0, highlighted: true },
-  { name: 'معهد كبير', tagline: 'لمؤسسات تعليمية أكبر', features: ['كل ميزات خطة المعهد', 'هوية بصرية مخصّصة', 'دعم فني مباشر', 'تكامل حسب الطلب'], r: 2, highlighted: false },
+const PLAN_STYLE = [
+  { r: -2, highlighted: false },
+  { r: 0, highlighted: true },
+  { r: 2, highlighted: false },
 ]
 
 const WHATSAPP_NUMBER = '963998285483'
 
-const FAQS = [
-  {
-    q: 'ما هو أفضل نظام لإدارة معهد تدريبي؟',
-    a: 'رُوّاد نظام عربي متكامل لإدارة المعاهد والتدريبات، يجمع الكورسات والمحاضرات، الامتحانات الذكية، التحديات الحيّة، الشهادات الموثّقة بـQR، والحضور الرقمي في لوحة تحكم واحدة لكل مدربي المعهد.',
-  },
-  {
-    q: 'كيف أدير تدريبات معهدي إلكترونياً؟',
-    a: 'أنشئ حساب معهد على رُوّاد، أضف مدربيك تحت مظلة واحدة، وابدأ بنشر التدريبات والامتحانات والتحديات — مع متابعة لحظية لتقدّم كل طالب وحضوره من لوحة تحكم موحّدة.',
-  },
-  {
-    q: 'هل يدعم رُوّاد إدارة عدة مدربين تحت معهد واحد؟',
-    a: 'نعم، خطة "معهد" في رُوّاد مصمّمة خصيصاً لهذا: لوحة تحكم لعدة مدربين، مشاركة موارد بينهم، وتقارير أداء شاملة على مستوى المعهد بالكامل.',
-  },
-  {
-    q: 'هل يوجد نظام حضور إلكتروني لمراكز التدريب؟',
-    a: 'نعم، رُوّاد يوفّر نظام حضور رقمي بكود جلسة من 6 أرقام وموافقة فورية من شاشة المدرب، مع إحصاء تلقائي للحضور والغياب لكل جلسة تدريبية.',
-  },
-]
-
 export function LandingPage() {
   return (
-    <main dir="rtl" className="bg-white overflow-x-clip">
+    <LangProvider>
+      <LandingPageInner />
+    </LangProvider>
+  )
+}
+
+function LandingPageInner() {
+  const { t, dir, lang } = useLang()
+  const ArrowFwd = dir === 'rtl' ? ArrowLeft : ArrowRight
+  const FEATURES = t.features.items.map((f, i) => ({ ...f, ...FEATURE_STYLE[i] }))
+  const PLANS = t.plans.items.map((p, i) => ({ ...p, ...PLAN_STYLE[i] }))
+  const FACTS = t.facts
+  const STEPS = t.how.steps
+  const FAQS = t.faq.items
+
+  return (
+    <main dir={dir} className="bg-white overflow-x-clip">
       <LandingNav />
 
       {/* ===== HERO — لوحة ملصقات ملوّنة ===== */}
@@ -79,31 +64,31 @@ export function LandingPage() {
           <div>
             <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-7">
               <span className="bg-white text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-2 inline-flex items-center gap-1">
-                <Flame size={12} className="text-red-500" /> تحديات حيّة
+                <Flame size={12} className="text-red-500" /> {t.hero.badges[0]}
               </span>
               <span className="bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm rotate-1">
-                تصحيح تلقائي فوري
+                {t.hero.badges[1]}
               </span>
               <span className="bg-ruwad-blue text-white text-xs font-extrabold px-3.5 py-2 rounded-full border-2 border-ruwad-navy shadow-hard-sm -rotate-1">
-                شهادات بـQR
+                {t.hero.badges[2]}
               </span>
             </div>
 
-            <h1 className="text-center lg:text-right text-5xl sm:text-6xl font-extrabold leading-[0.98] tracking-tight">
-              <span className="block text-white">تدريبك،</span>
-              <span className="block text-ruwad-lime -rotate-1 inline-block my-1">بروح المسابقة</span>
+            <h1 className="text-center lg:text-start text-5xl sm:text-6xl font-extrabold leading-[0.98] tracking-tight">
+              <span className="block text-white">{t.hero.title1}</span>
+              <span className="block text-ruwad-lime -rotate-1 inline-block my-1">{t.hero.title2}</span>
             </h1>
 
-            <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0 text-center lg:text-right mt-6">
-              كورسات، امتحانات تُصحَّح نفسها، تحديات حيّة بنفس اللحظة، وشهادات تُشارَك تلقائياً — كل ما يحتاجه المدرب والمعهد في مكان واحد.
+            <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0 text-center lg:text-start mt-6">
+              {t.hero.desc}
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mt-9">
               <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop text-center">
-                ابدأ مجاناً الآن
+                {t.hero.cta}
               </Link>
               <a href="#demo" className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white font-bold px-9 py-4 rounded-ruwad-sm hover:bg-white hover:text-ruwad-navy transition">
-                جرّب تحدياً حياً <ArrowLeft size={16} />
+                {t.hero.demo} <ArrowFwd size={16} />
               </a>
             </div>
           </div>
@@ -118,7 +103,7 @@ export function LandingPage() {
       <div className="bg-ruwad-lime border-y-2 border-ruwad-navy py-3 overflow-hidden -rotate-1 scale-105">
         <div className="flex whitespace-nowrap animate-marquee">
           {[...Array(2)].flatMap((_, dup) =>
-            ['امتحانات تُصحَّح نفسها', 'تحديات حيّة', 'شهادات موثّقة بـQR', 'حضور بلمسة واحدة', 'تقارير Excel جاهزة'].map((t, i) => (
+            t.marquee.map((t, i) => (
               <span key={`${dup}-${i}`} className="flex items-center gap-3 text-ruwad-navy text-sm font-extrabold px-6 shrink-0">
                 {t} <Star size={12} className="fill-ruwad-navy" />
               </span>
@@ -130,8 +115,8 @@ export function LandingPage() {
       {/* ===== FEATURES — لوحة ملاحظات مثبّتة ===== */}
       <section id="features" className="bg-[#F5F6FA] bg-dot-grid py-20 sm:py-28">
         <Reveal className="text-center max-w-xl mx-auto mb-16 px-5">
-          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full -rotate-2">كل الأدوات في مكان واحد</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">كل جانب من تدريبك، مغطّى</h2>
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full -rotate-2">{t.features.tag}</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">{t.features.title}</h2>
         </Reveal>
 
         <div className="max-w-6xl mx-auto px-5 sm:px-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-7">
@@ -160,15 +145,15 @@ export function LandingPage() {
         <div className="absolute bottom-10 right-10 w-24 h-24 border-4 border-ruwad-lime/40 rotate-12" />
 
         <div className="relative max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-12 items-center">
-          <Reveal className="text-center lg:text-right order-2 lg:order-1" rotate={-1}>
+          <Reveal className="text-center lg:text-start order-2 lg:order-1" rotate={-1}>
             <span className="inline-block bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-4 py-1.5 rounded-full border-2 border-ruwad-navy">
-              جرّب بنفسك — بدون تسجيل
+              {t.demo.tag}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-4 leading-snug">
-              الأسرع في الإجابة، يتصدّر اللوحة
+              {t.demo.title}
             </h2>
             <p className="text-white/80 mt-4 leading-relaxed max-w-md mx-auto lg:mx-0">
-              هذا بالضبط ما يعيشه طلابك في كل تحدٍّ حي. جاوب على البطاقة المجاورة وشاهد نقاطك تتغيّر لحظياً.
+              {t.demo.desc}
             </p>
           </Reveal>
 
@@ -195,14 +180,14 @@ export function LandingPage() {
       {/* ===== HOW IT WORKS — زِكزاك ===== */}
       <section id="how" className="max-w-4xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
         <Reveal className="text-center mb-16">
-          <span className="inline-block bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-4 py-1.5 rounded-full border-2 border-ruwad-navy rotate-1">أربع خطوات فقط</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">من التسجيل إلى أول تدريب منشور</h2>
+          <span className="inline-block bg-ruwad-lime text-ruwad-navy text-xs font-extrabold px-4 py-1.5 rounded-full border-2 border-ruwad-navy rotate-1">{t.how.tag}</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">{t.how.title}</h2>
         </Reveal>
 
         <div className="flex flex-col gap-8">
           {STEPS.map((s, idx) => (
             <Reveal key={s.title} delay={idx * 90} rotate={idx % 2 === 0 ? -0.6 : 0.6}>
-              <div className={`flex items-center gap-5 ${idx % 2 === 1 ? 'sm:flex-row-reverse sm:text-left' : ''}`}>
+              <div className={`flex items-center gap-5 ${idx % 2 === 1 ? 'sm:flex-row-reverse sm:text-end' : ''}`}>
                 <span className="text-6xl sm:text-7xl font-extrabold text-outline-navy shrink-0">{`0${idx + 1}`}</span>
                 <div className="bg-white border-2 border-ruwad-navy rounded-ruwad p-5 shadow-hard-sm flex-1">
                   <h3 className="font-extrabold text-ruwad-navy text-lg">{s.title}</h3>
@@ -221,30 +206,30 @@ export function LandingPage() {
         <div className="relative max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-12 items-center">
           <Reveal className="order-2 lg:order-1 flex justify-center" rotate={-3}>
             <div className="bg-white border-2 border-ruwad-navy rounded-ruwad shadow-hard p-8 text-center relative w-full max-w-sm">
-              <p className="text-xs text-ruwad-navy/40 font-bold tracking-widest">شهادة إتمام</p>
-              <p className="text-2xl font-extrabold text-ruwad-navy mt-3">محمد العتيبي</p>
+              <p className="text-xs text-ruwad-navy/40 font-bold tracking-widest">{t.cert.label}</p>
+              <p className="text-2xl font-extrabold text-ruwad-navy mt-3">{t.cert.name}</p>
               <div className="w-16 h-px bg-ruwad-gray mx-auto my-3" />
-              <p className="text-sm text-ruwad-navy/60">أتمّ بنجاح تدريب</p>
-              <p className="font-bold text-ruwad-blue mt-1">أساسيات إدارة المشاريع</p>
+              <p className="text-sm text-ruwad-navy/60">{t.cert.completed}</p>
+              <p className="font-bold text-ruwad-blue mt-1">{t.cert.course}</p>
               <div className="mt-5 flex items-center justify-center gap-2">
                 <div className="w-10 h-10 bg-ruwad-navy rounded-ruwad-sm grid grid-cols-3 gap-[1px] p-1">
                   {Array.from({ length: 9 }).map((_, i) => (
                     <span key={i} className={`rounded-[1px] ${[0, 2, 4, 6, 8].includes(i) ? 'bg-ruwad-lime' : 'bg-white/20'}`} />
                   ))}
                 </div>
-                <span className="text-[10px] text-ruwad-navy/40">امسح للتحقق</span>
+                <span className="text-[10px] text-ruwad-navy/40">{t.cert.scan}</span>
               </div>
             </div>
           </Reveal>
 
-          <Reveal delay={100} className="order-1 lg:order-2 text-center lg:text-right">
-            <span className="inline-block bg-white text-ruwad-navy text-xs font-extrabold px-4 py-1.5 rounded-full border-2 border-ruwad-navy">إنجاز يستحق المشاركة</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4 leading-snug">شهادة موثّقة، تُشارَك من نفسها</h2>
+          <Reveal delay={100} className="order-1 lg:order-2 text-center lg:text-start">
+            <span className="inline-block bg-white text-ruwad-navy text-xs font-extrabold px-4 py-1.5 rounded-full border-2 border-ruwad-navy">{t.cert.tag}</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4 leading-snug">{t.cert.title}</h2>
             <p className="text-ruwad-navy/70 mt-4 leading-relaxed max-w-md mx-auto lg:mx-0">
-              بمجرد إتمام الطالب لتدريبه بنجاح، تُصدَر شهادته تلقائياً برمز QR للتحقق، وتُنشر في الرواق ليشاركها مع الجميع.
+              {t.cert.desc}
             </p>
             <ul className="mt-6 flex flex-col gap-2.5 items-center lg:items-start">
-              {['تصميم أنيق يحمل هوية تدريبك', 'رمز QR للتحقق من صحة الشهادة', 'نشر تلقائي فور الإصدار'].map((t) => (
+              {t.cert.points.map((t) => (
                 <li key={t} className="flex items-center gap-2 text-sm text-ruwad-navy/80 font-medium">
                   <CheckCircle2 size={16} className="text-ruwad-navy shrink-0" /> {t}
                 </li>
@@ -257,9 +242,9 @@ export function LandingPage() {
       {/* ===== PLANS ===== */}
       <section id="plans" className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
         <Reveal className="text-center max-w-xl mx-auto mb-16">
-          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full -rotate-1">خطط تناسب حجمك</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">من مدرب مستقل إلى معهد كامل</h2>
-          <p className="text-ruwad-navy/60 mt-3">تواصل معنا لتحديد السعر الأنسب لحجم فريقك — بدون التزامات مخفية.</p>
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full -rotate-1">{t.plans.tag}</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">{t.plans.title}</h2>
+          <p className="text-ruwad-navy/60 mt-3">{t.plans.desc}</p>
         </Reveal>
 
         <div className="grid md:grid-cols-3 gap-8 md:pt-4">
@@ -273,7 +258,7 @@ export function LandingPage() {
               >
                 {plan.highlighted && (
                   <span className="absolute -top-4 right-1/2 translate-x-1/2 bg-ruwad-lime text-ruwad-navy text-[11px] font-extrabold px-3 py-1.5 rounded-full border-2 border-ruwad-navy rotate-2">
-                    الأكثر طلباً
+                    {t.plans.popular}
                   </span>
                 )}
                 <div>
@@ -288,13 +273,13 @@ export function LandingPage() {
                   ))}
                 </ul>
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`السلام عليكم، أرغب بمعرفة تفاصيل خطة "${plan.name}" في منصة رُوّاد`)}`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t.plans.whatsapp(plan.name))}`}
                   target="_blank" rel="noopener noreferrer"
                   className={`text-center font-extrabold py-3 rounded-ruwad-sm border-2 border-ruwad-navy transition ${
                     plan.highlighted ? 'bg-ruwad-lime text-ruwad-navy hover:opacity-90' : 'bg-ruwad-navy text-white hover:opacity-90'
                   }`}
                 >
-                  تواصل بخصوص هذه الخطة
+                  {t.plans.cta}
                 </a>
               </div>
             </Reveal>
@@ -306,16 +291,11 @@ export function LandingPage() {
       <section className="max-w-4xl mx-auto px-5 sm:px-8 pb-16">
         <Reveal className="bg-[#F5F6FA] rounded-ruwad p-8 sm:p-10 border-2 border-ruwad-navy/10">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-ruwad-navy mb-4">
-            نظام إدارة معاهد وتدريبات متكامل — بالعربية بالكامل
+            {t.seo.title}
           </h2>
-          <p className="text-ruwad-navy/70 leading-relaxed">
-            رُوّاد هو برنامج إدارة تدريبات ومعاهد مصمّم من الصفر للسوق العربي: يتيح لصاحب المعهد إدارة فريق كامل من
-            المدربين تحت مظلة واحدة، مع مشاركة الموارد بينهم ولوحة تحكم موحّدة لمتابعة كل تدريب ودورة يتم نشرها.
-            سواء كنت تدير مركز تدريب صغير أو معهداً متعدد الفروع، يمنحك رُوّاد أدوات إدارة الدورات التدريبية،
-            الامتحانات الإلكترونية، الحضور الرقمي، والشهادات الموثّقة في نظام عربي واحد سهل الاستخدام.
-          </p>
+          <p className="text-ruwad-navy/70 leading-relaxed">{t.seo.body}</p>
           <Link href="/idarat-maahid" className="inline-block mt-5 text-ruwad-blue font-extrabold hover:underline">
-            اقرأ المزيد عن نظام إدارة المعاهد في رُوّاد ←
+            {t.seo.more} {dir === 'rtl' ? '←' : '→'}
           </Link>
         </Reveal>
       </section>
@@ -337,8 +317,8 @@ export function LandingPage() {
       />
       <section id="faq" className="max-w-3xl mx-auto px-5 sm:px-8 pb-20 sm:pb-28">
         <Reveal className="text-center max-w-xl mx-auto mb-12">
-          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">أسئلة شائعة</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">كل ما تريد معرفته عن إدارة معهدك على رُوّاد</h2>
+          <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full rotate-1">{t.faq.tag}</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">{t.faq.title}</h2>
         </Reveal>
         <div className="flex flex-col gap-4">
           {FAQS.map((f) => (
@@ -355,18 +335,18 @@ export function LandingPage() {
         <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-ruwad-blue/30 rounded-full blur-3xl" />
 
         <Reveal className="relative max-w-2xl mx-auto px-5 sm:px-8 text-center flex flex-col items-center gap-6">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-snug">جاهز تبدأ تدريبك الأول؟</h2>
-          <p className="text-white/70 leading-relaxed">انضم مجاناً خلال دقيقة، أو تواصل معنا مباشرة لو عندك أي استفسار.</p>
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-snug">{t.contact.title}</h2>
+          <p className="text-white/70 leading-relaxed">{t.contact.desc}</p>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-lime hover-pop">
-              ابدأ مجاناً الآن
+              {t.contact.cta}
             </Link>
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('السلام عليكم، لدي استفسار عن منصة رُوّاد')}`}
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t.contact.whatsappMsg)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 border-2 border-white text-white font-bold px-9 py-4 rounded-ruwad-sm hover:bg-white hover:text-ruwad-navy transition"
             >
-              <MessageCircle size={17} /> تواصل عبر واتساب
+              <MessageCircle size={17} /> {t.contact.whatsapp}
             </a>
           </div>
         </Reveal>
@@ -375,24 +355,24 @@ export function LandingPage() {
       {/* ===== FOOTER ===== */}
       <footer className="bg-ruwad-lime border-t-2 border-ruwad-navy py-10">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2 text-center sm:text-right">
+          <div className="flex items-center gap-2 text-center sm:text-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/icon-192.png" alt="رُوّاد" className="w-9 h-9 rounded-full border-2 border-ruwad-navy" />
             <div>
-              <p className="text-xl font-extrabold text-ruwad-navy">رُوّاد</p>
-              <p className="text-xs text-ruwad-navy/60 mt-0.5">منصة تدريب تفاعلية بروح المسابقة</p>
+              <p className="text-xl font-extrabold text-ruwad-navy">{lang === 'ar' ? 'رُوّاد' : 'Ruwad'}</p>
+              <p className="text-xs text-ruwad-navy/60 mt-0.5">{t.footer.tagline}</p>
             </div>
           </div>
           <div className="flex items-center gap-5 text-sm text-ruwad-navy/70 font-semibold">
-            <a href="#features" className="hover:text-ruwad-navy transition">الميزات</a>
-            <a href="#plans" className="hover:text-ruwad-navy transition">الخطط</a>
-            <Link href="/idarat-maahid" className="hover:text-ruwad-navy transition">إدارة المعاهد</Link>
-            <Link href="/blog" className="hover:text-ruwad-navy transition">المدونة</Link>
+            <a href="#features" className="hover:text-ruwad-navy transition">{t.footer.features}</a>
+            <a href="#plans" className="hover:text-ruwad-navy transition">{t.footer.plans}</a>
+            <Link href="/idarat-maahid" className="hover:text-ruwad-navy transition">{t.footer.institutes}</Link>
+            <Link href="/blog" className="hover:text-ruwad-navy transition">{t.footer.blog}</Link>
             <a href="mailto:hello@ruwad.app" className="flex items-center gap-1.5 hover:text-ruwad-navy transition">
-              <Mail size={14} /> راسلنا
+              <Mail size={14} /> {t.footer.email}
             </a>
           </div>
-          <p className="text-xs text-ruwad-navy/50">© {new Date().getFullYear()} رُوّاد. جميع الحقوق محفوظة.</p>
+          <p className="text-xs text-ruwad-navy/50">© {new Date().getFullYear()} {lang === 'ar' ? 'رُوّاد' : 'Ruwad'}. {t.footer.rights}</p>
         </div>
       </footer>
     </main>

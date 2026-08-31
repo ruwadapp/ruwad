@@ -1,27 +1,25 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Flame, Trophy } from 'lucide-react'
+import { useLang } from './LangProvider'
 
 const SHAPES = ['▲', '◆', '●', '■']
 const TILE_COLORS = ['bg-red-500', 'bg-ruwad-blue', 'bg-amber-400', 'bg-ruwad-lime']
 
-const DEMO_QUESTIONS = [
-  { text: 'ما هي عاصمة السعودية؟', options: ['جدة', 'الرياض', 'الدمام', 'مكة'], correct: 1 },
-  { text: 'كم عدد أيام الأسبوع؟', options: ['5', '6', '7', '8'], correct: 2 },
-  { text: 'ما ناتج 12 × 4؟', options: ['46', '84', '52', '48'], correct: 3 },
-  { text: 'أسرع من يجيب صح، أكثر نقاط يجمع — جرّب!', options: ['أوافق', 'بالتأكيد', 'هيا بنا', 'الكل صحيح'], correct: 0 },
-]
-
-interface Player { name: string; score: number }
+interface Player { id: string; score: number }
 
 export function LiveQuizDemo() {
+  const { t, lang } = useLang()
+  const DEMO_QUESTIONS = t.demo.questions
   const [qIndex, setQIndex] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
+  // نحفظ اللاعبين بمعرّفات ثابتة كي لا تتأثر النقاط بتبديل اللغة
   const [players, setPlayers] = useState<Player[]>([
-    { name: 'أنت', score: 0 },
-    { name: 'سارة', score: 240 },
-    { name: 'خالد', score: 180 },
+    { id: 'you', score: 0 },
+    { id: 'p1', score: 240 },
+    { id: 'p2', score: 180 },
   ])
+  const nameOf = (id: string) => id === 'you' ? t.demo.you : id === 'p1' ? t.demo.players[0] : t.demo.players[1]
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cycleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -37,15 +35,16 @@ export function LiveQuizDemo() {
     setSelected(idx)
     if (idx === question.correct) {
       const gained = 80 + Math.floor(Math.random() * 60)
-      setPlayers((prev) => {
-        const next = [...prev]
-        next[0] = { ...next[0], score: next[0].score + gained }
-        return next.sort((a, b) => b.score - a.score)
-      })
+      setPlayers((prev) =>
+        prev.map((p) => (p.id === 'you' ? { ...p, score: p.score + gained } : p)).sort((a, b) => b.score - a.score),
+      )
     }
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(advance, 1400)
   }, [selected, question, advance])
+
+  // إعادة الضبط عند تبديل اللغة كي لا يبقى مؤشر خارج النطاق
+  useEffect(() => { setQIndex(0); setSelected(null) }, [lang])
 
   // دورة تلقائية تُبقي البطاقة "حيّة" حتى بدون تفاعل الزائر
   useEffect(() => {
@@ -58,13 +57,13 @@ export function LiveQuizDemo() {
 
   return (
     <div className="relative max-w-lg mx-auto">
-      <div className="absolute -top-4 -right-4 flex items-center gap-1.5 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-ruwad-lg z-10">
-        <Flame size={13} className="animate-flame-flicker" /> مباشر الآن
+      <div className="absolute -top-4 end-[-1rem] flex items-center gap-1.5 bg-gradient-to-r from-orange-600 via-red-500 to-orange-500 animate-fire-bg text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-ruwad-lg z-10">
+        <Flame size={13} className="animate-flame-flicker" /> {t.demo.live}
       </div>
 
       <div className="bg-white rounded-ruwad p-6 sm:p-8 flex flex-col gap-5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-ruwad-navy/40">سؤال {qIndex + 1} من {DEMO_QUESTIONS.length}</span>
+          <span className="text-xs font-bold text-ruwad-navy/40">{t.demo.question} {qIndex + 1} {t.demo.of} {DEMO_QUESTIONS.length}</span>
           <svg width="34" height="34" viewBox="0 0 80 80" className="text-ruwad-lime">
             <circle cx="40" cy="40" r="36" fill="none" stroke="#DEE0ED" strokeWidth="8" />
             <circle
@@ -103,13 +102,13 @@ export function LiveQuizDemo() {
 
         <div className="flex items-center justify-between border-t border-ruwad-gray/60 pt-4">
           <div className="flex items-center gap-2 text-xs font-bold text-ruwad-navy/50">
-            <Trophy size={14} className="text-ruwad-lime" /> المتصدّرون الآن
+            <Trophy size={14} className="text-ruwad-lime" /> {t.demo.leaders}
           </div>
           <div className="flex items-center gap-3">
             {players.map((p) => (
-              <div key={p.name} className="text-center">
-                <p className={`text-xs font-bold ${p.name === 'أنت' ? 'text-ruwad-blue' : 'text-ruwad-navy/60'}`}>{p.name}</p>
-                <p className={`text-sm font-extrabold text-ruwad-navy ${p.name === 'أنت' ? 'animate-score-pulse' : ''}`} key={p.score}>
+              <div key={p.id} className="text-center">
+                <p className={`text-xs font-bold ${p.id === 'you' ? 'text-ruwad-blue' : 'text-ruwad-navy/60'}`}>{nameOf(p.id)}</p>
+                <p className={`text-sm font-extrabold text-ruwad-navy ${p.id === 'you' ? 'animate-score-pulse' : ''}`} key={p.score}>
                   {p.score}
                 </p>
               </div>
