@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle, Paperclip, FileText, FileCheck, Zap, BookOpen, ClipboardList, Link2, ExternalLink, X, Trash2, MoreVertical, ShieldAlert } from 'lucide-react'
 import { ChatAttachmentPicker, type ChatAttachment, type AttachmentType } from './ChatAttachmentPicker'
+import { EmojiPicker } from './EmojiPicker'
 
 export interface ChatMessage {
   id: string
@@ -60,6 +61,20 @@ function AttachmentCard({ m, mine }: { m: ChatMessage; mine: boolean }) {
       <ExternalLink size={13} className={mine ? 'text-white/60' : 'text-ruwad-navy/35'} />
     </Link>
   )
+}
+
+
+// يكتشف إن كانت الرسالة تتكوّن من إيموجي فقط (١-٦ رموز) لتكبيرها تلقائياً كواتساب/تليجرام
+const EMOJI_RE = /^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u200d\ufe0f\u20e3])+$/u
+function isEmojiOnly(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+  if (!EMOJI_RE.test(trimmed)) return false
+  // عدّ الرموز الفعلية (لا الوحدات الثنائية UTF-16) لتحديد الحد الأقصى
+  const graphemes = typeof Intl !== 'undefined' && 'Segmenter' in Intl
+    ? [...new (Intl as unknown as { Segmenter: new (l: string, o: object) => { segment: (s: string) => Iterable<unknown> } }).Segmenter('ar', { granularity: 'grapheme' }).segment(trimmed)]
+    : [...trimmed]
+  return graphemes.length >= 1 && graphemes.length <= 6
 }
 
 function dayLabel(iso: string) {
@@ -369,6 +384,7 @@ export function ChatRoom({
               const firstOfRun = !prev || prev.sender_id !== m.sender_id
               const sender = memberMap.get(m.sender_id)
               const canDelete = (mine || isManager) && !m._status
+              const jumbo = !m.attachment_type && isEmojiOnly(m.content)
               return (
                 <div key={m.id} className={`group flex items-center gap-1.5 ${mine ? 'justify-start' : 'justify-end'} ${firstOfRun ? 'mt-2' : 'mt-0.5'}`}>
                   {mine && canDelete && (
@@ -376,17 +392,25 @@ export function ChatRoom({
                       <Trash2 size={14} />
                     </button>
                   )}
-                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 shadow-sm relative ${
-                    mine
-                      ? `bg-ruwad-blue text-white ${firstOfRun ? 'rounded-tr-md' : ''}`
-                      : `bg-white text-ruwad-navy ${firstOfRun ? 'rounded-tl-md' : ''}`
-                  } ${m._status === 'failed' ? 'ring-2 ring-red-400' : ''}`}>
-                    {!mine && firstOfRun && (
+                  <div className={`max-w-[78%] relative ${
+                    jumbo
+                      ? 'bg-transparent shadow-none px-1 py-0.5'
+                      : `rounded-2xl px-3.5 py-2 shadow-sm ${
+                          mine
+                            ? `bg-ruwad-blue text-white ${firstOfRun ? 'rounded-tr-md' : ''}`
+                            : `bg-white text-ruwad-navy ${firstOfRun ? 'rounded-tl-md' : ''}`
+                        } ${m._status === 'failed' ? 'ring-2 ring-red-400' : ''}`
+                  }`}>
+                    {!mine && firstOfRun && !jumbo && (
                       <p className="text-[11px] font-extrabold mb-0.5" style={{ color: colorFor(m.sender_id) }}>{sender?.full_name ?? 'عضو'}</p>
                     )}
                     <AttachmentCard m={m} mine={mine} />
-                    {m.content && <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>}
-                    <div className={`flex items-center gap-1 justify-end mt-0.5 text-[10px] ${mine ? 'text-white/70' : 'text-ruwad-navy/40'}`}>
+                    {m.content && (
+                      jumbo
+                        ? <p className="text-[52px] leading-none">{m.content}</p>
+                        : <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>
+                    )}
+                    <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${jumbo ? (mine ? 'justify-start' : 'justify-end') + ' text-ruwad-navy/40' : 'justify-end ' + (mine ? 'text-white/70' : 'text-ruwad-navy/40')}`}>
                       <span>{timeLabel(m.created_at)}</span>
                       {mine && (
                         m._status === 'sending' ? <Check size={12} className="opacity-60" />
@@ -420,6 +444,7 @@ export function ChatRoom({
         )}
 
         <div className="flex items-end gap-2">
+        <EmojiPicker onPick={(e) => setDraft((d) => d + e)} />
         {isManager && (
           <button
             onClick={() => setPickerOpen(!pickerOpen)}
