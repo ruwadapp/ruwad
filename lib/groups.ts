@@ -52,13 +52,14 @@ export async function loadChatRoom(supabase: SupabaseClient, groupId: string, us
   if (!me) return { group, isMember: false as const }
 
   const [{ data: messages }, { data: members }] = await Promise.all([
-    supabase.from('chat_messages').select('id, group_id, sender_id, content, created_at').eq('group_id', groupId).order('created_at', { ascending: false }).limit(60),
+    supabase.from('chat_messages').select('id, group_id, sender_id, content, created_at, attachment_type, attachment_ref_id, attachment_title, attachment_url').eq('group_id', groupId).order('created_at', { ascending: false }).limit(60),
     supabase.from('chat_members').select('user_id, role, profile:profiles!user_id(full_name, avatar_url)').eq('group_id', groupId),
   ])
   return {
     group,
     isMember: true as const,
     muted: me.muted,
+    isManager: (await supabase.from('chat_members').select('role').eq('group_id', groupId).eq('user_id', userId).single()).data?.role === 'admin',
     messages: ((messages ?? []) as ChatMessage[]).reverse(),
     members: (members ?? []).map((m) => {
       const p = m.profile as unknown as { full_name?: string; avatar_url?: string | null }

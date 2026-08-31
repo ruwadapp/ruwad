@@ -22,6 +22,7 @@ export default async function GroupRoomPage({ params }: { params: Promise<{ id: 
       initialMessages={room.messages}
       members={room.members}
       initialMuted={room.muted}
+      isManager={room.isManager}
     />
   )
 }

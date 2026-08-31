@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle } from 'lucide-react'
+import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle, Paperclip, FileText, FileCheck, Zap, BookOpen, ClipboardList, Link2, ExternalLink, X } from 'lucide-react'
+import { ChatAttachmentPicker, type ChatAttachment, type AttachmentType } from './ChatAttachmentPicker'
 
 export interface ChatMessage {
   id: string
@@ -10,6 +11,10 @@ export interface ChatMessage {
   sender_id: string
   content: string
   created_at: string
+  attachment_type?: AttachmentType | null
+  attachment_ref_id?: string | null
+  attachment_title?: string | null
+  attachment_url?: string | null
   // حالة محلية للرسائل المتفائلة
   _status?: 'sending' | 'failed'
 }
@@ -22,6 +27,40 @@ export interface ChatMemberInfo {
 }
 
 const PAGE = 60
+
+
+// أيقونة ولون كل نوع مرفق
+const ATTACH_META: Record<string, { icon: typeof FileText; label: string; color: string }> = {
+  exam: { icon: FileText, label: 'امتحان', color: '#3A4EFB' },
+  assignment: { icon: FileCheck, label: 'واجب', color: '#33A4FA' },
+  challenge: { icon: Zap, label: 'تحدي', color: '#a8c40f' },
+  course: { icon: BookOpen, label: 'كورس', color: '#252943' },
+  survey: { icon: ClipboardList, label: 'استبيان', color: '#7C3AED' },
+  link: { icon: Link2, label: 'رابط', color: '#0e9f6e' },
+}
+
+function AttachmentCard({ m, mine }: { m: ChatMessage; mine: boolean }) {
+  if (!m.attachment_type) return null
+  const meta = ATTACH_META[m.attachment_type]
+  const Icon = meta.icon
+  return (
+    <Link
+      href={m.attachment_url || '#'}
+      className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 mb-1.5 transition ${
+        mine ? 'bg-white/15 hover:bg-white/20' : 'bg-[#F5F6FA] hover:bg-ruwad-gray/30'
+      }`}
+    >
+      <span className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: mine ? 'rgba(255,255,255,.2)' : `${meta.color}18` }}>
+        <Icon size={17} style={{ color: mine ? '#fff' : meta.color }} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block text-[10px] font-bold ${mine ? 'text-white/70' : 'text-ruwad-navy/45'}`}>{meta.label}</span>
+        <span className={`block text-[13px] font-bold truncate ${mine ? 'text-white' : 'text-ruwad-navy'}`}>{m.attachment_title}</span>
+      </span>
+      <ExternalLink size={13} className={mine ? 'text-white/60' : 'text-ruwad-navy/35'} />
+    </Link>
+  )
+}
 
 function dayLabel(iso: string) {
   const d = new Date(iso)
@@ -51,6 +90,7 @@ export function ChatRoom({
   initialMessages,
   members,
   initialMuted,
+  isManager = false,
 }: {
   groupId: string
   groupName: string
@@ -60,9 +100,12 @@ export function ChatRoom({
   initialMessages: ChatMessage[]
   members: ChatMemberInfo[]
   initialMuted: boolean
+  isManager?: boolean
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [draft, setDraft] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null)
   const [muted, setMuted] = useState(initialMuted)
   const [connected, setConnected] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
@@ -107,7 +150,7 @@ export function ChatRoom({
   const syncLatest = useCallback(async () => {
     const { data } = await supabase
       .from('chat_messages')
-      .select('id, group_id, sender_id, content, created_at')
+      .select('id, group_id, sender_id, content, created_at, attachment_type, attachment_ref_id, attachment_title, attachment_url')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false })
       .limit(PAGE)
@@ -167,16 +210,26 @@ export function ChatRoom({
   // ===== إرسال متفائل مع إعادة محاولة =====
   async function send(retryOf?: ChatMessage) {
     const content = (retryOf?.content ?? draft).trim()
-    if (!content) return
+    const attachment = retryOf
+      ? (retryOf.attachment_type ? { type: retryOf.attachment_type, ref_id: retryOf.attachment_ref_id ?? null, title: retryOf.attachment_title ?? '', url: retryOf.attachment_url ?? '' } as ChatAttachment : null)
+      : pendingAttachment
+    if (!content && !attachment) return
     const tempId = retryOf?.id ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const optimistic: ChatMessage = { id: tempId, group_id: groupId, sender_id: currentUserId, content, created_at: new Date().toISOString(), _status: 'sending' }
+    const optimistic: ChatMessage = {
+      id: tempId, group_id: groupId, sender_id: currentUserId, content, created_at: new Date().toISOString(), _status: 'sending',
+      attachment_type: attachment?.type ?? null, attachment_ref_id: attachment?.ref_id ?? null, attachment_title: attachment?.title ?? null, attachment_url: attachment?.url ?? null,
+    }
     setMessages((prev) => (retryOf ? prev.map((m) => (m.id === tempId ? optimistic : m)) : [...prev, optimistic]))
-    if (!retryOf) setDraft('')
+    if (!retryOf) { setDraft(''); setPendingAttachment(null) }
 
     const { data, error } = await supabase
       .from('chat_messages')
-      .insert({ group_id: groupId, sender_id: currentUserId, content })
-      .select('id, group_id, sender_id, content, created_at')
+      .insert({
+        group_id: groupId, sender_id: currentUserId, content,
+        attachment_type: attachment?.type ?? null, attachment_ref_id: attachment?.ref_id ?? null,
+        attachment_title: attachment?.title ?? null, attachment_url: attachment?.url ?? null,
+      })
+      .select('id, group_id, sender_id, content, created_at, attachment_type, attachment_ref_id, attachment_title, attachment_url')
       .single()
 
     if (error || !data) {
@@ -275,7 +328,8 @@ export function ChatRoom({
                     {!mine && firstOfRun && (
                       <p className="text-[11px] font-extrabold mb-0.5" style={{ color: colorFor(m.sender_id) }}>{sender?.full_name ?? 'عضو'}</p>
                     )}
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>
+                    <AttachmentCard m={m} mine={mine} />
+                    {m.content && <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>}
                     <div className={`flex items-center gap-1 justify-end mt-0.5 text-[10px] ${mine ? 'text-white/70' : 'text-ruwad-navy/40'}`}>
                       <span>{timeLabel(m.created_at)}</span>
                       {mine && (
@@ -294,7 +348,26 @@ export function ChatRoom({
       </div>
 
       {/* ===== المؤلّف ===== */}
-      <div className="bg-white border-t border-ruwad-gray/40 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex items-end gap-2">
+      <div className="relative bg-white border-t border-ruwad-gray/40 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+        {pickerOpen && <ChatAttachmentPicker onPick={(a) => { setPendingAttachment(a); setPickerOpen(false) }} onClose={() => setPickerOpen(false)} />}
+
+        {pendingAttachment && (
+          <div className="flex items-center gap-2 bg-ruwad-blue/5 border border-ruwad-blue/20 rounded-ruwad-sm px-3 py-2 mb-2">
+            <span className="text-xs font-bold text-ruwad-blue flex-1 truncate">📎 {pendingAttachment.title}</span>
+            <button onClick={() => setPendingAttachment(null)} aria-label="إزالة" className="text-ruwad-navy/40 hover:text-red-500"><X size={14} /></button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2">
+        {isManager && (
+          <button
+            onClick={() => setPickerOpen(!pickerOpen)}
+            aria-label="إرفاق"
+            className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition ${pickerOpen ? 'bg-ruwad-blue text-white' : 'bg-ruwad-gray/30 text-ruwad-navy hover:bg-ruwad-gray/50'}`}
+          >
+            <Paperclip size={19} />
+          </button>
+        )}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -307,12 +380,13 @@ export function ChatRoom({
         />
         <button
           onClick={() => send()}
-          disabled={!draft.trim()}
+          disabled={!draft.trim() && !pendingAttachment}
           aria-label="إرسال"
           className="w-11 h-11 rounded-full bg-ruwad-blue text-white flex items-center justify-center shrink-0 shadow-ruwad hover:opacity-90 transition disabled:opacity-40 disabled:shadow-none"
         >
           <Send size={18} className="-scale-x-100" />
         </button>
+        </div>
       </div>
     </div>
   )
