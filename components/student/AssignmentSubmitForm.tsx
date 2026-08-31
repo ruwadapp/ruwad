@@ -2,13 +2,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { FileUploadZone, type UploadedFile } from '@/components/shared/FileUploadZone'
+import { LinksInput } from '@/components/shared/LinksInput'
+// تحويل الروابط لصيغة المرفقات المعتمدة في العرض {name,url,type}
+const toAttachment = (url: string) => {
+  let name = url
+  try { name = new URL(url).hostname.replace('www.', '') } catch { /* كما هو */ }
+  return { name, url, type: 'link' }
+}
+
 import { RichTextEditor } from '@/components/trainer/RichTextEditor'
 import { AlertTriangle, Send } from 'lucide-react'
 
 export function AssignmentSubmitForm({ assignmentId, dueDate }: { assignmentId: string; dueDate: string | null }) {
   const [content, setContent] = useState('')
-  const [files, setFiles] = useState<UploadedFile[]>([])
+  const [files, setFiles] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [confirmLate, setConfirmLate] = useState(false)
@@ -28,7 +35,7 @@ export function AssignmentSubmitForm({ assignmentId, dueDate }: { assignmentId: 
       assignment_id: assignmentId,
       student_id: user.id,
       content: content || null,
-      file_urls: files,
+      file_urls: files.map(toAttachment),
     })
 
     if (insertError) {
@@ -70,13 +77,9 @@ export function AssignmentSubmitForm({ assignmentId, dueDate }: { assignmentId: 
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-ruwad-navy">الملفات المرفقة (اختياري)</label>
-        <FileUploadZone
-          bucket="assignment-submissions"
-          pathPrefix={assignmentId}
-          files={files}
-          onChange={setFiles}
-        />
+        <label className="text-sm font-medium text-ruwad-navy">روابط عملك (اختياري)</label>
+        <p className="text-[11px] text-ruwad-navy/45 -mt-1">ارفع ملفك على Google Drive أو YouTube أو أي خدمة ثم الصق الرابط هنا.</p>
+        <LinksInput links={files} onChange={setFiles} placeholder="رابط ملف عملك..." />
       </div>
 
       {confirmLate ? (

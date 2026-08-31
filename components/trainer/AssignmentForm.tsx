@@ -4,7 +4,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Assignment, Course } from '@/lib/types'
 import { RichTextEditor } from './RichTextEditor'
-import { FileUploadZone, type UploadedFile } from '@/components/shared/FileUploadZone'
+import { LinksInput } from '@/components/shared/LinksInput'
+// تحويل الروابط لصيغة المرفقات المعتمدة في العرض {name,url,type}
+const toAttachment = (url: string) => {
+  let name = url
+  try { name = new URL(url).hostname.replace('www.', '') } catch { /* كما هو */ }
+  return { name, url, type: 'link' }
+}
+
 import { Paperclip, Calendar, Award, BookOpen } from 'lucide-react'
 import { ShareCodeBlock } from '@/components/shared/ShareCodeBlock'
 
@@ -15,8 +22,9 @@ export function AssignmentForm({ courses, initialAssignment }: { courses: Course
   const [courseId, setCourseId] = useState(initialAssignment?.course_id ?? '')
   const [totalMarks, setTotalMarks] = useState(initialAssignment?.total_marks?.toString() ?? '100')
   const [dueDate, setDueDate] = useState(initialAssignment?.due_date ? initialAssignment.due_date.slice(0, 16) : '')
-  const [attachments, setAttachments] = useState<UploadedFile[]>(
-    (initialAssignment?.attachments as unknown as UploadedFile[]) ?? []
+  // روابط مرفقة (بلا تخزين): تُحفظ في عمود attachments كمصفوفة {url}
+  const [attachments, setAttachments] = useState<string[]>(
+    (((initialAssignment?.attachments as unknown as { url: string }[]) ?? []).map((a) => a.url)).filter(Boolean)
   )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -34,7 +42,7 @@ export function AssignmentForm({ courses, initialAssignment }: { courses: Course
       title,
       description: description || null,
       instructions: instructions || null,
-      attachments,
+      attachments: attachments.map(toAttachment),
       total_marks: Number(totalMarks) || 100,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
     }
@@ -91,21 +99,10 @@ export function AssignmentForm({ courses, initialAssignment }: { courses: Course
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-ruwad-navy flex items-center gap-1.5">
-          <Paperclip size={15} className="text-ruwad-blue" /> مرفقات الواجب (اختياري)
+          <Paperclip size={15} className="text-ruwad-blue" /> روابط مرفقة (اختياري)
         </label>
-        {initialAssignment ? (
-          <FileUploadZone
-            bucket="assignment-attachments"
-            pathPrefix={initialAssignment.id}
-            files={attachments}
-            onChange={setAttachments}
-            maxFiles={5}
-          />
-        ) : (
-          <p className="text-xs text-ruwad-navy/50 bg-ruwad-gray/10 rounded-ruwad-sm px-4 py-3">
-            يمكنك إضافة المرفقات بعد إنشاء الواجب مباشرة من صفحته.
-          </p>
-        )}
+        <p className="text-[11px] text-ruwad-navy/45 -mt-1">ملفات الواجب تُشارَك كروابط (Google Drive، YouTube، ...) — لا رفع ملفات.</p>
+        <LinksInput links={attachments} onChange={setAttachments} />
       </div>
 
       <div className="grid grid-cols-3 gap-4">

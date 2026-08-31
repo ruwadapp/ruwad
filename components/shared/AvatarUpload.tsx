@@ -15,6 +15,20 @@ interface AvatarUploadProps {
   size?: number
 }
 
+// ضغط صورة إلى مربّع بحجم محدد وإخراجها كـ data URL (JPEG) — عادةً 15–30KB
+async function compressToDataUrl(file: File, size: number, quality: number): Promise<string> {
+  const bitmap = await createImageBitmap(file)
+  const side = Math.min(bitmap.width, bitmap.height)
+  const sx = (bitmap.width - side) / 2
+  const sy = (bitmap.height - side) / 2
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, size, size)
+  return canvas.toDataURL('image/jpeg', quality)
+}
+
 export function AvatarUpload({ currentUrl, fallbackLetter, table, rowId, column, size = 80 }: AvatarUploadProps) {
   const [url, setUrl] = useState(currentUrl)
   const [uploading, setUploading] = useState(false)
@@ -29,15 +43,13 @@ export function AvatarUpload({ currentUrl, fallbackLetter, table, rowId, column,
     setUploading(true)
     setError(null)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    const ext = file.name.split('.').pop()
-    const path = `${user!.id}/${column}-${Date.now()}.${ext}`
-
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (uploadError) { setError('تعذّر رفع الصورة'); setUploading(false); return }
-
-    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(path)
-    const newUrl = publicUrlData.publicUrl
+    // بلا تخزين ملفات: تُضغَط الصورة في المتصفح إلى 256×256 وتُحفظ مضمَّنة (data URL) في قاعدة البيانات مباشرة
+    let newUrl: string
+    try {
+      newUrl = await compressToDataUrl(file, 256, 0.82)
+    } catch {
+      setError('تعذّر معالجة الصورة'); setUploading(false); return
+    }
 
     const { error: updateError } = await supabase.from(table).update({ [column]: newUrl }).eq('id', rowId)
     setUploading(false)
