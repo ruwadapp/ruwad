@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle, Paperclip, FileText, FileCheck, Zap, BookOpen, ClipboardList, Link2, ExternalLink, X } from 'lucide-react'
+import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle, Paperclip, FileText, FileCheck, Zap, BookOpen, ClipboardList, Link2, ExternalLink, X, Trash2, MoreVertical, ShieldAlert } from 'lucide-react'
 import { ChatAttachmentPicker, type ChatAttachment, type AttachmentType } from './ChatAttachmentPicker'
 
 export interface ChatMessage {
@@ -109,6 +109,9 @@ export function ChatRoom({
   const [muted, setMuted] = useState(initialMuted)
   const [connected, setConnected] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [clearing, setClearing] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -243,6 +246,22 @@ export function ChatRoom({
     })
   }
 
+  async function deleteMessage(id: string) {
+    setMessages((prev) => prev.filter((m) => m.id !== id))
+    await supabase.from('chat_messages').delete().eq('id', id)
+  }
+
+  async function clearHistory() {
+    setClearing(true)
+    const { error } = await supabase.rpc('clear_chat_history', { p_group_id: groupId })
+    setClearing(false)
+    if (!error) {
+      setMessages([])
+      setConfirmClear(false)
+      setMenuOpen(false)
+    }
+  }
+
   async function toggleMute() {
     const next = !muted
     setMuted(next)
@@ -281,7 +300,38 @@ export function ChatRoom({
         >
           {muted ? <BellOff size={19} /> : <Bell size={19} />}
         </button>
+        {isManager && (
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} aria-label="خيارات" className="p-2 rounded-full hover:bg-ruwad-gray/30 text-ruwad-navy transition">
+              <MoreVertical size={19} />
+            </button>
+            {menuOpen && (
+              <div className="absolute left-0 top-11 z-20 bg-white rounded-ruwad-sm shadow-ruwad-lg border border-ruwad-gray/40 py-1 w-56">
+                <button
+                  onClick={() => { setConfirmClear(true); setMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition text-right"
+                >
+                  <Trash2 size={14} /> مسح سجل الدردشة
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
+
+      {/* ===== تأكيد مسح السجل ===== */}
+      {confirmClear && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" onClick={() => setConfirmClear(false)}>
+          <div className="bg-white rounded-ruwad shadow-ruwad-lg p-5 max-w-sm w-full flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 text-red-500"><ShieldAlert size={20} /><p className="font-extrabold">مسح سجل الدردشة نهائياً؟</p></div>
+            <p className="text-sm text-ruwad-navy/60 leading-relaxed">ستُحذف كل الرسائل من قاعدة البيانات لكل الأعضاء بلا استرجاع. هذا الإجراء لا يمكن التراجع عنه.</p>
+            <div className="flex items-center gap-2 mt-1">
+              <button onClick={clearHistory} disabled={clearing} className="flex-1 bg-red-500 text-white font-bold text-sm py-2.5 rounded-ruwad-sm hover:opacity-90 transition disabled:opacity-50">{clearing ? 'جارٍ المسح...' : 'مسح نهائياً'}</button>
+              <button onClick={() => setConfirmClear(false)} className="flex-1 bg-ruwad-gray/30 text-ruwad-navy font-bold text-sm py-2.5 rounded-ruwad-sm hover:bg-ruwad-gray/50 transition">إلغاء</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== لوحة الأعضاء ===== */}
       {showMembers && (
@@ -318,8 +368,14 @@ export function ChatRoom({
               const prev = g.items[i - 1]
               const firstOfRun = !prev || prev.sender_id !== m.sender_id
               const sender = memberMap.get(m.sender_id)
+              const canDelete = (mine || isManager) && !m._status
               return (
-                <div key={m.id} className={`flex ${mine ? 'justify-start' : 'justify-end'} ${firstOfRun ? 'mt-2' : 'mt-0.5'}`}>
+                <div key={m.id} className={`group flex items-center gap-1.5 ${mine ? 'justify-start' : 'justify-end'} ${firstOfRun ? 'mt-2' : 'mt-0.5'}`}>
+                  {mine && canDelete && (
+                    <button onClick={() => deleteMessage(m.id)} aria-label="حذف الرسالة" className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-ruwad-navy/30 hover:text-red-500 transition shrink-0">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                   <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 shadow-sm relative ${
                     mine
                       ? `bg-ruwad-blue text-white ${firstOfRun ? 'rounded-tr-md' : ''}`
@@ -339,6 +395,11 @@ export function ChatRoom({
                       )}
                     </div>
                   </div>
+                  {!mine && canDelete && isManager && (
+                    <button onClick={() => deleteMessage(m.id)} aria-label="حذف الرسالة" className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-ruwad-navy/30 hover:text-red-500 transition shrink-0">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               )
             })}
