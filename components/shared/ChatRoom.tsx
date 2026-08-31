@@ -385,8 +385,10 @@ export function ChatRoom({
               const sender = memberMap.get(m.sender_id)
               const canDelete = (mine || isManager) && !m._status
               const jumbo = !m.attachment_type && isEmojiOnly(m.content)
+              const prevJumbo = !!prev && !prev.attachment_type && isEmojiOnly(prev.content)
+              const rowSpacing = jumbo || prevJumbo ? 'mt-3' : firstOfRun ? 'mt-2' : 'mt-0.5'
               return (
-                <div key={m.id} className={`group flex items-center gap-1.5 ${mine ? 'justify-start' : 'justify-end'} ${firstOfRun ? 'mt-2' : 'mt-0.5'}`}>
+                <div key={m.id} className={`group flex items-center gap-1.5 ${mine ? 'justify-start' : 'justify-end'} ${rowSpacing}`}>
                   {mine && canDelete && (
                     <button onClick={() => deleteMessage(m.id)} aria-label="حذف الرسالة" className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-ruwad-navy/30 hover:text-red-500 transition shrink-0">
                       <Trash2 size={14} />
