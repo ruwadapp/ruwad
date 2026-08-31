@@ -21,7 +21,6 @@ const trainerNav = [
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/badges', label: 'الشارات', icon: Award },
   { href: '/posts', label: 'منشوراتي', icon: Rss },
-  { href: '/groups', label: 'المجموعات', icon: MessageCircle },
   { href: '/nearby-students', label: 'بالقرب مني', icon: MapPin },
   { href: '/jobs', label: 'فرص العمل', icon: Briefcase },
   { href: '/training-requests', label: 'طلبات التدريب', icon: Target },
@@ -33,7 +32,6 @@ const trainerNav = [
 const studentNav = [
   { href: '/home', label: 'الرئيسية', icon: Home },
   { href: '/rawaq', label: 'الرواق', icon: Rss },
-  { href: '/my-groups', label: 'المجموعات', icon: MessageCircle },
   { href: '/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/opportunities', label: 'الفرص', icon: Briefcase },
   { href: '/request-training', label: 'اطلب تدريباً', icon: Target },

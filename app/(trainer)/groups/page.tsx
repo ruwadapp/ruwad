@@ -13,7 +13,7 @@ export default async function GroupsPage() {
   const courses = myCourses ?? []
   return (
     <>
-      <Header title="المجموعات" />
+      <Header title="الدردشات" />
       <main className="p-6 max-w-3xl mx-auto w-full">
         <GroupsList groups={groups} canCreate={true} courses={courses} groupBasePath="/groups" />
       </main>

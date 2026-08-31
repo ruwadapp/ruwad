@@ -63,7 +63,7 @@ export function GroupsList({
       .select('id')
       .single()
     setSaving(false)
-    if (err || !data) { setError('تعذّر إنشاء المجموعة، حاول مجدداً.'); return }
+    if (err || !data) { setError('تعذّر إنشاء الدردشة، حاول مجدداً.'); return }
     router.push(`${groupBasePath}/${data.id}`)
   }
 
@@ -85,7 +85,7 @@ export function GroupsList({
           <div className="flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-extrabold text-ruwad-navy">
               <span className="w-9 h-9 rounded-ruwad-sm bg-ruwad-blue/10 flex items-center justify-center"><MessageCircle size={17} className="text-ruwad-blue" /></span>
-              مجموعة جديدة
+              دردشة جديدة
             </h2>
             {!formOpen && (
               <button onClick={() => setFormOpen(true)} disabled={courses.length === 0} className="bg-ruwad-blue text-white px-4 py-2 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5 disabled:opacity-40">
@@ -97,14 +97,14 @@ export function GroupsList({
           {formOpen && (
             <div className="flex flex-col gap-3 mt-4">
               {error && <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-2.5">{error}</div>}
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم المجموعة (مثال: دفعة المونتاج — نقاشات)" className={inputCls} />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم الدردشة (مثال: دفعة المونتاج — نقاشات)" className={inputCls} />
               <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={inputCls}>
                 {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
               <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="وصف مختصر اختياري" className={inputCls} />
-              <p className="text-[11px] text-ruwad-navy/45">يستطيع كل طالب مسجَّل في هذا الكورس الانضمام للمجموعة.</p>
+              <p className="text-[11px] text-ruwad-navy/45">يستطيع كل طالب مسجَّل في هذا الكورس الانضمام للدردشة.</p>
               <div className="flex items-center gap-2">
-                <button onClick={create} disabled={saving} className="bg-ruwad-blue text-white px-6 py-2.5 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition disabled:opacity-50">{saving ? 'جارٍ الإنشاء...' : 'إنشاء المجموعة'}</button>
+                <button onClick={create} disabled={saving} className="bg-ruwad-blue text-white px-6 py-2.5 rounded-ruwad-sm text-sm font-bold hover:opacity-90 transition disabled:opacity-50">{saving ? 'جارٍ الإنشاء...' : 'إنشاء الدردشة'}</button>
                 <button onClick={() => { setFormOpen(false); setError(null) }} className="text-sm font-semibold text-ruwad-navy/50 px-3 py-2.5 hover:text-ruwad-navy transition">إلغاء</button>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function GroupsList({
       {/* ===== مجموعات يمكنك الانضمام لها ===== */}
       {joinable.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-bold text-ruwad-navy/60 flex items-center gap-1.5"><LogIn size={14} /> مجموعات كورساتك — انضم إليها</h3>
+          <h3 className="text-sm font-bold text-ruwad-navy/60 flex items-center gap-1.5"><LogIn size={14} /> دردشات كورساتك — انضم إليها</h3>
           {joinable.map((g) => (
             <div key={g.id} className="bg-white rounded-ruwad shadow-card p-4 flex items-center gap-3">
               <span className="w-11 h-11 rounded-full bg-ruwad-navy text-ruwad-lime flex items-center justify-center font-bold shrink-0">{g.name.charAt(0)}</span>
@@ -165,7 +165,7 @@ export function GroupsList({
       {mine.length === 0 && joinable.length === 0 && (
         <div className="bg-white rounded-ruwad shadow-card p-10 text-center">
           <MessageCircle className="mx-auto text-ruwad-navy/30 mb-3" size={40} />
-          <p className="text-ruwad-navy/60">{canCreate ? 'لا توجد مجموعات بعد — أنشئ أول مجموعة لطلابك.' : 'لا توجد مجموعات لكورساتك بعد.'}</p>
+          <p className="text-ruwad-navy/60">{canCreate ? 'لا توجد دردشات بعد — أنشئ أول دردشة لطلابك.' : 'لا توجد دردشات لكورساتك بعد.'}</p>
         </div>
       )}
     </div>
