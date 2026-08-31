@@ -1,0 +1,319 @@
+'use client'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle } from 'lucide-react'
+
+export interface ChatMessage {
+  id: string
+  group_id: string
+  sender_id: string
+  content: string
+  created_at: string
+  // حالة محلية للرسائل المتفائلة
+  _status?: 'sending' | 'failed'
+}
+
+export interface ChatMemberInfo {
+  user_id: string
+  full_name: string
+  avatar_url: string | null
+  role: string
+}
+
+const PAGE = 60
+
+function dayLabel(iso: string) {
+  const d = new Date(iso)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const that = new Date(d); that.setHours(0, 0, 0, 0)
+  const diff = Math.round((today.getTime() - that.getTime()) / 86400_000)
+  if (diff === 0) return 'اليوم'
+  if (diff === 1) return 'أمس'
+  return d.toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+const timeLabel = (iso: string) => new Date(iso).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })
+
+// ألوان ثابتة لأسماء الأعضاء (كواتساب في المجموعات)
+const NAME_COLORS = ['#3A4EFB', '#0e9f6e', '#d9480f', '#7c3aed', '#c2410c', '#0369a1', '#be185d', '#4d7c0f']
+const colorFor = (id: string) => { let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return NAME_COLORS[h % NAME_COLORS.length] }
+
+// ============================================================
+// غرفة الدردشة — تصميم حديث (فقاعات، أيام، أوقات، حالات إرسال) وموثوقية عالية:
+// إرسال متفائل + بث لحظي مع إزالة التكرار + إعادة اشتراك تلقائي + مزامنة دورية احتياطية
+// ============================================================
+export function ChatRoom({
+  groupId,
+  groupName,
+  courseTitle,
+  backHref,
+  currentUserId,
+  initialMessages,
+  members,
+  initialMuted,
+}: {
+  groupId: string
+  groupName: string
+  courseTitle: string
+  backHref: string
+  currentUserId: string
+  initialMessages: ChatMessage[]
+  members: ChatMemberInfo[]
+  initialMuted: boolean
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+  const [draft, setDraft] = useState('')
+  const [muted, setMuted] = useState(initialMuted)
+  const [connected, setConnected] = useState(true)
+  const [showMembers, setShowMembers] = useState(false)
+  const listRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
+  const memberMap = new Map(members.map((m) => [m.user_id, m]))
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    bottomRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'end' })
+  }, [])
+
+  // تعليم القراءة
+  const markRead = useCallback(async () => {
+    await supabase.from('chat_members').update({ last_read_at: new Date().toISOString() }).eq('group_id', groupId).eq('user_id', currentUserId)
+  }, [supabase, groupId, currentUserId])
+
+  // دمج رسائل جديدة بلا تكرار (تحل الرسالة الحقيقية محل المتفائلة بنفس المحتوى والمرسل)
+  const mergeIncoming = useCallback((incoming: ChatMessage[]) => {
+    setMessages((prev) => {
+      const byId = new Map(prev.map((m) => [m.id, m]))
+      let changed = false
+      for (const msg of incoming) {
+        if (byId.has(msg.id)) continue
+        // استبدال نسخة متفائلة مطابقة (نفس المرسل والنص) إن وجدت
+        const optimisticIdx = prev.findIndex((m) => m._status === 'sending' && m.sender_id === msg.sender_id && m.content === msg.content)
+        if (optimisticIdx !== -1) {
+          prev = prev.map((m, i) => (i === optimisticIdx ? msg : m))
+          byId.set(msg.id, msg)
+          changed = true
+          continue
+        }
+        byId.set(msg.id, msg)
+        changed = true
+      }
+      if (!changed) return prev
+      return [...byId.values()].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    })
+  }, [])
+
+  // جلب ما فات (مزامنة احتياطية)
+  const syncLatest = useCallback(async () => {
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('id, group_id, sender_id, content, created_at')
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: false })
+      .limit(PAGE)
+    if (data) mergeIncoming(data.reverse())
+  }, [supabase, groupId, mergeIncoming])
+
+  // ===== البث اللحظي + إعادة الاشتراك + المزامنة الدورية =====
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+    scrollToBottom(false)
+    markRead()
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session || cancelled) return
+      supabase.realtime.setAuth(session.access_token)
+      const subscribe = () => {
+        channel = supabase
+          .channel(`chat:${groupId}:${Math.random().toString(36).slice(2)}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `group_id=eq.${groupId}` }, (payload) => {
+            mergeIncoming([payload.new as ChatMessage])
+            markRead()
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') { setConnected(true); syncLatest() }
+            if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !cancelled) {
+              setConnected(false)
+              if (channel) supabase.removeChannel(channel)
+              setTimeout(() => { if (!cancelled) subscribe() }, 2000)
+            }
+          })
+      }
+      subscribe()
+    })
+
+    const poll = setInterval(() => { if (document.visibilityState === 'visible') syncLatest() }, 15000)
+    const onVisible = () => { if (document.visibilityState === 'visible') { syncLatest(); markRead() } }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      cancelled = true
+      clearInterval(poll)
+      document.removeEventListener('visibilitychange', onVisible)
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [supabase, groupId, mergeIncoming, syncLatest, markRead, scrollToBottom])
+
+  // تمرير للأسفل عند وصول رسائل جديدة (إن كان المستخدم قرب الأسفل أو الرسالة منه)
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160
+    const last = messages[messages.length - 1]
+    if (nearBottom || last?.sender_id === currentUserId) scrollToBottom()
+  }, [messages, currentUserId, scrollToBottom])
+
+  // ===== إرسال متفائل مع إعادة محاولة =====
+  async function send(retryOf?: ChatMessage) {
+    const content = (retryOf?.content ?? draft).trim()
+    if (!content) return
+    const tempId = retryOf?.id ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const optimistic: ChatMessage = { id: tempId, group_id: groupId, sender_id: currentUserId, content, created_at: new Date().toISOString(), _status: 'sending' }
+    setMessages((prev) => (retryOf ? prev.map((m) => (m.id === tempId ? optimistic : m)) : [...prev, optimistic]))
+    if (!retryOf) setDraft('')
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert({ group_id: groupId, sender_id: currentUserId, content })
+      .select('id, group_id, sender_id, content, created_at')
+      .single()
+
+    if (error || !data) {
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, _status: 'failed' } : m)))
+      return
+    }
+    setMessages((prev) => {
+      // إن سبق البثُّ الردَّ وأدرج الرسالة الحقيقية، احذف المتفائلة فقط
+      if (prev.some((m) => m.id === data.id)) return prev.filter((m) => m.id !== tempId)
+      return prev.map((m) => (m.id === tempId ? data : m))
+    })
+  }
+
+  async function toggleMute() {
+    const next = !muted
+    setMuted(next)
+    const { error } = await supabase.from('chat_members').update({ muted: next }).eq('group_id', groupId).eq('user_id', currentUserId)
+    if (error) setMuted(!next)
+  }
+
+  // ===== تجميع الرسائل بالأيام =====
+  const groups: { day: string; items: ChatMessage[] }[] = []
+  for (const m of messages) {
+    const day = dayLabel(m.created_at)
+    const last = groups[groups.length - 1]
+    if (last && last.day === day) last.items.push(m)
+    else groups.push({ day, items: [m] })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#EEF0F7]" dir="rtl">
+      {/* ===== الترويسة ===== */}
+      <header className="bg-white/95 backdrop-blur border-b border-ruwad-gray/40 px-3 py-2.5 flex items-center gap-2 shadow-sm">
+        <Link href={backHref} aria-label="رجوع" className="p-2 rounded-full hover:bg-ruwad-gray/30 text-ruwad-navy transition"><ArrowRight size={20} /></Link>
+        <button onClick={() => setShowMembers(!showMembers)} className="flex items-center gap-3 flex-1 min-w-0 text-right">
+          <span className="w-10 h-10 rounded-full bg-ruwad-gradient text-white flex items-center justify-center font-bold shrink-0">{groupName.charAt(0)}</span>
+          <span className="min-w-0">
+            <span className="block font-bold text-ruwad-navy text-sm truncate">{groupName}</span>
+            <span className="block text-[11px] text-ruwad-navy/50 truncate">
+              {connected ? `${members.length} عضو · ${courseTitle}` : 'جارٍ إعادة الاتصال...'}
+            </span>
+          </span>
+        </button>
+        <button
+          onClick={toggleMute}
+          aria-label={muted ? 'تشغيل إشعارات المجموعة' : 'كتم إشعارات المجموعة'}
+          title={muted ? 'الإشعارات مكتومة — اضغط للتشغيل' : 'كتم إشعارات هذه المجموعة'}
+          className={`p-2 rounded-full transition ${muted ? 'bg-ruwad-gray/40 text-ruwad-navy/50' : 'hover:bg-ruwad-gray/30 text-ruwad-navy'}`}
+        >
+          {muted ? <BellOff size={19} /> : <Bell size={19} />}
+        </button>
+      </header>
+
+      {/* ===== لوحة الأعضاء ===== */}
+      {showMembers && (
+        <div className="bg-white border-b border-ruwad-gray/40 px-4 py-3 max-h-48 overflow-y-auto">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-ruwad-navy/50 mb-2"><Users size={13} /> الأعضاء ({members.length})</p>
+          <div className="flex flex-wrap gap-2">
+            {members.map((m) => (
+              <span key={m.user_id} className="flex items-center gap-1.5 bg-[#F5F6FA] rounded-full pr-1 pl-3 py-1 text-xs font-semibold text-ruwad-navy">
+                <span className="w-6 h-6 rounded-full text-white text-[10px] flex items-center justify-center overflow-hidden" style={{ background: colorFor(m.user_id) }}>
+                  {m.avatar_url ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={m.avatar_url} alt="" className="w-full h-full object-cover" /> : m.full_name.charAt(0)}
+                </span>
+                {m.full_name}{m.role === 'admin' && <span className="text-[9px] text-ruwad-blue">مشرف</span>}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ===== الرسائل ===== */}
+      <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-4" style={{ backgroundImage: 'radial-gradient(rgba(58,78,251,.06) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
+        {messages.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center text-center text-ruwad-navy/45 gap-2">
+            <span className="text-4xl">👋</span>
+            <p className="text-sm font-semibold">ابدأ المحادثة — كن أول من يرحّب بالمجموعة!</p>
+          </div>
+        )}
+        {groups.map((g) => (
+          <div key={g.day} className="flex flex-col gap-1">
+            <div className="flex justify-center my-3">
+              <span className="text-[11px] font-bold text-ruwad-navy/55 bg-white/90 shadow-sm rounded-full px-3 py-1">{g.day}</span>
+            </div>
+            {g.items.map((m, i) => {
+              const mine = m.sender_id === currentUserId
+              const prev = g.items[i - 1]
+              const firstOfRun = !prev || prev.sender_id !== m.sender_id
+              const sender = memberMap.get(m.sender_id)
+              return (
+                <div key={m.id} className={`flex ${mine ? 'justify-start' : 'justify-end'} ${firstOfRun ? 'mt-2' : 'mt-0.5'}`}>
+                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 shadow-sm relative ${
+                    mine
+                      ? `bg-ruwad-blue text-white ${firstOfRun ? 'rounded-tr-md' : ''}`
+                      : `bg-white text-ruwad-navy ${firstOfRun ? 'rounded-tl-md' : ''}`
+                  } ${m._status === 'failed' ? 'ring-2 ring-red-400' : ''}`}>
+                    {!mine && firstOfRun && (
+                      <p className="text-[11px] font-extrabold mb-0.5" style={{ color: colorFor(m.sender_id) }}>{sender?.full_name ?? 'عضو'}</p>
+                    )}
+                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>
+                    <div className={`flex items-center gap-1 justify-end mt-0.5 text-[10px] ${mine ? 'text-white/70' : 'text-ruwad-navy/40'}`}>
+                      <span>{timeLabel(m.created_at)}</span>
+                      {mine && (
+                        m._status === 'sending' ? <Check size={12} className="opacity-60" />
+                        : m._status === 'failed' ? <button onClick={() => send(m)} className="flex items-center gap-1 text-red-200 font-bold"><AlertCircle size={12} /> إعادة</button>
+                        : <CheckCheck size={13} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* ===== المؤلّف ===== */}
+      <div className="bg-white border-t border-ruwad-gray/40 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex items-end gap-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          placeholder="اكتب رسالة..."
+          rows={1}
+          className="flex-1 resize-none max-h-32 bg-[#F5F6FA] rounded-2xl px-4 py-2.5 text-[15px] outline-none focus:ring-2 focus:ring-ruwad-blue/30 transition"
+          style={{ height: 'auto' }}
+          onInput={(e) => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 128) + 'px' }}
+        />
+        <button
+          onClick={() => send()}
+          disabled={!draft.trim()}
+          aria-label="إرسال"
+          className="w-11 h-11 rounded-full bg-ruwad-blue text-white flex items-center justify-center shrink-0 shadow-ruwad hover:opacity-90 transition disabled:opacity-40 disabled:shadow-none"
+        >
+          <Send size={18} className="-scale-x-100" />
+        </button>
+      </div>
+    </div>
+  )
+}

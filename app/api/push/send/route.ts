@@ -15,6 +15,7 @@ function destinationFor(type: string, referenceId: string | null, role: string):
     case 'badge': return isTrainer ? '/badges' : '/my-badges'
     case 'certificate': return isTrainer ? '/students' : '/my-certificates'
     case 'announcement': return isTrainer ? '/dashboard' : '/home'
+    case 'chat': return role === 'institute_admin' ? `/org/groups/${referenceId}` : isTrainer ? `/groups/${referenceId}` : `/my-groups/${referenceId}`
     default: return isTrainer ? '/dashboard' : '/home'
   }
 }
@@ -35,13 +36,13 @@ export async function POST(req: NextRequest) {
     process.env.VAPID_PRIVATE_KEY
   )
 
-  const { subscriptions, title, body, type, reference_id, role, tone, image } = await req.json()
+  const { subscriptions, title, body, type, reference_id, role, tone, image, tag } = await req.json()
   if (!Array.isArray(subscriptions) || subscriptions.length === 0) {
     return NextResponse.json({ sent: 0, failed: 0, cleaned: 0 })
   }
 
   const url = destinationFor(type, reference_id, role ?? 'student')
-  const payload = JSON.stringify({ title, body, url, tone, type, image })
+  const payload = JSON.stringify({ title, body, url, tone, type, image, tag })
 
   // نستخدم مفتاح الخدمة إن وُجد، وإلا نتراجع لمفتاح anon مع دالة RPC آمنة لحذف الاشتراكات الميتة
   // بهذا لا يتعطّل تنظيف الاشتراكات الميتة إطلاقاً حتى لو غاب SUPABASE_SERVICE_ROLE_KEY في البيئة

@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target,
+  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -29,6 +29,7 @@ const trainerNav: NavItem[] = [
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
   { href: '/badges', label: 'الشارات', icon: 'Award' },
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
+  { href: '/groups', label: 'المجموعات', icon: 'MessageCircle' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
   { href: '/training-requests', label: 'طلبات التدريب', icon: 'Target' },
@@ -39,6 +40,7 @@ const trainerNav: NavItem[] = [
 const studentNav: NavItem[] = [
   { href: '/home', label: 'الرئيسية', icon: 'Home' },
   { href: '/rawaq', label: 'الرواق', icon: 'Rss' },
+  { href: '/my-groups', label: 'المجموعات', icon: 'MessageCircle' },
   { href: '/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/opportunities', label: 'الفرص', icon: 'Briefcase' },
   { href: '/request-training', label: 'اطلب تدريباً', icon: 'Target' },

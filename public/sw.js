@@ -18,8 +18,8 @@ self.addEventListener('push', (event) => {
     vibrate: data.tone === 'urgent' ? [180, 80, 180, 80, 180] : [120, 60, 120],
     timestamp: Date.now(),
     // إشعارات النوع نفسه تُستبدل بأحدثها بدل تكديس المركز، مع تنبيه متجدد
-    tag: data.type ? `ruwad-${data.type}` : undefined,
-    renotify: !!data.type,
+    tag: data.tag || (data.type ? `ruwad-${data.type}` : undefined),
+    renotify: !!(data.tag || data.type),
     // صورة كبيرة اختيارية (للدعايات مستقبلاً)
     image: data.image || undefined,
     actions: [{ action: 'open', title: 'فتح' }],
