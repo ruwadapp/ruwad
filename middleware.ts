@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
+import { MAIN_HOSTS, resolvePortal, portalIsLive } from '@/lib/portal/resolve'
 
 const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
@@ -26,6 +27,33 @@ export async function middleware(request: NextRequest) {
     url.protocol = 'https:'
     url.port = ''
     return NextResponse.redirect(url, 308)
+  }
+
+  // ===== بوابات المعاهد: أي مضيف غير المنصة الأم =====
+  if (!MAIN_HOSTS.has(host.toLowerCase())) {
+    const portal = await resolvePortal(host)
+    const url = request.nextUrl
+
+    // مضيف مجهول (subdomain بلا بوابة أو دومين غير مربوط) → المنصة الأم
+    if (!portal) {
+      return NextResponse.redirect(new URL(`https://www.ruwaad.app${url.pathname}${url.search}`), 307)
+    }
+    // بوابة موقوفة أو منتهية → صفحة التعليق (تُعرض على دومين المعهد نفسه)
+    if (!portalIsLive(portal)) {
+      if (url.pathname !== '/portal-inactive') {
+        return NextResponse.rewrite(new URL('/portal-inactive', request.url))
+      }
+      return NextResponse.next()
+    }
+    // بوابة حية: الجذر → صفحة البوابة العامة؛ بقية المسارات مؤقتاً → المنصة الأم
+    // (تجربة الدخول الكاملة على دومين البوابة تأتي في المرحلة 3)
+    if (url.pathname === '/' ) {
+      return NextResponse.rewrite(new URL(`/portal/${portal.portal_id}`, request.url))
+    }
+    if (url.pathname === '/portal-inactive' || url.pathname.startsWith(`/portal/`)) {
+      return NextResponse.next()
+    }
+    return NextResponse.redirect(new URL(`https://www.ruwaad.app${url.pathname}${url.search}`), 307)
   }
 
   const { user, response } = await updateSession(request)

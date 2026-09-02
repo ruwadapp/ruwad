@@ -2,16 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* هوية العلامة الافتراضية (رُوّاد) — بوابات المعاهد تكتب فوقها بقيمها */
+:root {
+  --brand-primary: 58 78 251;    /* #3A4EFB */
+  --brand-secondary: 51 164 250; /* #33A4FA */
+  --brand-accent: 227 255 59;    /* #E3FF3B */
+  --brand-navy: 37 41 67;        /* #252943 */
+  --brand-gray: 222 224 237;     /* #DEE0ED */
+}
+
+
 :root {
   --color-primary: #3a4efb;
   --color-primary-light: #33a4fa;
   --color-accent: #e3ff3b;
-  --color-dark: #252943;
+  --color-dark: rgb(var(--brand-navy));
   --color-gray: #dee0ed;
   --color-white: #ffffff;
 
   --gradient-primary: linear-gradient(135deg, #3a4efb 0%, #33a4fa 100%);
-  --gradient-dark: linear-gradient(180deg, #252943 0%, #1a1e33 100%);
+  --gradient-dark: linear-gradient(180deg, rgb(var(--brand-navy)) 0%, #1a1e33 100%);
 
   --radius-lg: 20px;
   --radius-md: 12px;
@@ -28,7 +38,7 @@
 body {
   font-family: 'Alyamama', 'Inter', sans-serif;
   background-color: #f5f6fa;
-  color: #252943;
+  color: rgb(var(--brand-navy));
   direction: rtl;
 }
 
@@ -136,20 +146,20 @@ textarea:focus-visible {
 
 /* ===== لغة تصميم "الملاحظات المثبّتة" — ظلال صلبة بدل التمويه ===== */
 .shadow-hard {
-  box-shadow: 6px 6px 0 0 #252943;
+  box-shadow: 6px 6px 0 0 rgb(var(--brand-navy));
 }
 .shadow-hard-sm {
-  box-shadow: 4px 4px 0 0 #252943;
+  box-shadow: 4px 4px 0 0 rgb(var(--brand-navy));
 }
 .shadow-hard-lime {
-  box-shadow: 6px 6px 0 0 #E3FF3B;
+  box-shadow: 6px 6px 0 0 rgb(var(--brand-accent));
 }
 .hover-pop {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .hover-pop:hover {
   transform: translate(-3px, -3px);
-  box-shadow: 9px 9px 0 0 #252943;
+  box-shadow: 9px 9px 0 0 rgb(var(--brand-navy));
 }
 
 @keyframes scorePulse {

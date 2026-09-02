@@ -5,31 +5,33 @@ const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // الألوان تُقرأ من متغيرات CSS (قيمها الافتراضية في globals.css = هوية رُوّاد)
+      // صيغة قنوات RGB تُبقي مُعدِّلات الشفافية مثل bg-ruwad-blue/10 تعمل كما هي
       colors: {
         ruwad: {
-          blue: '#3A4EFB',
-          'blue-light': '#33A4FA',
-          lime: '#E3FF3B',
-          navy: '#252943',
-          gray: '#DEE0ED',
+          blue: 'rgb(var(--brand-primary) / <alpha-value>)',
+          'blue-light': 'rgb(var(--brand-secondary) / <alpha-value>)',
+          lime: 'rgb(var(--brand-accent) / <alpha-value>)',
+          navy: 'rgb(var(--brand-navy) / <alpha-value>)',
+          gray: 'rgb(var(--brand-gray) / <alpha-value>)',
         },
         primary: {
-          DEFAULT: '#3A4EFB',
-          light: '#33A4FA',
+          DEFAULT: 'rgb(var(--brand-primary) / <alpha-value>)',
+          light: 'rgb(var(--brand-secondary) / <alpha-value>)',
           foreground: '#FFFFFF',
         },
         accent: {
-          DEFAULT: '#E3FF3B',
-          foreground: '#252943',
+          DEFAULT: 'rgb(var(--brand-accent) / <alpha-value>)',
+          foreground: 'rgb(var(--brand-navy) / <alpha-value>)',
         },
         dark: {
-          DEFAULT: '#252943',
+          DEFAULT: 'rgb(var(--brand-navy) / <alpha-value>)',
           foreground: '#FFFFFF',
         },
       },
       backgroundImage: {
-        'ruwad-gradient': 'linear-gradient(135deg, #3A4EFB 0%, #33A4FA 100%)',
-        'ruwad-dark': 'linear-gradient(180deg, #252943 0%, #1a1e33 100%)',
+        'ruwad-gradient': 'linear-gradient(135deg, rgb(var(--brand-primary)) 0%, rgb(var(--brand-secondary)) 100%)',
+        'ruwad-dark': 'linear-gradient(180deg, rgb(var(--brand-navy)) 0%, #1a1e33 100%)',
       },
       borderRadius: {
         ruwad: '20px',
@@ -40,9 +42,9 @@ const config: Config = {
         latin: ['Inter', 'sans-serif'],
       },
       boxShadow: {
-        ruwad: '0 8px 32px rgba(58, 78, 251, 0.18)',
-        'ruwad-lg': '0 16px 48px rgba(58, 78, 251, 0.24)',
-        card: '0 2px 16px rgba(37, 41, 67, 0.08)',
+        ruwad: '0 8px 32px rgb(var(--brand-primary) / 0.18)',
+        'ruwad-lg': '0 16px 48px rgb(var(--brand-primary) / 0.24)',
+        card: '0 2px 16px rgb(var(--brand-navy) / 0.08)',
       },
     },
   },
