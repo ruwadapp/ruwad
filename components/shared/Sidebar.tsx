@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Globe2,
+  Wallet,
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3, LogOut, Pencil,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
@@ -59,6 +60,7 @@ const instituteNav = [
   { href: '/org/training-requests', label: 'طلبات التدريب', icon: Target },
   { href: '/org/surveys', label: 'الاستبيانات', icon: ClipboardList },
   { href: '/org/posts', label: 'منشوراتي', icon: Rss },
+  { href: '/org/finance', label: 'المالية', icon: Wallet },
   { href: '/org/portal', label: 'بوابتي', icon: Globe2 },
   { href: '/org/members', label: 'الأعضاء', icon: UserCog },
 ]
