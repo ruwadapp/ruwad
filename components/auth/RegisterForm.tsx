@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -7,10 +7,24 @@ import type { UserRole } from '@/lib/types'
 
 export function RegisterForm() {
   const searchParams = useSearchParams()
+  // التسجيل عبر بوابة معهد: يفرض دور الطالب ويربطه بالمعهد تلقائياً (عبر trigger الخادم)
+  const portalId = searchParams.get('portal')
+  const [portalName, setPortalName] = useState<string | null>(null)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<UserRole>('student')
+
+  useEffect(() => {
+    if (!portalId) return
+    setRole('student')
+    supabase.rpc('get_portal_public', { p_portal_id: portalId }).single()
+      .then(({ data }) => {
+        const d = data as { brand?: { display_name?: string }; institute_name?: string } | null
+        if (d) setPortalName(d.brand?.display_name || d.institute_name || null)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portalId])
   const [instituteName, setInstituteName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -28,7 +42,7 @@ export function RegisterForm() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: { data: { full_name: fullName, role, ...(portalId ? { portal_id: portalId } : {}) } },
     })
 
     if (signUpError) {
@@ -76,12 +90,19 @@ export function RegisterForm() {
         >
           <h2 className="text-xl font-bold text-ruwad-navy mb-2">إنشاء حساب جديد</h2>
 
+          {portalName && (
+            <div className="bg-ruwad-blue/10 border-2 border-ruwad-blue/25 text-ruwad-blue text-sm font-bold rounded-ruwad-sm px-4 py-3 -mt-1">
+              🎓 ستنضم تلقائياً إلى <span className="font-extrabold">{portalName}</span> فور إنشاء حسابك
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">
               {error}
             </div>
           )}
 
+          {!portalId && (
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
@@ -117,6 +138,7 @@ export function RegisterForm() {
               معهد
             </button>
           </div>
+          )}
 
           {role === 'institute_admin' && (
             <div className="flex flex-col gap-1.5">

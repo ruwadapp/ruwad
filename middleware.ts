@@ -53,6 +53,12 @@ export async function middleware(request: NextRequest) {
     if (url.pathname === '/portal-inactive' || url.pathname.startsWith(`/portal/`)) {
       return NextResponse.next()
     }
+    // مسارا المصادقة على دومين البوابة يحملان هويتها إلى المنصة الأم
+    if (url.pathname === '/register' || url.pathname === '/login') {
+      const authUrl = new URL(`https://www.ruwaad.app${url.pathname}${url.search}`)
+      if (url.pathname === '/register') authUrl.searchParams.set('portal', portal.portal_id)
+      return NextResponse.redirect(authUrl, 307)
+    }
     return NextResponse.redirect(new URL(`https://www.ruwaad.app${url.pathname}${url.search}`), 307)
   }
 

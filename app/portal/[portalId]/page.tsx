@@ -54,7 +54,7 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
             <p className="flex items-center gap-1.5 text-sm text-white/70"><MapPin size={14} /> {portal.institute_address}</p>
           )}
           <div className="flex gap-3 mt-3">
-            <Link href="https://www.ruwaad.app/register"
+            <Link href={`https://www.ruwaad.app/register?portal=${portal.portal_id}`}
               className="bg-ruwad-lime text-ruwad-navy font-extrabold px-6 py-3 rounded-ruwad-sm hover:opacity-90 transition">
               سجّل كطالب
             </Link>
