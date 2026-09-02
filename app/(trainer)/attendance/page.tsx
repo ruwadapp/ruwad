@@ -3,20 +3,33 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
 import { CreateSessionForm } from '@/components/trainer/CreateSessionForm'
 import { SessionToggle } from '@/components/trainer/SessionToggle'
+import { CopyCodeButton } from '@/components/trainer/CopyCodeButton'
 import { CalendarCheck, Circle, BarChart3, BookOpen, Layers, Users } from 'lucide-react'
 
 export default async function AttendancePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: sessions }, { data: courses }] = await Promise.all([
+  const [{ data: sessions }, { data: courses }, { data: enrollRows }] = await Promise.all([
     supabase
       .from('attendance_sessions')
-      .select('*, attendance_records(count)')
+      .select('*, attendance_records(status), calendar_events!attendance_session_id(starts_at, ends_at)')
       .eq('trainer_id', user!.id)
       .order('created_at', { ascending: false }),
     supabase.from('courses').select('*').eq('trainer_id', user!.id),
+    supabase.from('enrollments').select('course_id, course:courses!inner(trainer_id)')
+      .eq('status', 'approved').eq('course.trainer_id', user!.id),
   ])
+  // عدد الطلاب المقبولين لكل كورس — لحساب نسبة الحضور على البطاقة
+  const enrolledByCourse = new Map<string, number>()
+  for (const r of enrollRows ?? []) enrolledByCourse.set(r.course_id, (enrolledByCourse.get(r.course_id) ?? 0) + 1)
+
+  const TIME_FMT = new Intl.DateTimeFormat('ar', { hour: 'numeric', minute: '2-digit' })
+  const durationLabel = (a?: string | null, b?: string | null) => {
+    if (!a || !b) return null
+    const mins = Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000))
+    return mins >= 60 ? `${Math.floor(mins / 60)}س ${mins % 60 ? (mins % 60) + 'د' : ''}`.trim() : `${mins}د`
+  }
 
   // ===== تجميع الجلسات في مجموعات لكل كورس =====
   const ACCENTS = [
@@ -47,7 +60,7 @@ export default async function AttendancePage() {
   }
   if (generalSessions.length) groups.push({ key: 'general', title: 'جلسات عامة (بلا كورس)', sessions: generalSessions })
 
-  const totalCheckins = (list: SessionRow[]) => list.reduce((sum, x) => sum + (x.attendance_records?.[0]?.count ?? 0), 0)
+  const totalCheckins = (list: SessionRow[]) => list.reduce((sum, x) => sum + (x.attendance_records?.length ?? 0), 0)
 
   return (
     <>
@@ -104,35 +117,91 @@ export default async function AttendancePage() {
 
                   {/* ===== جلسات المجموعة ===== */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {group.sessions.map((session) => (
-                      <Link
-                        key={session.id}
-                        href={`/attendance/${session.id}`}
-                        className={`group bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2.5 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all ${
-                          session.is_active ? 'ring-2 ring-green-400/60' : ''
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-bold text-ruwad-navy leading-snug line-clamp-2 group-hover:text-ruwad-blue transition-colors flex-1">{session.title}</h3>
-                          <SessionToggle sessionId={session.id} initialActive={session.is_active} />
-                          <span
-                            className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                              session.is_active ? 'bg-green-50 text-green-600' : session.closed_at ? 'bg-ruwad-gray/40 text-ruwad-navy/50' : 'bg-amber-50 text-amber-600'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${session.is_active ? 'bg-green-500 animate-pulse' : session.closed_at ? 'bg-ruwad-navy/30' : 'bg-amber-400'}`} />
-                            {session.is_active ? 'نشطة الآن' : session.closed_at ? 'مغلقة' : 'لم تُفعَّل'}
-                          </span>
-                        </div>
-                        <p className="text-xl font-mono font-bold tracking-widest" style={{ color: accent.text }}>
-                          {session.session_code}
-                        </p>
-                        <div className="flex items-center justify-between text-[11px] text-ruwad-navy/45">
-                          <span className="flex items-center gap-1"><Users size={11} /> {session.attendance_records?.[0]?.count ?? 0} مسجّل</span>
-                          <span>{new Date(session.created_at).toLocaleDateString('ar', { day: 'numeric', month: 'short' })}</span>
-                        </div>
-                      </Link>
-                    ))}
+                    {group.sessions.map((session) => {
+                      const recs = session.attendance_records ?? []
+                      const approved = recs.filter((r: { status: string }) => r.status === 'approved').length
+                      const pending = recs.filter((r: { status: string }) => r.status === 'pending').length
+                      const enrolled = session.course_id ? (enrolledByCourse.get(session.course_id) ?? 0) : 0
+                      const rate = enrolled > 0 ? Math.round((approved / enrolled) * 100) : null
+                      const calEvent = session.calendar_events?.[0] ?? null
+                      const duration = durationLabel(calEvent?.starts_at ?? session.activated_at, calEvent?.ends_at ?? session.closed_at)
+                      return (
+                        <Link
+                          key={session.id}
+                          href={`/attendance/${session.id}`}
+                          className={`group relative overflow-hidden bg-white rounded-ruwad shadow-card flex flex-col hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all ${
+                            session.is_active ? 'ring-2 ring-green-400/70' : ''
+                          }`}
+                        >
+                          {/* شريط الحالة العلوي */}
+                          <div className="h-1.5 w-full" style={{ background: session.is_active ? '#22c55e' : session.closed_at ? '#c9cdde' : accent.bar }} />
+
+                          <div className="p-4 flex flex-col gap-3 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-extrabold text-ruwad-navy leading-snug line-clamp-2 group-hover:text-ruwad-blue transition-colors">{session.title}</h3>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-ruwad-navy/45 font-medium">
+                                  <span>{new Date(session.created_at).toLocaleDateString('ar', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                  {session.activated_at && <span>فُعّلت {TIME_FMT.format(new Date(session.activated_at))}</span>}
+                                  {duration && <span>· المدة {duration}</span>}
+                                </div>
+                              </div>
+                              <SessionToggle sessionId={session.id} initialActive={session.is_active} />
+                            </div>
+
+                            {/* الكود — كبير وواضح مع نسخ */}
+                            <div className="flex items-center justify-between gap-2 rounded-ruwad-sm border-2 border-dashed px-3 py-2" style={{ borderColor: accent.bar + '55', background: accent.soft }}>
+                              <div>
+                                <p className="text-[10px] font-bold text-ruwad-navy/40">كود الجلسة</p>
+                                <p className="text-2xl font-mono font-black tracking-[.3em] leading-none mt-0.5" style={{ color: accent.text }}>{session.session_code}</p>
+                              </div>
+                              <CopyCodeButton code={session.session_code} />
+                            </div>
+
+                            {/* الإحصاءات */}
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="rounded-ruwad-sm bg-green-50 py-1.5">
+                                <p className="text-base font-extrabold text-green-600 leading-none">{approved}</p>
+                                <p className="text-[10px] font-bold text-green-700/60 mt-1">حاضر ✓</p>
+                              </div>
+                              <div className={`rounded-ruwad-sm py-1.5 ${pending > 0 ? 'bg-amber-50 ring-1 ring-amber-300' : 'bg-[#F5F6FA]'}`}>
+                                <p className={`text-base font-extrabold leading-none ${pending > 0 ? 'text-amber-600' : 'text-ruwad-navy/40'}`}>{pending}</p>
+                                <p className={`text-[10px] font-bold mt-1 ${pending > 0 ? 'text-amber-700/70' : 'text-ruwad-navy/35'}`}>بالانتظار</p>
+                              </div>
+                              <div className="rounded-ruwad-sm bg-[#F5F6FA] py-1.5">
+                                <p className="text-base font-extrabold text-ruwad-navy leading-none">{enrolled || '—'}</p>
+                                <p className="text-[10px] font-bold text-ruwad-navy/40 mt-1">طلاب الكورس</p>
+                              </div>
+                            </div>
+
+                            {/* نسبة الحضور */}
+                            {rate !== null && (
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 rounded-full bg-ruwad-gray/40 overflow-hidden">
+                                  <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(rate, 100)}%`, background: rate >= 70 ? '#22c55e' : rate >= 40 ? '#f59e0b' : '#94a3b8' }} />
+                                </div>
+                                <span className="text-[11px] font-extrabold text-ruwad-navy/60 w-9 text-left">{rate}%</span>
+                              </div>
+                            )}
+
+                            {/* تذييل الحالة */}
+                            <div className="flex items-center justify-between mt-auto pt-1">
+                              <span className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                                session.is_active ? 'bg-green-50 text-green-600' : session.closed_at ? 'bg-ruwad-gray/40 text-ruwad-navy/50' : 'bg-amber-50 text-amber-600'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${session.is_active ? 'bg-green-500 animate-pulse' : session.closed_at ? 'bg-ruwad-navy/30' : 'bg-amber-400'}`} />
+                                {session.is_active ? 'نشطة الآن' : session.closed_at ? 'مغلقة' : 'لم تُفعَّل'}
+                              </span>
+                              {calEvent && (
+                                <span className="flex items-center gap-1 text-[10px] font-bold text-ruwad-blue bg-ruwad-blue/10 rounded-full px-2 py-1">
+                                  <CalendarCheck size={10} /> مجدولة بالتقويم · {TIME_FMT.format(new Date(calEvent.starts_at))}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })}
                   </div>
                 </section>
               )
