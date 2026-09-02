@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { brandStyle, type PortalInfo } from '@/lib/portal/resolve'
-import { GraduationCap, MapPin, ArrowLeft, BookOpen } from 'lucide-react'
+import { GraduationCap, MapPin, ArrowLeft, BookOpen, MessageCircleQuestion } from 'lucide-react'
+import { InquiryForm } from '@/components/portal/InquiryForm'
 
 // الصفحة العامة لبوابة المعهد — تُعرض على دومينه بهويته البصرية
 // (الوصول إليها عبر rewrite من الـ middleware حصراً)
@@ -104,6 +105,16 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
             ))}
           </div>
         )}
+      </section>
+
+      {/* استفسر الآن — يصب مباشرة في لوحة المهتمين لدى المعهد */}
+      <section id="inquiry" className="max-w-2xl mx-auto px-5 pb-14">
+        <h2 className="text-xl font-extrabold text-ruwad-navy mb-2 flex items-center gap-2">
+          <MessageCircleQuestion size={20} className="text-ruwad-blue" /> استفسر الآن
+        </h2>
+        <p className="text-sm text-ruwad-navy/55 mb-4">اترك اسمك ورقمك وسيتواصل معك المعهد مباشرة.</p>
+        <InquiryForm instituteId={portal.institute_id} portalId={portal.portal_id}
+          courses={(courses ?? []).map((c) => ({ id: c.id, title: c.title }))} />
       </section>
 
       <footer className="border-t border-ruwad-gray/60 py-6 text-center text-xs text-ruwad-navy/40">

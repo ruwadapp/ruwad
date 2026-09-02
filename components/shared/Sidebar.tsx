@@ -61,6 +61,7 @@ const instituteNav = [
   { href: '/org/training-requests', label: 'طلبات التدريب', icon: Target },
   { href: '/org/surveys', label: 'الاستبيانات', icon: ClipboardList },
   { href: '/org/posts', label: 'منشوراتي', icon: Rss },
+  { href: '/org/crm', label: 'المهتمون', icon: Target },
   { href: '/org/finance', label: 'المالية', icon: Wallet },
   { href: '/org/portal', label: 'بوابتي', icon: Globe2 },
   { href: '/org/members', label: 'الأعضاء', icon: UserCog },
