@@ -27,7 +27,6 @@ const trainerNav: NavItem[] = [
   { href: '/challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/assignments', label: 'الوظائف', icon: 'FileCheck' },
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
-  { href: '/calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/badges', label: 'الشارات', icon: 'Award' },
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
@@ -39,7 +38,6 @@ const trainerNav: NavItem[] = [
 
 const studentNav: NavItem[] = [
   { href: '/home', label: 'الرئيسية', icon: 'Home' },
-  { href: '/rawaq', label: 'الرواق', icon: 'Rss' },
   { href: '/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/opportunities', label: 'الفرص', icon: 'Briefcase' },
   { href: '/request-training', label: 'اطلب تدريباً', icon: 'Target' },
@@ -50,7 +48,6 @@ const studentNav: NavItem[] = [
   { href: '/my-presentations', label: 'العروض', icon: 'MonitorPlay' },
   { href: '/my-assignments', label: 'واجباتي', icon: 'ListChecks' },
   { href: '/my-attendance', label: 'الحضور', icon: 'CalendarCheck' },
-  { href: '/my-calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/my-achievements', label: 'إنجازاتي', icon: 'Award' },
 ]
 
@@ -58,7 +55,6 @@ const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
-  { href: '/org/calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
