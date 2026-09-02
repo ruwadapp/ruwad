@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
-  Trophy, FileCheck, CalendarCheck, BarChart3,
+  Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
@@ -12,7 +12,7 @@ import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
+  CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -27,6 +27,7 @@ const trainerNav: NavItem[] = [
   { href: '/challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/assignments', label: 'الوظائف', icon: 'FileCheck' },
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
+  { href: '/calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/badges', label: 'الشارات', icon: 'Award' },
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
@@ -49,6 +50,7 @@ const studentNav: NavItem[] = [
   { href: '/my-presentations', label: 'العروض', icon: 'MonitorPlay' },
   { href: '/my-assignments', label: 'واجباتي', icon: 'ListChecks' },
   { href: '/my-attendance', label: 'الحضور', icon: 'CalendarCheck' },
+  { href: '/my-calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/progress', label: 'تقدّمي', icon: 'BarChart3' },
   { href: '/my-badges', label: 'شاراتي', icon: 'Award' },
   { href: '/my-certificates', label: 'شهاداتي', icon: 'ShieldCheck' },
@@ -58,6 +60,7 @@ const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
+  { href: '/org/calendar', label: 'التقويم', icon: 'CalendarDays' },
   { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },

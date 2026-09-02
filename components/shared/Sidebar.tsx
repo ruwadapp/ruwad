@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
-  Trophy, FileCheck, CalendarCheck, BarChart3, LogOut, Pencil,
+  Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3, LogOut, Pencil,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
@@ -19,6 +19,7 @@ const trainerNav = [
   { href: '/challenges', label: 'التحديات', icon: Trophy },
   { href: '/assignments', label: 'الوظائف', icon: FileCheck },
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
+  { href: '/calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/badges', label: 'الشارات', icon: Award },
   { href: '/posts', label: 'منشوراتي', icon: Rss },
   { href: '/nearby-students', label: 'بالقرب مني', icon: MapPin },
@@ -42,6 +43,7 @@ const studentNav = [
   { href: '/my-challenges', label: 'التحديات', icon: Trophy },
   { href: '/my-assignments', label: 'واجباتي', icon: ListChecks },
   { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
+  { href: '/my-calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/progress', label: 'تقدّمي', icon: BarChart3 },
   { href: '/my-badges', label: 'شاراتي', icon: Award },
   { href: '/my-certificates', label: 'شهاداتي', icon: ShieldCheck },
@@ -51,6 +53,7 @@ const instituteNav = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/org/trainers', label: 'المدربون', icon: Users },
   { href: '/org/students', label: 'الطلاب', icon: GraduationCap },
+  { href: '/org/calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/org/analytics', label: 'الإحصائيات', icon: BarChart3 },
   { href: '/org/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/org/jobs', label: 'فرص العمل', icon: Briefcase },
