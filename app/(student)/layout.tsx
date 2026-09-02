@@ -8,13 +8,17 @@ import { OnboardingPermissions } from '@/components/shared/OnboardingPermissions
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // الجلسة من الكوكي محلياً — التحقق الفعلي من صحتها يتم في middleware على كل طلب،
+  // فلا داعي لرحلة شبكة إضافية إلى خادم المصادقة عند كل تنقّل
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const [{ data: profile }, { data: myLoc }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('user_locations').select('visible').eq('user_id', user.id).maybeSingle(),
+  ])
   if (profile?.role !== 'student') redirect('/dashboard')
-
-  const { data: myLoc } = await supabase.from('user_locations').select('visible').eq('user_id', user.id).maybeSingle()
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">

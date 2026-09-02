@@ -7,16 +7,20 @@ import { OnboardingPermissions } from '@/components/shared/OnboardingPermissions
 
 export default async function TrainerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // الجلسة من الكوكي محلياً — التحقق الفعلي من صحتها يتم في middleware على كل طلب،
+  // فلا داعي لرحلة شبكة إضافية إلى خادم المصادقة عند كل تنقّل
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const [{ data: profile }, { data: myLoc }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('user_locations').select('visible').eq('user_id', user.id).maybeSingle(),
+  ])
   // مدير المعهد مسموح له بالدخول أيضاً كي يستطيع فتح وتعديل صفحات التفاصيل
   // (كورس/امتحان/واجب/تحدٍ) التي شاركها معه أحد المدربين المنضمين له. صلاحية
   // التعديل الفعلية محكومة بـ RLS داخل كل صفحة، وليس بهذا الحارس فقط.
   if (profile?.role !== 'trainer' && profile?.role !== 'institute_admin') redirect('/home')
-
-  const { data: myLoc } = await supabase.from('user_locations').select('visible').eq('user_id', user.id).maybeSingle()
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">

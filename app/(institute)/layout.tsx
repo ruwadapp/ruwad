@@ -7,13 +7,17 @@ import { OnboardingPermissions } from '@/components/shared/OnboardingPermissions
 
 export default async function InstituteLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // الجلسة من الكوكي محلياً — التحقق الفعلي من صحتها يتم في middleware على كل طلب،
+  // فلا داعي لرحلة شبكة إضافية إلى خادم المصادقة عند كل تنقّل
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const [{ data: profile }, { data: myInstitute }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('institutes').select('id, latitude').eq('owner_id', user.id).maybeSingle(),
+  ])
   if (profile?.role !== 'institute_admin') redirect('/dashboard')
-
-  const { data: myInstitute } = await supabase.from('institutes').select('id, latitude').eq('owner_id', user.id).maybeSingle()
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">
