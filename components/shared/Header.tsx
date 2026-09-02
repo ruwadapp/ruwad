@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { NotificationBell } from './NotificationBell'
 import { ChatHeaderButton } from './ChatHeaderButton'
+import { CalendarHeaderButton } from './CalendarHeaderButton'
 import { UserCircle } from 'lucide-react'
 
 export function Header({ title }: { title: string }) {
@@ -9,6 +10,7 @@ export function Header({ title }: { title: string }) {
     <header className="bg-white shadow-card px-6 py-4 flex items-center justify-between sticky top-0 z-10">
       <h1 className="text-lg md:text-xl font-bold text-ruwad-navy">{title}</h1>
       <div className="flex items-center gap-2">
+        <CalendarHeaderButton />
         <ChatHeaderButton />
         <NotificationBell />
         <Link
