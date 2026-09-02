@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   ChevronRight, ChevronLeft, Plus, X, Clock, MapPin, BookOpen,
-  Building2, UserRound, Trash2, Pencil, CalendarDays, Loader2,
+  Building2, UserRound, Trash2, Pencil, CalendarDays, Loader2, ClipboardCheck,
 } from 'lucide-react'
 
 /* ================= الأنواع ================= */
@@ -30,8 +30,10 @@ interface CalEvent {
   color: string | null
   starts_at: string
   ends_at: string | null
+  attendance_session_id: string | null
   course: { title: string } | null
   institute: { name: string } | null
+  attendance_session: { session_code: string; is_active: boolean; closed_at: string | null } | null
 }
 
 /* ================= أدوات التاريخ (الأسبوع يبدأ السبت) ================= */
@@ -81,7 +83,7 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
     const from = new Date(gridStart); const to = new Date(gridStart); to.setDate(to.getDate() + 42)
     const { data } = await supabase
       .from('calendar_events')
-      .select('*, course:courses(title), institute:institutes(name)')
+      .select('*, course:courses(title), institute:institutes(name), attendance_session:attendance_sessions(session_code, is_active, closed_at)')
       .gte('starts_at', from.toISOString())
       .lt('starts_at', to.toISOString())
       .order('starts_at')
@@ -243,6 +245,23 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
                     {e.location && <span className="flex items-center gap-1"><MapPin size={12} /> {e.location}</span>}
                   </div>
                   {e.description && <p className="text-xs text-ruwad-navy/70 mt-1.5 leading-relaxed">{e.description}</p>}
+                  {e.attendance_session_id && e.attendance_session && (
+                    e.attendance_session.is_active ? (
+                      <span className="inline-flex items-center gap-1.5 mt-2 text-[11px] font-extrabold text-emerald-800 bg-emerald-50 border-2 border-emerald-300 rounded-full px-2.5 py-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        الحضور مفتوح الآن
+                        {meta.mode !== 'student' && <span className="font-black tracking-widest">· {e.attendance_session.session_code}</span>}
+                      </span>
+                    ) : e.attendance_session.closed_at ? (
+                      <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-ruwad-navy/45 bg-ruwad-gray/25 rounded-full px-2.5 py-1">
+                        <ClipboardCheck size={11} /> انتهت جلسة الحضور
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-ruwad-blue bg-ruwad-blue/10 border border-ruwad-blue/25 rounded-full px-2.5 py-1">
+                        <ClipboardCheck size={11} /> حضور تلقائي عند بدء الموعد
+                      </span>
+                    )
+                  )}
                 </div>
                 {canEdit(e) && (
                   <button onClick={() => setModal({ open: true, event: e })} aria-label="تعديل"
@@ -282,6 +301,7 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
   const [location, setLocation] = useState(event?.location ?? '')
   const [description, setDescription] = useState(event?.description ?? '')
   const [color, setColor] = useState(event?.color ?? (meta.mode === 'institute' ? '#252943' : '#3A4EFB'))
+  const [autoAttendance, setAutoAttendance] = useState(!!event?.attendance_session_id)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -290,20 +310,31 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
     const starts = new Date(`${date}T${startTime}`)
     const ends = endTime ? new Date(`${date}T${endTime}`) : null
     if (ends && ends <= starts) { setError('وقت النهاية يجب أن يكون بعد البداية'); return }
+    if (autoAttendance && !ends) { setError('الحضور التلقائي يتطلب تحديد وقت نهاية — منه تُحسب مدة الجلسة'); return }
     setSaving(true); setError('')
     const payload = {
       title: title.trim(), course_id: courseId, location: location.trim() || null,
       description: description.trim() || null, color,
       starts_at: starts.toISOString(), ends_at: ends ? ends.toISOString() : null,
     }
-    const { error: err } = event
-      ? await supabase.from('calendar_events').update(payload).eq('id', event.id)
-      : await supabase.from('calendar_events').insert({
-          ...payload, created_by: meta.userId,
-          institute_id: meta.mode === 'institute' ? meta.instituteId : null,
-        })
+    let eventId = event?.id ?? null
+    if (event) {
+      const { error: err } = await supabase.from('calendar_events').update(payload).eq('id', event.id)
+      if (err) { setSaving(false); setError('تعذّر الحفظ — تأكد من صلاحياتك على هذا التدريب'); return }
+    } else {
+      const { data: created, error: err } = await supabase.from('calendar_events').insert({
+        ...payload, created_by: meta.userId,
+        institute_id: meta.mode === 'institute' ? meta.instituteId : null,
+      }).select('id').single()
+      if (err || !created) { setSaving(false); setError('تعذّر الحفظ — تأكد من صلاحياتك على هذا التدريب'); return }
+      eventId = created.id
+    }
+    // مزامنة الحضور التلقائي (إنشاء الجلسة أو حذفها/فك ربطها)
+    if (eventId && autoAttendance !== !!event?.attendance_session_id) {
+      const { error: attErr } = await supabase.rpc('set_event_auto_attendance', { p_event_id: eventId, p_enabled: autoAttendance })
+      if (attErr) { setSaving(false); setError('حُفظ الموعد لكن تعذّر ضبط جلسة الحضور — أعد المحاولة من التعديل'); return }
+    }
     setSaving(false)
-    if (err) { setError('تعذّر الحفظ — تأكد من صلاحياتك على هذا التدريب'); return }
     onSaved()
   }
 
@@ -368,6 +399,27 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
               className="border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none resize-none" />
           </label>
+
+          <button type="button" onClick={() => setAutoAttendance((v) => !v)}
+            className={`sm:col-span-2 flex items-center gap-3 rounded-ruwad-sm border-2 px-3.5 py-3 text-right transition ${
+              autoAttendance ? 'border-emerald-400 bg-emerald-50' : 'border-ruwad-gray bg-white hover:border-emerald-300'}`}>
+            <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${autoAttendance ? 'bg-emerald-500' : 'bg-ruwad-gray'}`}>
+              <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${autoAttendance ? 'right-6' : 'right-1'}`} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-extrabold text-ruwad-navy flex items-center gap-1.5">
+                <ClipboardCheck size={15} className={autoAttendance ? 'text-emerald-600' : 'text-ruwad-navy/40'} /> جلسة حضور تلقائية
+              </span>
+              <span className="block text-[11px] text-ruwad-navy/55 font-medium mt-0.5">
+                تُفعَّل عند بدء الموعد وتُغلق عند نهايته، مع إشعار طلاب الكورس بالكود — تتطلب وقت نهاية
+              </span>
+              {event?.attendance_session_id && event.attendance_session && autoAttendance && (
+                <span className="block text-[11px] font-extrabold text-emerald-700 mt-1">
+                  كود الجلسة: <span className="tracking-widest font-black">{event.attendance_session.session_code}</span>
+                </span>
+              )}
+            </span>
+          </button>
 
           <div className="sm:col-span-2 flex items-center gap-2.5">
             <span className="text-xs font-extrabold text-ruwad-navy">اللون:</span>
