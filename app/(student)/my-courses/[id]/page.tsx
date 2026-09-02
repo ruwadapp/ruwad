@@ -102,7 +102,7 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
   }
   const summitNode: JourneyNode = {
     key: 'summit', kind: 'certificate', title: 'شهادة إتمام الكورس',
-    href: '/my-certificates', completed: !!certificate,
+    href: '/my-achievements', completed: !!certificate,
   }
 
   const byId = {
