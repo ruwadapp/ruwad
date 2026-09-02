@@ -1,4 +1,5 @@
 // تُعرض على دومين المعهد عندما تكون بوابته موقوفة أو منتهية الاشتراك
+export const metadata = { title: 'البوابة غير نشطة', robots: { index: false, follow: false } }
 export default function PortalInactivePage() {
   return (
     <main dir="rtl" className="min-h-screen bg-[#F5F6FA] flex items-center justify-center p-6">

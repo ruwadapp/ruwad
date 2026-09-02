@@ -6,6 +6,21 @@ import { GraduationCap, MapPin, ArrowLeft, BookOpen } from 'lucide-react'
 
 // الصفحة العامة لبوابة المعهد — تُعرض على دومينه بهويته البصرية
 // (الوصول إليها عبر rewrite من الـ middleware حصراً)
+
+export async function generateMetadata({ params }: { params: Promise<{ portalId: string }> }) {
+  const { portalId } = await params
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase.rpc('get_portal_public', { p_portal_id: portalId }).single<{
+    brand: PortalInfo['brand']; institute_name: string; institute_description: string | null
+  }>()
+  if (!data) return { title: 'بوابة غير موجودة', robots: { index: false } }
+  const name = data.brand?.display_name || data.institute_name
+  return {
+    title: `${name} — التدريبات والتسجيل`,
+    description: data.institute_description ?? `بوابة ${name}: تصفح التدريبات المتاحة وسجّل كطالب.`,
+    openGraph: { title: name, description: data.institute_description ?? undefined, type: 'website' },
+  }
+}
 export default async function PortalLandingPage({ params }: { params: Promise<{ portalId: string }> }) {
   const { portalId } = await params
   const supabase = await createServerSupabaseClient()

@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PrintCertificateButton } from '@/components/shared/PrintCertificateButton'
 import { Award } from 'lucide-react'
+import { brandStyle, type PortalInfo } from '@/lib/portal/resolve'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,16 +23,30 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://ruwadapp.vercel.app'}/certificates/verify/${cert.certificate_code}`
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&color=252943&bgcolor=ffffff`
 
+  // هوية بوابة المعهد (إن كان الكورس مشاركاً مع معهد له بوابة) — تلوّن الشهادة تلقائياً
+  let portalBrand: PortalInfo['brand'] = {}
+  const { data: share } = await supabase
+    .from('resource_institute_shares').select('institute_id')
+    .eq('resource_type', 'courses').eq('resource_id', cert.course_id).limit(1).maybeSingle()
+  if (share) {
+    const { data: portal } = await supabase
+      .from('institute_portals').select('brand, status')
+      .eq('institute_id', share.institute_id).eq('status', 'active').maybeSingle()
+    if (portal?.brand) portalBrand = portal.brand as PortalInfo['brand']
+  }
+  const accentHex = portalBrand.accent ?? '#E3FF3B'
+  const primaryHex = portalBrand.primary ?? '#3A4EFB'
+
   const studentName = (cert.student as unknown as { full_name?: string })?.full_name ?? '—'
   const courseTitle = (cert.course as unknown as { title?: string })?.title ?? '—'
   const trainerName = (cert.trainer as unknown as { full_name?: string })?.full_name ?? '—'
 
   return (
-    <main className="min-h-screen bg-[#E9EBF5] p-4 sm:p-8 flex flex-col items-center gap-6" dir="rtl">
+    <main className="min-h-screen bg-[#E9EBF5] p-4 sm:p-8 flex flex-col items-center gap-6" dir="rtl" style={brandStyle(portalBrand)}>
       <div className="w-full max-w-4xl aspect-[1.55/1] relative">
         {/* الإطار الخارجي الفخم */}
         <div className="absolute inset-0 rounded-[28px] bg-ruwad-dark shadow-2xl" />
-        <div className="absolute inset-[10px] rounded-[22px] p-[3px]" style={{ background: 'linear-gradient(135deg, #E3FF3B, #3A4EFB, #E3FF3B)' }}>
+        <div className="absolute inset-[10px] rounded-[22px] p-[3px]" style={{ background: `linear-gradient(135deg, ${accentHex}, ${primaryHex}, ${accentHex})` }}>
           <div className="w-full h-full rounded-[19px] bg-white relative overflow-hidden flex flex-col items-center justify-center px-6 sm:px-16 py-6 sm:py-10 text-center">
 
             {/* نقشة زخرفية خفيفة في الخلفية */}
