@@ -4,6 +4,7 @@ import { Header } from '@/components/shared/Header'
 import { CreateSessionForm } from '@/components/trainer/CreateSessionForm'
 import { SessionToggle } from '@/components/trainer/SessionToggle'
 import { CopyCodeButton } from '@/components/trainer/CopyCodeButton'
+import { SessionDeleteButton } from '@/components/trainer/SessionDeleteButton'
 import { CalendarCheck, Circle, BarChart3, BookOpen, Layers, Users } from 'lucide-react'
 
 export default async function AttendancePage() {
@@ -146,7 +147,10 @@ export default async function AttendancePage() {
                                   {duration && <span>· المدة {duration}</span>}
                                 </div>
                               </div>
-                              <SessionToggle sessionId={session.id} initialActive={session.is_active} />
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <SessionDeleteButton sessionId={session.id} title={session.title} />
+                                <SessionToggle sessionId={session.id} initialActive={session.is_active} />
+                              </div>
                             </div>
 
                             {/* الكود — كبير وواضح مع نسخ */}
