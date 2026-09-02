@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/dashboard', '/home', '/admin', '/org', '/students', '/courses',
           '/exams', '/surveys', '/challenges', '/assignments', '/attendance',
-          '/analytics', '/rawaq', '/profile', '/progress', '/posts',
+          '/analytics', '/rawaq', '/profile', '/my-achievements', '/posts',
           '/presentations', '/my-courses', '/my-challenges', '/my-institute',
           '/api/', '/account-pending', '/reset-password',
         ],

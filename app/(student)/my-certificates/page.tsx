@@ -1,2 +1,2 @@
 import { redirect } from 'next/navigation'
-export default function LegacyCertificates() { redirect('/my-achievements') }
+export default function LegacyCertificates() { redirect('/my-achievements?tab=certificates') }
