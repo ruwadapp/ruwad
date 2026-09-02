@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
+  Globe2,
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3, LogOut, Pencil,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
@@ -64,6 +65,7 @@ const instituteNav = [
 const superAdminNav = [
   { href: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/admin/accounts', label: 'الحسابات', icon: UserCog },
+  { href: '/admin/portals', label: 'البوابات', icon: Globe2 },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
