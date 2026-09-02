@@ -228,3 +228,23 @@ textarea:focus-visible {
   50% { transform: translateY(-6px) rotate(6deg); }
 }
 .animate-badge-float { animation: badgeFloat 3s ease-in-out infinite; }
+
+/* ===== نجوم الدردشة التحفيزية ===== */
+@keyframes starBurst {
+  0% { transform: rotate(var(--burst-angle)) translateY(0) scale(.4); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotate(var(--burst-angle)) translateY(-72px) scale(1.15); opacity: 0; }
+}
+.animate-star-burst { animation: starBurst .95s cubic-bezier(.2,.7,.3,1) forwards; }
+
+@keyframes starFloat {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-4px) rotate(6deg); }
+}
+.animate-star-float { animation: starFloat 1.8s ease-in-out infinite; }
+
+@keyframes starCardGlow {
+  0%, 100% { box-shadow: 0 6px 24px rgba(245,158,11,.45); }
+  50% { box-shadow: 0 6px 34px rgba(245,158,11,.75); }
+}
+.animate-star-card-glow { animation: starCardGlow 1.6s ease-in-out infinite; }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowRight, Send, Bell, BellOff, Users, Check, CheckCheck, AlertCircle, Paperclip, FileText, FileCheck, Zap, BookOpen, ClipboardList, Link2, ExternalLink, X, Trash2, MoreVertical, ShieldAlert } from 'lucide-react'
 import { ChatAttachmentPicker, type ChatAttachment, type AttachmentType } from './ChatAttachmentPicker'
+import { StarDropCard, StarDropComposer, type StarDropInfo } from './StarDrop'
 import { EmojiPicker } from './EmojiPicker'
 
 export interface ChatMessage {
@@ -12,7 +13,7 @@ export interface ChatMessage {
   sender_id: string
   content: string
   created_at: string
-  attachment_type?: AttachmentType | null
+  attachment_type?: AttachmentType | 'stars' | null
   attachment_ref_id?: string | null
   attachment_title?: string | null
   attachment_url?: string | null
@@ -127,6 +128,9 @@ export function ChatRoom({
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [starComposer, setStarComposer] = useState(false)
+  // معلومات إسقاطات النجوم: message_id -> بيانات الإسقاط وحالة الالتقاط
+  const [starInfo, setStarInfo] = useState<Map<string, StarDropInfo>>(new Map())
   const listRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
@@ -174,6 +178,30 @@ export function ChatRoom({
       .limit(PAGE)
     if (data) mergeIncoming(data.reverse())
   }, [supabase, groupId, mergeIncoming])
+
+  // جلب بيانات النجوم لرسائل الإسقاط الظاهرة
+  const loadStars = useCallback(async (msgs: ChatMessage[]) => {
+    const ids = msgs.filter((m) => m.attachment_type === 'stars' && !m.id.startsWith('tmp-')).map((m) => m.id)
+    if (!ids.length) return
+    const { data: drops } = await supabase
+      .from('star_drops').select('id, message_id, stars_per_student, note').in('message_id', ids)
+    if (!drops?.length) return
+    const dropIds = drops.map((d) => d.id)
+    const { data: claims } = await supabase.from('star_claims').select('drop_id, student_id').in('drop_id', dropIds)
+    setStarInfo((prev) => {
+      const next = new Map(prev)
+      for (const d of drops) {
+        const dc = (claims ?? []).filter((c) => c.drop_id === d.id)
+        next.set(d.message_id, {
+          drop_id: d.id, stars_per_student: d.stars_per_student, note: d.note,
+          total_claims: dc.length, mine_claimed: dc.some((c) => c.student_id === currentUserId),
+        })
+      }
+      return next
+    })
+  }, [supabase, currentUserId])
+
+  useEffect(() => { loadStars(messages) }, [messages, loadStars])
 
   // ===== البث اللحظي + إعادة الاشتراك + المزامنة الدورية =====
   useEffect(() => {
@@ -385,6 +413,7 @@ export function ChatRoom({
               const sender = memberMap.get(m.sender_id)
               const canDelete = (mine || isManager) && !m._status
               const jumbo = !m.attachment_type && isEmojiOnly(m.content)
+              const isStars = m.attachment_type === 'stars'
               const prevJumbo = !!prev && !prev.attachment_type && isEmojiOnly(prev.content)
               const rowSpacing = jumbo || prevJumbo ? 'mt-3' : firstOfRun ? 'mt-2' : 'mt-0.5'
               return (
@@ -395,6 +424,7 @@ export function ChatRoom({
                     </button>
                   )}
                   <div className={`max-w-[78%] relative ${
+                    isStars ? 'bg-transparent shadow-none px-0 py-0' :
                     jumbo
                       ? 'bg-transparent shadow-none px-1 py-0.5'
                       : `rounded-2xl px-3.5 py-2 shadow-sm ${
@@ -406,13 +436,34 @@ export function ChatRoom({
                     {!mine && firstOfRun && !jumbo && (
                       <p className="text-[11px] font-extrabold mb-0.5" style={{ color: colorFor(m.sender_id) }}>{sender?.full_name ?? 'عضو'}</p>
                     )}
-                    <AttachmentCard m={m} mine={mine} />
+                    {m.attachment_type === 'stars' ? (
+                      starInfo.has(m.id) ? (
+                        <StarDropCard
+                          info={starInfo.get(m.id)!}
+                          mine={mine}
+                          isManager={isManager}
+                          senderName={mine ? 'أنت' : sender?.full_name ?? 'المشرف'}
+                          onClaimed={(dropId, points, totalClaims) => {
+                            setStarInfo((prev) => {
+                              const next = new Map(prev)
+                              const cur = next.get(m.id)
+                              if (cur) next.set(m.id, { ...cur, total_claims: totalClaims, mine_claimed: true })
+                              return next
+                            })
+                          }}
+                        />
+                      ) : (
+                        <div className="w-64 h-20 rounded-2xl bg-amber-100/60 animate-pulse mb-1" />
+                      )
+                    ) : (
+                      <AttachmentCard m={m} mine={mine} />
+                    )}
                     {m.content && (
                       jumbo
                         ? <p className="text-[52px] leading-none">{m.content}</p>
                         : <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{m.content}</p>
                     )}
-                    <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${jumbo ? (mine ? 'justify-start' : 'justify-end') + ' text-ruwad-navy/40' : 'justify-end ' + (mine ? 'text-white/70' : 'text-ruwad-navy/40')}`}>
+                    <div className={`flex items-center gap-1 mt-0.5 text-[10px] ${(jumbo || isStars) ? (mine ? 'justify-start' : 'justify-end') + ' text-ruwad-navy/40' : 'justify-end ' + (mine ? 'text-white/70' : 'text-ruwad-navy/40')}`}>
                       <span>{timeLabel(m.created_at)}</span>
                       {mine && (
                         m._status === 'sending' ? <Check size={12} className="opacity-60" />
@@ -437,6 +488,7 @@ export function ChatRoom({
       {/* ===== المؤلّف ===== */}
       <div className="relative bg-white border-t border-ruwad-gray/40 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
         {pickerOpen && <ChatAttachmentPicker onPick={(a) => { setPendingAttachment(a); setPickerOpen(false) }} onClose={() => setPickerOpen(false)} />}
+        {starComposer && <StarDropComposer groupId={groupId} onClose={() => setStarComposer(false)} onSent={() => { setStarComposer(false); syncLatest() }} />}
 
         {pendingAttachment && (
           <div className="flex items-center gap-2 bg-ruwad-blue/5 border border-ruwad-blue/20 rounded-ruwad-sm px-3 py-2 mb-2">
@@ -447,6 +499,16 @@ export function ChatRoom({
 
         <div className="flex items-end gap-2">
         <EmojiPicker onPick={(e) => setDraft((d) => d + e)} />
+        {isManager && (
+          <button
+            onClick={() => setStarComposer(true)}
+            aria-label="إرسال نجوم"
+            title="إرسال نجوم تحفيزية"
+            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-300 to-amber-400 text-amber-900 border border-amber-400 hover:scale-105 active:scale-95 transition"
+          >
+            <span className="text-lg leading-none">⭐</span>
+          </button>
+        )}
         {isManager && (
           <button
             onClick={() => setPickerOpen(!pickerOpen)}

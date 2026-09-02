@@ -7,6 +7,8 @@ export interface PointsBreakdown {
   certificates: number
   attendance: number
   badges: number
+  treasures?: number
+  stars?: number
   total: number
 }
 
@@ -59,6 +61,8 @@ export function PointsCard({ points, compact = false }: { points: PointsBreakdow
     { label: 'الشهادات', value: points.certificates, icon: '🎓' },
     { label: 'الحضور', value: points.attendance, icon: '📅' },
     { label: 'الشارات', value: points.badges, icon: '🏅' },
+    { label: 'الكنوز', value: points.treasures ?? 0, icon: '💎' },
+    { label: 'النجوم', value: points.stars ?? 0, icon: '⭐' },
   ].filter((r) => r.value > 0)
 
   return (
