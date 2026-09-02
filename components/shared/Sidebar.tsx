@@ -47,6 +47,7 @@ const studentNav = [
   { href: '/my-attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/my-calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/my-achievements', label: 'إنجازاتي', icon: Award },
+  { href: '/my-payments', label: 'أقساطي', icon: Wallet },
 ]
 
 const instituteNav = [

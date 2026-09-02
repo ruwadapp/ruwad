@@ -143,6 +143,7 @@ export function NotificationBell() {
       case 'assignment': return isTrainer ? `/assignments/${n.reference_id}` : '/my-assignments'
       case 'enrollment': return isTrainer ? '/students' : '/my-courses'
       case 'attendance': return isTrainer ? '/attendance' : '/my-attendance'
+      case 'finance': return '/my-payments'
       case 'badge': return isTrainer ? '/badges' : '/my-achievements?tab=badges'
       case 'certificate': return isTrainer ? '/students' : '/my-achievements'
       case 'announcement': return isTrainer ? '/dashboard' : '/home'
