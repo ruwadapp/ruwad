@@ -53,52 +53,22 @@ export function AttendanceCheckIn() {
     setLoading(true)
     setError(null)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: session, error: sessionError } = await supabase
-      .from('attendance_sessions')
-      .select('id, title')
-      .eq('session_code', code)
-      .eq('is_active', true)
-      .single()
-
-    if (sessionError || !session) {
-      setError('الكود غير صحيح أو الجلسة غير نشطة حالياً')
-      setLoading(false)
-      return
-    }
-
-    setSessionTitle(session.title)
-
-    const { data: existing } = await supabase
-      .from('attendance_records')
-      .select('*')
-      .eq('session_id', session.id)
-      .eq('student_id', user.id)
-      .maybeSingle()
-
-    if (existing) {
-      setRecordId(existing.id)
-      setStatus(existing.status)
-      setLoading(false)
-      return
-    }
-
-    const { data: record, error: insertError } = await supabase
-      .from('attendance_records')
-      .insert({ session_id: session.id, student_id: user.id })
-      .select()
-      .single()
-
-    if (insertError || !record) {
+    // رحلة واحدة: فك الكود والتحقق والإدراج معاً في قاعدة البيانات
+    const { data, error: rpcError } = await supabase.rpc('check_in_attendance', { p_code: code })
+    const row = Array.isArray(data) ? data[0] : data
+    if (rpcError || !row) {
       setError('حدث خطأ أثناء تسجيل الحضور')
       setLoading(false)
       return
     }
-
-    setRecordId(record.id)
-    setStatus('pending')
+    if (!row.ok) {
+      setError('الكود غير صحيح أو الجلسة غير نشطة حالياً')
+      setLoading(false)
+      return
+    }
+    setSessionTitle(row.session_title ?? '')
+    setRecordId(row.record_id)
+    setStatus((row.record_status ?? 'pending') as AttendanceStatus)
     setLoading(false)
   }
 

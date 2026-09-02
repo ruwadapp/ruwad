@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
+import { LiveAttendanceCard } from '@/components/student/LiveAttendanceCard'
 import {
   BookOpen, Award, CalendarCheck, PlayCircle, Radio, FileText,
   FileCheck, ScanLine, KeyRound, ArrowLeft, Flame,
@@ -265,24 +266,11 @@ export default async function StudentHomePage() {
 
         {/* ===== جلسة حضور مفتوحة الآن ===== */}
         {openAttendance && (
-          <div className="relative overflow-hidden rounded-ruwad shadow-ruwad-lg p-[2px]" style={{ background: 'linear-gradient(120deg,#16a34a,#4ade80,#16a34a)' }}>
-            <div className="relative bg-gradient-to-l from-green-600 via-emerald-500 to-green-500 rounded-[10px] p-5 flex items-center justify-between gap-4 text-white overflow-hidden">
-              <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-white/40 animate-ping" />
-                  <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur"><CalendarCheck size={24} /></span>
-                </span>
-                <div className="min-w-0">
-                  <p className="font-bold flex items-center gap-1.5">جلسة حضور مفتوحة الآن <Radio size={15} className="animate-pulse" /></p>
-                  <p className="text-sm opacity-90 truncate">{openAttendance.title}{openAttendance.courseTitle ? ` — ${openAttendance.courseTitle}` : ''}</p>
-                </div>
-              </div>
-              <Link href={`/qr/${openAttendance.session_code}`} className="bg-white text-green-600 font-bold px-4 py-2 rounded-ruwad-sm text-sm shrink-0 hover:opacity-90 transition">
-                سجّل حضورك
-              </Link>
-            </div>
-          </div>
+          <LiveAttendanceCard
+            sessionCode={openAttendance.session_code}
+            title={openAttendance.title}
+            courseTitle={openAttendance.courseTitle}
+          />
         )}
 
         {/* ===== امتحانات نشطة بانتظارك ===== */}
