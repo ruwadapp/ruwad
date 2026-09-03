@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { AppResumeGuard } from '@/components/shared/AppResumeGuard'
 
 const SITE_URL = 'https://www.ruwaad.app'
 const TITLE = 'رُوّاد | نظام إدارة معاهد وتدريبات — منصة تعليمية عربية متكاملة'
@@ -68,6 +69,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: '#3A4EFB',
 }
 
@@ -94,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
-      <body className="font-arabic">{children}</body>
+      <body className="font-arabic"><AppResumeGuard />{children}</body>
     </html>
   )
 }
