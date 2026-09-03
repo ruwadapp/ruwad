@@ -1,5 +1,6 @@
 'use client'
 import { useState, type ReactNode } from 'react'
+import { SanitizedHtml } from '@/components/shared/SanitizedHtml'
 import {
   Users, PlaySquare, FileText, ListChecks, Trophy, CalendarCheck, MonitorPlay,
   CheckCircle2, Clock, Video, Presentation as PresIcon, CircleDot, ChevronDown,
@@ -44,12 +45,29 @@ function Expandable({ open, onToggle, header, children }: { open: boolean; onTog
   )
 }
 
+function normalizeOptions(raw: unknown): { key: string; text: string }[] {
+  if (Array.isArray(raw)) {
+    return raw.map((o, i) => {
+      if (typeof o === 'string') return { key: String(i), text: o }
+      const obj = o as { id?: unknown; text?: unknown; label?: unknown; value?: unknown }
+      return {
+        key: String(obj.id ?? i),
+        text: String(obj.text ?? obj.label ?? obj.value ?? JSON.stringify(o)),
+      }
+    })
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.entries(raw as Record<string, unknown>).map(([k, v]) => ({ key: k, text: String(v) }))
+  }
+  return []
+}
+
 function QuestionsList({ questions }: { questions: Question[] }) {
   if (questions.length === 0) return <p className="text-[11px] text-ruwad-navy/40">لا أسئلة بعد.</p>
   return (
     <div className="flex flex-col gap-2.5">
       {questions.map((q, i) => {
-        const opts = Array.isArray(q.options) ? (q.options as string[]) : []
+        const opts = normalizeOptions(q.options)
         return (
           <div key={q.id} className="bg-white rounded-ruwad-sm p-3 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">
@@ -63,10 +81,11 @@ function QuestionsList({ questions }: { questions: Question[] }) {
             {opts.length > 0 && (
               <div className="flex flex-col gap-1">
                 {opts.map((o, oi) => {
-                  const correct = q.correct != null && (String(q.correct) === String(o) || String(q.correct) === String(oi))
+                  const c = q.correct != null ? String(q.correct) : null
+                  const correct = c !== null && (c === o.key || c === o.text || c === String(oi))
                   return (
-                    <div key={oi} className={`flex items-center gap-1.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5 ${correct ? 'bg-green-50 text-green-700' : 'bg-[#F5F6FA] text-ruwad-navy/60'}`}>
-                      {correct && <Check size={11} className="shrink-0" />} {o}
+                    <div key={o.key + oi} className={`flex items-center gap-1.5 text-[11px] font-bold rounded-lg px-2.5 py-1.5 ${correct ? 'bg-green-50 text-green-700' : 'bg-[#F5F6FA] text-ruwad-navy/60'}`}>
+                      {correct && <Check size={11} className="shrink-0" />} {o.text}
                     </div>
                   )
                 })}
@@ -192,7 +211,9 @@ export function CourseOverviewTabs({ data }: { data: Overview }) {
                   }>
                   {l.description && <p className="text-[11px] font-bold text-ruwad-navy/60 leading-relaxed">{l.description}</p>}
                   {l.content && (
-                    <div className="text-xs text-ruwad-navy/80 leading-relaxed whitespace-pre-wrap bg-white rounded-ruwad-sm p-3 max-h-72 overflow-y-auto">{l.content}</div>
+                    <div className="bg-white rounded-ruwad-sm p-3 max-h-72 overflow-y-auto">
+                      <SanitizedHtml html={l.content} className="text-xs" />
+                    </div>
                   )}
                   <div className="flex flex-wrap gap-2">
                     {l.video_url && (
@@ -241,7 +262,7 @@ export function CourseOverviewTabs({ data }: { data: Overview }) {
                     </div>
                   }>
                   {x.description && <p className="text-[11px] font-bold text-ruwad-navy/60">{x.description}</p>}
-                  {x.instructions && <p className="text-[11px] text-ruwad-navy/60 bg-white rounded-ruwad-sm p-2.5 whitespace-pre-wrap">{x.instructions}</p>}
+                  {x.instructions && <div className="bg-white rounded-ruwad-sm p-2.5"><SanitizedHtml html={x.instructions} className="text-[11px]" /></div>}
                   <QuestionsList questions={x.questions} />
                 </Expandable>
               ))}
@@ -270,7 +291,7 @@ export function CourseOverviewTabs({ data }: { data: Overview }) {
                       </div>
                     }>
                     {a.description && <p className="text-[11px] font-bold text-ruwad-navy/60">{a.description}</p>}
-                    {a.instructions && <p className="text-[11px] text-ruwad-navy/70 bg-white rounded-ruwad-sm p-2.5 whitespace-pre-wrap leading-relaxed">{a.instructions}</p>}
+                    {a.instructions && <div className="bg-white rounded-ruwad-sm p-2.5"><SanitizedHtml html={a.instructions} className="text-[11px]" /></div>}
                     <div className="flex flex-wrap gap-2">
                       {asLinks(a.attachments).map((f, i) => (
                         <a key={i} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[11px] font-extrabold text-ruwad-navy bg-ruwad-gray/40 rounded-full px-3 py-1.5 hover:bg-ruwad-gray/60">
@@ -311,7 +332,7 @@ export function CourseOverviewTabs({ data }: { data: Overview }) {
                     </div>
                   }>
                   {c.description && <p className="text-[11px] font-bold text-ruwad-navy/60">{c.description}</p>}
-                  {c.instructions && <p className="text-[11px] text-ruwad-navy/60 bg-white rounded-ruwad-sm p-2.5 whitespace-pre-wrap">{c.instructions}</p>}
+                  {c.instructions && <div className="bg-white rounded-ruwad-sm p-2.5"><SanitizedHtml html={c.instructions} className="text-[11px]" /></div>}
                   <QuestionsList questions={c.questions} />
                 </Expandable>
               ))}
