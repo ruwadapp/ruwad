@@ -131,7 +131,9 @@ export function InstituteCoursesBoard({ instituteId, initial, trainers }: {
             const published = c.status === 'published'
             const lectures = c.lectures?.[0]?.count ?? 0
             return (
-              <div key={x.share_id} className="group bg-white rounded-ruwad shadow-card overflow-hidden flex flex-col hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all">
+              <div key={x.share_id} className="group relative bg-white rounded-ruwad shadow-card overflow-hidden flex flex-col hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all">
+                {/* البطاقة كلها تفتح تفاصيل التدريب */}
+                <Link href={`/org/courses/${c.id}`} className="absolute inset-0 z-[1]" aria-label={c.title} />
                 {/* الغلاف */}
                 <div className="relative h-28 overflow-hidden">
                   {c.cover_image ? (
@@ -142,7 +144,7 @@ export function InstituteCoursesBoard({ instituteId, initial, trainers }: {
                       <BookOpen size={30} className="text-white/70" />
                     </div>
                   )}
-                  <span className={`absolute top-2.5 right-2.5 text-[10px] font-extrabold px-2.5 py-1 rounded-full backdrop-blur ${published ? 'bg-green-500/90 text-white' : 'bg-white/90 text-amber-600'}`}>
+                  <span className={`z-[2] absolute top-2.5 right-2.5 text-[10px] font-extrabold px-2.5 py-1 rounded-full backdrop-blur ${published ? 'bg-green-500/90 text-white' : 'bg-white/90 text-amber-600'}`}>
                     {published ? 'منشور' : 'مسودة'}
                   </span>
                   <span className={`absolute top-2.5 left-2.5 text-[10px] font-extrabold px-2.5 py-1 rounded-full backdrop-blur flex items-center gap-1 ${x.origin === 'institute' ? 'bg-ruwad-blue/90 text-white' : 'bg-teal-600/90 text-white'}`}>
@@ -184,7 +186,7 @@ export function InstituteCoursesBoard({ instituteId, initial, trainers }: {
                     <span className="text-[10px] font-bold text-ruwad-navy/35">
                       {new Date(c.created_at).toLocaleDateString('ar', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span className="relative z-[2] flex items-center gap-1">
                       <Link href={`/land/${c.id}`} target="_blank" title="صفحة التدريب"
                         className="w-8 h-8 rounded-full text-ruwad-navy/35 hover:text-ruwad-blue hover:bg-ruwad-blue/10 flex items-center justify-center transition"><ExternalLink size={14} /></Link>
                       <button onClick={() => unlink(x)} title="إزالة من المعهد"
