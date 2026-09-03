@@ -50,6 +50,7 @@ const studentNav: NavItem[] = [
   { href: '/my-attendance', label: 'الحضور', icon: 'CalendarCheck' },
   { href: '/my-achievements', label: 'إنجازاتي', icon: 'Award' },
   { href: '/my-payments', label: 'أقساطي', icon: 'Wallet' },
+  { href: '/my-institutes', label: 'معهدي', icon: 'Building2' },
 ]
 
 const instituteNav: NavItem[] = [

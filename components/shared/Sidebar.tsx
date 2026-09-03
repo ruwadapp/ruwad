@@ -48,6 +48,7 @@ const studentNav = [
   { href: '/my-calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/my-achievements', label: 'إنجازاتي', icon: Award },
   { href: '/my-payments', label: 'أقساطي', icon: Wallet },
+  { href: '/my-institutes', label: 'معهدي', icon: Building2 },
 ]
 
 const instituteNav = [
