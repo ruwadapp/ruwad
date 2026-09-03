@@ -17,6 +17,8 @@ export interface CalendarMeta {
   instituteId?: string
   /** الكورسات المتاحة للإضافة (المدرب: كورساته، المعهد: المشتركة معه) وللفلترة */
   courses: CalCourse[]
+  /** للمدرب: المعاهد المنضم لها (لاختيار قاعاتها عند الحجز) */
+  institutes?: { id: string; name: string }[]
 }
 
 interface CalEvent {
@@ -31,8 +33,10 @@ interface CalEvent {
   starts_at: string
   ends_at: string | null
   attendance_session_id: string | null
+  room_id: string | null
   course: { title: string } | null
   institute: { name: string } | null
+  room: { name: string; institute: { name: string } | null } | null
   attendance_session: { session_code: string; is_active: boolean; closed_at: string | null } | null
 }
 
@@ -83,7 +87,7 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
     const from = new Date(gridStart); const to = new Date(gridStart); to.setDate(to.getDate() + 42)
     const { data } = await supabase
       .from('calendar_events')
-      .select('*, course:courses(title), institute:institutes(name), attendance_session:attendance_sessions(session_code, is_active, closed_at)')
+      .select('*, course:courses(title), institute:institutes(name), room:institute_rooms(name, institute:institutes(name)), attendance_session:attendance_sessions(session_code, is_active, closed_at)')
       .gte('starts_at', from.toISOString())
       .lt('starts_at', to.toISOString())
       .order('starts_at')
@@ -120,15 +124,15 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
   }
 
   return (
-    <div className="flex flex-col gap-5" dir="rtl">
+    <div className="flex flex-col gap-4 sm:gap-5 max-w-full overflow-x-hidden" dir="rtl">
       {/* شريط التحكم */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2.5 sm:gap-3">
+        <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
           <button onClick={() => setView((v) => new Date(v.getFullYear(), v.getMonth() - 1, 1))} aria-label="الشهر السابق"
             className="w-9 h-9 rounded-full bg-white border-2 border-ruwad-navy shadow-hard-sm hover-pop flex items-center justify-center">
             <ChevronRight size={16} className="text-ruwad-navy" />
           </button>
-          <h2 className="text-lg sm:text-xl font-extrabold text-ruwad-navy min-w-[9rem] text-center">{MONTH_FMT.format(view)}</h2>
+          <h2 className="text-base sm:text-xl font-extrabold text-ruwad-navy flex-1 sm:flex-none sm:min-w-[9rem] text-center">{MONTH_FMT.format(view)}</h2>
           <button onClick={() => setView((v) => new Date(v.getFullYear(), v.getMonth() + 1, 1))} aria-label="الشهر التالي"
             className="w-9 h-9 rounded-full bg-white border-2 border-ruwad-navy shadow-hard-sm hover-pop flex items-center justify-center">
             <ChevronLeft size={16} className="text-ruwad-navy" />
@@ -140,18 +144,18 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
           {loading && <Loader2 size={16} className="animate-spin text-ruwad-navy/40" />}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {meta.courses.length > 1 && (
             <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}
-              className="text-sm font-bold text-ruwad-navy bg-white border-2 border-ruwad-navy rounded-ruwad-sm px-3 py-2 shadow-hard-sm">
+              className="flex-1 sm:flex-none min-w-0 max-w-full sm:max-w-[14rem] truncate text-xs sm:text-sm font-bold text-ruwad-navy bg-white border-2 border-ruwad-navy rounded-ruwad-sm px-2.5 sm:px-3 py-2 shadow-hard-sm">
               <option value="all">كل التدريبات</option>
               {meta.courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           )}
           {canEditAny && (
             <button onClick={() => setModal({ open: true, day: selectedDay })}
-              className="flex items-center gap-1.5 bg-ruwad-blue text-white text-sm font-extrabold px-4 py-2.5 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-sm hover-pop">
-              <Plus size={16} /> إضافة موعد
+              className="shrink-0 flex items-center gap-1.5 bg-ruwad-blue text-white text-xs sm:text-sm font-extrabold px-3 sm:px-4 py-2 sm:py-2.5 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-sm hover-pop">
+              <Plus size={15} /> <span className="hidden xs:inline sm:inline">إضافة </span>موعد
             </button>
           )}
         </div>
@@ -167,7 +171,7 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
       <div className="bg-white border-2 border-ruwad-navy rounded-ruwad shadow-hard overflow-hidden">
         <div className="grid grid-cols-7 bg-ruwad-navy">
           {DAY_NAMES.map((d) => (
-            <div key={d} className="text-center text-[11px] sm:text-xs font-extrabold text-white py-2.5">{d}</div>
+            <div key={d} className="text-center text-[9px] sm:text-xs font-extrabold text-white py-2 sm:py-2.5 truncate px-0.5">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -179,10 +183,10 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
             const isSelected = key === selectedDay
             return (
               <button key={key} onClick={() => setSelectedDay(key)}
-                className={`min-h-[4.2rem] sm:min-h-[5.5rem] border-t border-l border-ruwad-gray/60 p-1 sm:p-1.5 flex flex-col items-stretch gap-1 text-start transition-colors
+                className={`min-h-[3.2rem] sm:min-h-[5.5rem] min-w-0 border-t border-l border-ruwad-gray/60 p-0.5 sm:p-1.5 flex flex-col items-stretch gap-0.5 sm:gap-1 text-start transition-colors
                   ${inMonth ? 'bg-white' : 'bg-ruwad-gray/20'}
                   ${isSelected ? 'ring-2 ring-inset ring-ruwad-blue' : 'hover:bg-ruwad-gray/25'}`}>
-                <span className={`self-end text-[11px] sm:text-xs font-extrabold w-6 h-6 flex items-center justify-center rounded-full
+                <span className={`self-end text-[10px] sm:text-xs font-extrabold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full
                   ${isToday ? 'bg-ruwad-lime border-2 border-ruwad-navy text-ruwad-navy' : inMonth ? 'text-ruwad-navy' : 'text-ruwad-navy/30'}`}>
                   {d.getDate()}
                 </span>
@@ -209,7 +213,7 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
       </div>
 
       {/* مواعيد اليوم المحدد */}
-      <div className="bg-white border-2 border-ruwad-navy rounded-ruwad shadow-hard p-5">
+      <div className="bg-white border-2 border-ruwad-navy rounded-ruwad shadow-hard p-3.5 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-extrabold text-ruwad-navy flex items-center gap-2">
             <CalendarDays size={18} className="text-ruwad-blue" />
@@ -242,7 +246,14 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
                       {TIME_FMT.format(new Date(e.starts_at))}{e.ends_at ? ` – ${TIME_FMT.format(new Date(e.ends_at))}` : ''}
                     </span>
                     {e.course?.title && <span className="flex items-center gap-1"><BookOpen size={12} /> {e.course.title}</span>}
-                    {e.location && <span className="flex items-center gap-1"><MapPin size={12} /> {e.location}</span>}
+                    {e.room ? (
+                      <span className="flex items-center gap-1 font-extrabold text-ruwad-blue">
+                        <MapPin size={12} />
+                        {e.room.institute?.name ? `${e.room.institute.name} · ` : ''}{e.room.name}
+                      </span>
+                    ) : e.location ? (
+                      <span className="flex items-center gap-1"><MapPin size={12} /> {e.location}</span>
+                    ) : null}
                   </div>
                   {e.description && <p className="text-xs text-ruwad-navy/70 mt-1.5 leading-relaxed">{e.description}</p>}
                   {e.attendance_session_id && e.attendance_session && (
@@ -299,6 +310,32 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
   const [startTime, setStartTime] = useState(start.time)
   const [endTime, setEndTime] = useState(end?.time ?? '')
   const [location, setLocation] = useState(event?.location ?? '')
+  // القاعة: المعهد يرى قاعاته؛ المدرب يختار معهداً من معاهده فتظهر قاعاته تلقائياً
+  const [roomInstitute, setRoomInstitute] = useState<string>(
+    meta.mode === 'institute' ? (meta.instituteId ?? '') : (event?.room_id ? (event.room?.institute ? '' : '') : '')
+  )
+  const [roomId, setRoomId] = useState<string>(event?.room_id ?? '')
+  const [rooms, setRooms] = useState<{ id: string; name: string; capacity: number | null; institute_id: string }[]>([])
+
+  const roomsSource = meta.mode === 'institute' ? (meta.instituteId ?? '') : roomInstitute
+  useEffect(() => {
+    let cancelled = false
+    if (!roomsSource) { setRooms([]); return }
+    supabase.from('institute_rooms')
+      .select('id, name, capacity, institute_id')
+      .eq('institute_id', roomsSource).order('name')
+      .then(({ data }) => { if (!cancelled) setRooms(data ?? []) })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomsSource])
+
+  // عند تعديل موعد له قاعة: استرجاع معهد القاعة تلقائياً (للمدرب)
+  useEffect(() => {
+    if (meta.mode !== 'trainer' || !event?.room_id || roomInstitute) return
+    supabase.from('institute_rooms').select('institute_id').eq('id', event.room_id).single()
+      .then(({ data }) => { if (data) setRoomInstitute(data.institute_id) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [description, setDescription] = useState(event?.description ?? '')
   const [color, setColor] = useState(event?.color ?? (meta.mode === 'institute' ? '#252943' : '#3A4EFB'))
   const [autoAttendance, setAutoAttendance] = useState(!!event?.attendance_session_id)
@@ -312,9 +349,28 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
     if (ends && ends <= starts) { setError('وقت النهاية يجب أن يكون بعد البداية'); return }
     if (autoAttendance && !ends) { setError('الحضور التلقائي يتطلب تحديد وقت نهاية — منه تُحسب مدة الجلسة'); return }
     setSaving(true); setError('')
+
+    // قاعة محددة؟ نفحص تعارضها قبل الحفظ (تعارض القاعة يمنع)
+    if (roomId) {
+      const { data: conflicts } = await supabase.rpc('check_event_conflicts', {
+        p_course_id: courseId,
+        p_starts_at: starts.toISOString(),
+        p_ends_at: ends ? ends.toISOString() : null,
+        p_room_id: roomId,
+        p_exclude_event: event?.id ?? null,
+      })
+      const roomConf = (conflicts as { room: { title: string; starts_at: string } | null } | null)?.room
+      if (roomConf) {
+        setSaving(false)
+        setError(`القاعة محجوزة في هذا الوقت: "${roomConf.title}" — اختر قاعة أو وقتاً آخر`)
+        return
+      }
+    }
+
     const payload = {
       title: title.trim(), course_id: courseId, location: location.trim() || null,
       description: description.trim() || null, color,
+      room_id: roomId || null,
       starts_at: starts.toISOString(), ends_at: ends ? ends.toISOString() : null,
     }
     let eventId = event?.id ?? null
@@ -388,11 +444,31 @@ function EventModal({ meta, event, defaultDay, onClose, onSaved }: {
             </label>
           </div>
 
-          <label className="sm:col-span-2 flex flex-col gap-1.5">
+          <div className="sm:col-span-2 flex flex-col gap-1.5">
             <span className="text-xs font-extrabold text-ruwad-navy">المكان</span>
-            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="قاعة، رابط زوم…"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {meta.mode === 'trainer' && (meta.institutes?.length ?? 0) > 0 && (
+                <select value={roomInstitute} onChange={(e) => { setRoomInstitute(e.target.value); setRoomId('') }}
+                  className="border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3 py-2.5 text-sm font-semibold text-ruwad-navy outline-none bg-white">
+                  <option value="">بلا معهد (مكان حر)</option>
+                  {meta.institutes!.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+                </select>
+              )}
+              {roomsSource && (
+                <select value={roomId} onChange={(e) => setRoomId(e.target.value)}
+                  className="border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3 py-2.5 text-sm font-semibold text-ruwad-navy outline-none bg-white">
+                  <option value="">— اختر القاعة —</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}{r.capacity ? ` (تتسع ${r.capacity})` : ''}</option>
+                  ))}
+                  {rooms.length === 0 && <option value="" disabled>لا قاعات لهذا المعهد بعد</option>}
+                </select>
+              )}
+            </div>
+            <input value={location} onChange={(e) => setLocation(e.target.value)}
+              placeholder={roomId ? 'تفاصيل إضافية للمكان (اختياري)' : 'أو مكان حر: قاعة خارجية، رابط زوم…'}
               className="border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none" />
-          </label>
+          </div>
 
           <label className="sm:col-span-2 flex flex-col gap-1.5">
             <span className="text-xs font-extrabold text-ruwad-navy">وصف</span>
