@@ -1,108 +1,105 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { Wallet, CalendarClock, Receipt, Printer, CheckCircle2 } from 'lucide-react'
+import { Wallet, CalendarClock, Receipt, Printer, CheckCircle2, AlertTriangle } from 'lucide-react'
 
 const CUR: Record<string, string> = { SYP: 'ل.س', USD: '$' }
 const fmt = (n: number) => Number(n).toLocaleString('ar')
 
-// أقساطي: خطط دفع الطالب عبر كل المعاهد — قراءة وإيصالات فقط (RLS تضمن رؤيته لخططه حصراً)
+// أقساطي: مستحقات الطالب ودفعاته عبر كل المعاهد (RLS تريه قيوده فقط)
 export default async function StudentPaymentsPage() {
   const supabase = await createServerSupabaseClient()
 
-  const { data: plans } = await supabase
-    .from('payment_plans')
-    .select(`id, currency, total_amount,
-             institute:institutes(name),
-             enrollment:enrollments(course:courses(title)),
-             installments:payment_installments(id, seq, amount, due_date),
-             records:payment_records(id, amount, paid_at, receipt_code)`)
-    .order('created_at', { ascending: false })
+  const { data: entries } = await supabase
+    .from('finance_ledger')
+    .select('*, institute:institutes(name), course:courses(title)')
+    .order('occurred_at', { ascending: false })
+    .limit(300)
 
+  const all = entries ?? []
+  const dues = all.filter((e) => e.entry_type === 'due')
+  const payments = all.filter((e) => e.entry_type === 'income')
+  const paidFor = (dueId: string) => payments.filter((p) => p.due_link === dueId).reduce((s, p) => s + Number(p.amount), 0)
   const today = new Date().toISOString().slice(0, 10)
 
   return (
     <>
       <Header title="أقساطي" />
       <main className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-4">
-        {!plans || plans.length === 0 ? (
+        {all.length === 0 ? (
           <div className="bg-white rounded-ruwad shadow-card p-10 text-center flex flex-col items-center gap-3">
             <Wallet size={32} className="text-ruwad-blue/40" />
-            <p className="text-sm text-ruwad-navy/50 font-medium">لا خطط أقساط مسجّلة لك حالياً.</p>
+            <p className="text-sm text-ruwad-navy/50 font-medium">لا مستحقات أو دفعات مسجّلة لك حالياً.</p>
           </div>
         ) : (
-          plans.map((p) => {
-            const paid = (p.records ?? []).reduce((s: number, r: { amount: number }) => s + Number(r.amount), 0)
-            const total = Number(p.total_amount)
-            const pct = Math.min(Math.round((paid / total) * 100), 100)
-            const cur = CUR[p.currency] ?? p.currency
-            const inst = (p.institute as never as { name: string })?.name
-            const course = (p.enrollment as never as { course: { title: string } })?.course?.title
-            let cum = 0
-            return (
-              <div key={p.id} className="bg-white rounded-ruwad shadow-card overflow-hidden">
-                <div className="p-4 border-b border-ruwad-gray/40">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div>
-                      <p className="font-extrabold text-ruwad-navy">{course}</p>
-                      <p className="text-[11px] font-bold text-ruwad-navy/45">{inst}</p>
-                    </div>
-                    {pct >= 100 && (
-                      <span className="flex items-center gap-1 text-[11px] font-extrabold text-green-600 bg-green-50 rounded-full px-2.5 py-1">
-                        <CheckCircle2 size={12} /> مسدَّد بالكامل
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-2.5 rounded-full bg-ruwad-gray/40 overflow-hidden">
-                      <div className={`h-full rounded-full ${pct >= 100 ? 'bg-green-500' : 'bg-ruwad-blue'}`} style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-xs font-extrabold text-ruwad-navy/60 shrink-0">{fmt(paid)} / {fmt(total)} {cur}</span>
-                  </div>
-                </div>
-
-                <div className="p-4 grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-extrabold text-ruwad-navy mb-2 flex items-center gap-1"><CalendarClock size={13} /> الأقساط</p>
-                    <div className="flex flex-col gap-1.5">
-                      {(p.installments ?? []).sort((a: { seq: number }, b: { seq: number }) => a.seq - b.seq).map((i: { id: string; seq: number; amount: number; due_date: string }) => {
-                        cum += Number(i.amount)
-                        const covered = paid >= cum
-                        const late = !covered && i.due_date < today
-                        return (
-                          <div key={i.id} className={`flex items-center justify-between text-xs rounded-lg px-3 py-2 ${covered ? 'bg-green-50/70' : late ? 'bg-red-50' : 'bg-[#F5F6FA]'}`}>
-                            <span className="font-bold text-ruwad-navy/70">
-                              قسط {i.seq} · {new Date(i.due_date).toLocaleDateString('ar')}
-                            </span>
-                            <span className={`font-extrabold ${covered ? 'text-green-600' : late ? 'text-red-500' : 'text-ruwad-navy'}`}>
-                              {covered ? '✓ ' : ''}{fmt(i.amount)} {cur}{late ? ' · متأخر' : ''}
-                            </span>
+          <>
+            {dues.length > 0 && (
+              <div className="bg-white rounded-ruwad shadow-card p-4">
+                <p className="text-sm font-extrabold text-ruwad-navy mb-3 flex items-center gap-1.5">
+                  <CalendarClock size={15} className="text-amber-500" /> مستحقاتي
+                </p>
+                <div className="flex flex-col gap-2">
+                  {dues.map((d) => {
+                    const paid = paidFor(d.id)
+                    const remaining = Math.max(Number(d.amount) - paid, 0)
+                    const pct = Math.min(Math.round((paid / Number(d.amount)) * 100), 100)
+                    const late = remaining > 0 && d.due_date && d.due_date < today
+                    const done = remaining <= 0
+                    return (
+                      <div key={d.id} className={`rounded-ruwad-sm px-3.5 py-3 ${done ? 'bg-green-50/70' : late ? 'bg-red-50 ring-1 ring-red-200' : 'bg-[#F5F6FA]'}`}>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="min-w-0">
+                            <p className="text-sm font-extrabold text-ruwad-navy truncate">
+                              {(d.course as never as { title: string } | null)?.title ?? 'مستحق مالي'}
+                              <span className="text-[11px] font-bold text-ruwad-navy/45"> — {(d.institute as never as { name: string })?.name}</span>
+                            </p>
+                            <p className="text-[11px] font-bold text-ruwad-navy/50 mt-0.5">
+                              {d.due_date && <>الاستحقاق {new Date(d.due_date).toLocaleDateString('ar')} · </>}
+                              مدفوع {fmt(paid)} من {fmt(d.amount)} {CUR[d.currency]}
+                            </p>
                           </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-extrabold text-ruwad-navy mb-2 flex items-center gap-1"><Receipt size={13} /> دفعاتي</p>
-                    {(p.records ?? []).length === 0 ? (
-                      <p className="text-xs text-ruwad-navy/45 py-2">لا دفعات بعد.</p>
-                    ) : (
-                      <div className="flex flex-col gap-1.5">
-                        {(p.records as { id: string; amount: number; paid_at: string; receipt_code: string }[])
-                          .slice().sort((a, b) => b.paid_at.localeCompare(a.paid_at)).map((r) => (
-                          <Link key={r.id} href={`/org/finance/receipt/${r.id}`} target="_blank"
-                            className="flex items-center justify-between text-xs bg-[#F5F6FA] hover:bg-ruwad-gray/40 rounded-lg px-3 py-2 transition">
-                            <span className="font-bold text-ruwad-navy/70">{new Date(r.paid_at).toLocaleDateString('ar')} · <span dir="ltr">{r.receipt_code}</span></span>
-                            <span className="flex items-center gap-1.5 font-extrabold text-ruwad-navy">{fmt(r.amount)} {cur} <Printer size={12} className="text-ruwad-navy/35" /></span>
-                          </Link>
-                        ))}
+                          {done ? (
+                            <span className="flex items-center gap-1 text-[11px] font-extrabold text-green-600"><CheckCircle2 size={13} /> مسدَّد</span>
+                          ) : late ? (
+                            <span className="flex items-center gap-1 text-[11px] font-extrabold text-red-500"><AlertTriangle size={13} /> متأخر — متبقٍ {fmt(remaining)}</span>
+                          ) : (
+                            <span className="text-[11px] font-extrabold text-amber-600">متبقٍ {fmt(remaining)}</span>
+                          )}
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white overflow-hidden mt-2">
+                          <div className={`h-full rounded-full ${done ? 'bg-green-500' : 'bg-amber-400'}`} style={{ width: `${pct}%` }} />
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    )
+                  })}
                 </div>
               </div>
-            )
-          })
+            )}
+
+            <div className="bg-white rounded-ruwad shadow-card p-4">
+              <p className="text-sm font-extrabold text-ruwad-navy mb-3 flex items-center gap-1.5">
+                <Receipt size={15} className="text-ruwad-blue" /> دفعاتي وإيصالاتي
+              </p>
+              {payments.length === 0 ? (
+                <p className="text-xs text-ruwad-navy/45 py-2">لا دفعات بعد.</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {payments.map((p) => (
+                    <Link key={p.id} href={`/org/finance/receipt/${p.id}`} target="_blank"
+                      className="flex items-center justify-between text-xs bg-[#F5F6FA] hover:bg-ruwad-gray/40 rounded-lg px-3 py-2.5 transition">
+                      <span className="font-bold text-ruwad-navy/70">
+                        {new Date(p.occurred_at).toLocaleDateString('ar')} · {(p.institute as never as { name: string })?.name}
+                        {p.receipt_code && <span dir="ltr"> · {p.receipt_code}</span>}
+                      </span>
+                      <span className="flex items-center gap-1.5 font-extrabold text-green-700">
+                        {fmt(p.amount)} {CUR[p.currency]} <Printer size={12} className="text-ruwad-navy/35" />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </main>
     </>
