@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
+  CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -49,10 +49,13 @@ const studentNav: NavItem[] = [
   { href: '/my-assignments', label: 'واجباتي', icon: 'ListChecks' },
   { href: '/my-attendance', label: 'الحضور', icon: 'CalendarCheck' },
   { href: '/my-achievements', label: 'إنجازاتي', icon: 'Award' },
+  { href: '/my-payments', label: 'أقساطي', icon: 'Wallet' },
 ]
 
 const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
+  { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
+  { href: '/org/crm', label: 'المهتمون', icon: 'Target' },
   { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
   { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
@@ -62,11 +65,13 @@ const instituteNav: NavItem[] = [
   { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/org/members', label: 'الأعضاء', icon: 'UserCog' },
+  { href: '/org/portal', label: 'بوابتي', icon: 'Globe2' },
 ]
 
 const superAdminNav: NavItem[] = [
   { href: '/admin/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/admin/accounts', label: 'الحسابات', icon: 'UserCog' },
+  { href: '/admin/portals', label: 'البوابات', icon: 'Globe2' },
 ]
 
 export function MobileBottomNav({ profile }: { profile: Profile | null }) {
