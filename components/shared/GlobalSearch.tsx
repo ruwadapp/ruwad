@@ -29,7 +29,7 @@ export function GlobalSearch() {
   const [busy, setBusy] = useState(false)
   const [results, setResults] = useState<Results | null>(null)
   const [myCourses, setMyCourses] = useState<{ id: string; title: string }[]>([])
-  const [joinStates, setJoinStates] = useState<Record<string, 'busy' | 'pending'>>({})
+  const [joinStates, setJoinStates] = useState<Record<string, 'busy' | 'pending' | undefined>>({})
   const inputRef = useRef<HTMLInputElement>(null)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -88,7 +88,7 @@ export function GlobalSearch() {
     const { error } = await supabase.from('institute_members').insert({
       institute_id: instId, user_id: session!.user.id, member_role: 'student', invited_by: 'self',
     })
-    setJoinStates((s) => ({ ...s, [instId]: error ? undefined as never : 'pending' }))
+    setJoinStates((s) => ({ ...s, [instId]: error ? undefined : 'pending' }))
   }
 
   function close() { setOpen(false); setQ(''); setResults(null) }
