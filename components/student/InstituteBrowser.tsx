@@ -8,9 +8,10 @@ import { Search, MapPin, Building2, Loader2, Check, Clock, GraduationCap } from 
 interface Institute { id: string; name: string; description: string | null; logo_url: string | null; address: string | null }
 interface Membership { institute_id: string; status: 'pending' | 'approved' | 'rejected' }
 
-export function InstituteBrowser({ institutes, memberships }: {
+export function InstituteBrowser({ institutes, memberships, memberRole = 'student' }: {
   institutes: Institute[]
   memberships: Membership[]
+  memberRole?: 'student' | 'trainer'
 }) {
   const supabase = createClient()
   const [q, setQ] = useState('')
@@ -35,7 +36,7 @@ export function InstituteBrowser({ institutes, memberships }: {
     const { error } = await supabase.from('institute_members').insert({
       institute_id: inst.id,
       user_id: session!.user.id,
-      member_role: 'student',
+      member_role: memberRole,
       invited_by: 'self',
     })
     setStates((s) => ({ ...s, [inst.id]: error ? 'idle' : 'pending' }))
@@ -45,9 +46,9 @@ export function InstituteBrowser({ institutes, memberships }: {
   return (
     <div className="bg-white rounded-ruwad shadow-card p-4 sm:p-5">
       <h2 className="text-base font-extrabold text-ruwad-navy mb-1 flex items-center gap-2">
-        <GraduationCap size={18} className="text-ruwad-blue" /> انضم لمعهد
+        <GraduationCap size={18} className="text-ruwad-blue" /> {memberRole === 'trainer' ? 'انضم كمدرب لمعهد' : 'انضم لمعهد'}
       </h2>
-      <p className="text-xs text-ruwad-navy/50 mb-4">ابحث عن معهدك واضغط «انضمام» — سيصل طلبك لإدارة المعهد فوراً.</p>
+      <p className="text-xs text-ruwad-navy/50 mb-4">ابحث عن المعهد واضغط «انضمام» — سيصل طلبك لإدارته فوراً.</p>
 
       <div className="relative mb-4">
         <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ruwad-navy/35" />

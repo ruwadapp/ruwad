@@ -65,6 +65,7 @@ const instituteNav = [
   { href: '/org/posts', label: 'منشوراتي', icon: Rss },
   { href: '/org/courses', label: 'التدريبات', icon: BookOpen },
   { href: '/org/rooms', label: 'القاعات', icon: DoorOpen },
+  { href: '/org/team', label: 'الفريق', icon: Users },
   { href: '/org/crm', label: 'المهتمون', icon: Target },
   { href: '/org/finance', label: 'المالية', icon: Wallet },
   { href: '/org/portal', label: 'بوابتي', icon: Globe2 },
