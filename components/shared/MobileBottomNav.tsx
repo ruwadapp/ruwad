@@ -61,7 +61,6 @@ const instituteNav: NavItem[] = [
   { href: '/org/team', label: 'الفريق', icon: 'Users' },
   { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
   { href: '/org/crm', label: 'المهتمون', icon: 'Target' },
-  { href: '/org/trainers', label: 'المدربون', icon: 'Users' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
   { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },

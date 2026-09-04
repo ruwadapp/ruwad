@@ -55,7 +55,6 @@ const studentNav = [
 
 const instituteNav = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
-  { href: '/org/trainers', label: 'المدربون', icon: Users },
   { href: '/org/students', label: 'الطلاب', icon: GraduationCap },
   { href: '/org/calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/org/analytics', label: 'الإحصائيات', icon: BarChart3 },
