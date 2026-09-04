@@ -5,14 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import { getCachedRole, setCachedRole, type CachedRole } from '@/lib/role-cache'
 import { InviteToCourseButton } from './InviteToCourseButton'
 import {
-  Search, X, Loader2, Building2, GraduationCap, UserRound, MapPin,
+  Search, X, Loader2, Building2, MapPin,
   Check, Clock, ArrowLeft,
 } from 'lucide-react'
 
 /* ================================================================
-   البحث الشامل — أنيق وحسب الدور:
-   الطالب يبحث عن المدربين والمعاهد (انضمام بضغطة + فتح الملف)
-   المدرب والمعهد يبحثان عن الطلاب (فتح الملف + إضافة لتدريب بدعوة)
+   البحث الشامل — شريط حقيقي بجانب أزرار الترويسة، يتوسع عند الضغط
+   والنتائج قائمة منسدلة أسفله (بنمط نافذة الإشعارات)
    ================================================================ */
 
 interface Results {
@@ -30,12 +29,22 @@ export function GlobalSearch() {
   const [results, setResults] = useState<Results | null>(null)
   const [myCourses, setMyCourses] = useState<{ id: string; title: string }[]>([])
   const [joinStates, setJoinStates] = useState<Record<string, 'busy' | 'pending' | undefined>>({})
+  const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const role = getCachedRole()
+  const isStudent = (results?.role ?? role) === 'student'
 
-  // فتح النافذة: تركيز فوري + تحميل كورسات الداعي (للمدرب/المعهد) مرة واحدة
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) close()
+    }
+    if (open) document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
   useEffect(() => {
     if (!open) return
     setTimeout(() => inputRef.current?.focus(), 60)
@@ -66,7 +75,6 @@ export function GlobalSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  // بحث مؤجّل أثناء الكتابة
   useEffect(() => {
     if (!open) return
     if (debounce.current) clearTimeout(debounce.current)
@@ -92,129 +100,127 @@ export function GlobalSearch() {
   }
 
   function close() { setOpen(false); setQ(''); setResults(null) }
+  function onResultClick() { close() }
 
-  const isStudent = (results?.role ?? role) === 'student'
+  const showPanel = open && (results !== null || q.trim().length >= 2 || busy)
   const empty = results && results.trainers.length === 0 && results.institutes.length === 0 && results.students.length === 0
 
   return (
-    <>
-      <button onClick={() => setOpen(true)} aria-label="بحث"
-        className="w-10 h-10 rounded-full bg-ruwad-gray/40 text-ruwad-navy flex items-center justify-center hover:bg-ruwad-gray transition">
-        <Search size={19} />
-      </button>
+    <div className="relative flex items-center" ref={containerRef} dir="rtl">
+      <div
+        className={`flex items-center h-10 bg-ruwad-gray/40 rounded-full transition-[width] duration-200 ease-out overflow-hidden ${
+          open ? 'w-44 sm:w-64' : 'w-10'}`}
+      >
+        <button
+          onClick={() => (open ? close() : setOpen(true))}
+          aria-label="بحث"
+          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-ruwad-navy hover:bg-ruwad-gray transition"
+        >
+          <Search size={18} />
+        </button>
+        {open && (
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={isStudent ? 'مدرب أو معهد...' : 'اسم الطالب...'}
+            className="flex-1 min-w-0 bg-transparent text-sm font-bold text-ruwad-navy placeholder:text-ruwad-navy/40 outline-none pl-1 pr-0.5"
+          />
+        )}
+        {open && q && (
+          <button onClick={() => setQ('')} aria-label="مسح" className="shrink-0 w-7 h-7 mr-1 rounded-full flex items-center justify-center text-ruwad-navy/40 hover:text-ruwad-navy hover:bg-ruwad-gray transition">
+            <X size={14} />
+          </button>
+        )}
+      </div>
 
-      {open && (
-        <div className="fixed inset-0 z-[80] bg-ruwad-navy/60 backdrop-blur-sm flex items-start justify-center p-3 sm:p-6 pt-[8vh] sm:pt-[12vh]" dir="rtl" onClick={close}>
-          <div className="w-full max-w-xl flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
-            {/* حقل البحث الأنيق */}
-            <div className="bg-white rounded-full shadow-ruwad-lg flex items-center gap-2 pr-5 pl-2 py-2 ring-4 ring-white/20">
-              <Search size={20} className="text-ruwad-blue shrink-0" />
-              <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)}
-                placeholder={isStudent ? 'ابحث عن مدرب أو معهد...' : 'ابحث عن طالب باسمه...'}
-                className="flex-1 min-w-0 bg-transparent text-sm sm:text-base font-bold text-ruwad-navy placeholder:text-ruwad-navy/35 outline-none py-1.5" />
-              {busy && <Loader2 size={17} className="animate-spin text-ruwad-navy/30 shrink-0" />}
-              <button onClick={close} aria-label="إغلاق"
-                className="shrink-0 w-9 h-9 rounded-full bg-ruwad-gray/40 text-ruwad-navy/60 hover:bg-ruwad-gray flex items-center justify-center transition">
-                <X size={17} />
-              </button>
-            </div>
+      {showPanel && (
+        <div className="absolute left-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-ruwad shadow-ruwad-lg border border-ruwad-gray/40 z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-ruwad-gray/40 bg-ruwad-gray/10">
+            <h3 className="font-bold text-ruwad-navy text-sm">
+              {isStudent ? 'المدربون والمعاهد' : 'الطلاب'}
+            </h3>
+            {busy && <Loader2 size={14} className="animate-spin text-ruwad-navy/30" />}
+          </div>
 
-            {/* النتائج */}
-            {(results || q.trim().length >= 2) && (
-              <div className="bg-white rounded-ruwad shadow-ruwad-lg max-h-[62vh] overflow-y-auto p-3 flex flex-col gap-3">
-                {empty && !busy && (
-                  <p className="text-sm text-ruwad-navy/45 text-center py-8">لا نتائج لـ«{q.trim()}» — جرّب اسماً آخر.</p>
-                )}
-
-                {/* المعاهد (للطالب) */}
-                {(results?.institutes.length ?? 0) > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-[11px] font-extrabold text-ruwad-navy/40 px-1 flex items-center gap-1"><Building2 size={11} /> المعاهد</p>
-                    {results!.institutes.map((i) => {
-                      const st: 'busy' | 'pending' | 'member' | null = joinStates[i.id] ?? (i.membership === 'approved' ? 'member' : i.membership === 'pending' ? 'pending' : null)
-                      return (
-                        <div key={i.id} className="flex items-center gap-3 rounded-ruwad-sm hover:bg-[#F5F6FA] px-2.5 py-2.5 transition group">
-                          <Link href={`/i/${i.id}`} onClick={close} className="flex items-center gap-3 min-w-0 flex-1">
-                            {i.logo ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={i.logo} alt="" className="w-11 h-11 rounded-xl bg-white object-contain p-1 ring-2 ring-ruwad-gray/50 shrink-0" />
-                            ) : (
-                              <span className="w-11 h-11 rounded-xl bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0"><Building2 size={18} /></span>
-                            )}
-                            <span className="min-w-0">
-                              <span className="block text-sm font-extrabold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{i.name}</span>
-                              {i.address && <span className="block text-[11px] font-bold text-ruwad-navy/45 truncate"><MapPin size={9} className="inline ml-0.5" />{i.address}</span>}
-                            </span>
-                          </Link>
-                          {st === 'member' ? (
-                            <span className="shrink-0 flex items-center gap-1 text-[10px] font-extrabold text-green-600 bg-green-50 rounded-full px-2.5 py-1.5"><Check size={11} /> عضو</span>
-                          ) : st === 'pending' ? (
-                            <span className="shrink-0 flex items-center gap-1 text-[10px] font-extrabold text-amber-600 bg-amber-50 rounded-full px-2.5 py-1.5"><Clock size={11} /> بالانتظار</span>
-                          ) : st === 'busy' ? (
-                            <Loader2 size={14} className="animate-spin text-ruwad-navy/30 shrink-0" />
-                          ) : (
-                            <button onClick={() => requestJoin(i.id)}
-                              className="shrink-0 text-[11px] font-extrabold text-white bg-ruwad-blue hover:opacity-90 rounded-full px-3.5 py-1.5 transition">
-                              انضمام
-                            </button>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {/* المدربون (للطالب) */}
-                {(results?.trainers.length ?? 0) > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-[11px] font-extrabold text-ruwad-navy/40 px-1 flex items-center gap-1"><GraduationCap size={11} /> المدربون</p>
-                    {results!.trainers.map((t) => (
-                      <Link key={t.id} href={`/t/${t.id}`} onClick={close}
-                        className="flex items-center gap-3 rounded-ruwad-sm hover:bg-[#F5F6FA] px-2.5 py-2.5 transition group">
-                        {t.avatar ? (
+          <div className="max-h-96 overflow-y-auto">
+            {q.trim().length < 2 ? (
+              <p className="text-ruwad-navy/40 text-sm py-10 text-center px-4">اكتب حرفين على الأقل للبحث.</p>
+            ) : empty && !busy ? (
+              <p className="text-ruwad-navy/40 text-sm py-10 text-center px-4">لا نتائج لـ«{q.trim()}».</p>
+            ) : (
+              <div className="p-2 flex flex-col gap-1">
+                {results?.institutes.map((i) => {
+                  const st: 'busy' | 'pending' | 'member' | null = joinStates[i.id] ?? (i.membership === 'approved' ? 'member' : i.membership === 'pending' ? 'pending' : null)
+                  return (
+                    <div key={i.id} className="flex items-center gap-2.5 rounded-ruwad-sm hover:bg-ruwad-gray/20 px-2.5 py-2.5 transition group">
+                      <Link href={`/i/${i.id}`} onClick={onResultClick} className="flex items-center gap-2.5 min-w-0 flex-1">
+                        {i.logo ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={t.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-2 ring-ruwad-gray/50 shrink-0" />
+                          <img src={i.logo} alt="" className="w-10 h-10 rounded-xl bg-white object-contain p-1 ring-1 ring-ruwad-gray/50 shrink-0" />
                         ) : (
-                          <span className="w-11 h-11 rounded-full bg-ruwad-gradient text-white font-black flex items-center justify-center shrink-0">{t.name.charAt(0)}</span>
+                          <span className="w-10 h-10 rounded-xl bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0"><Building2 size={16} /></span>
                         )}
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-extrabold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{t.name}</span>
-                          {t.bio && <span className="block text-[11px] font-bold text-ruwad-navy/45 truncate">{t.bio}</span>}
+                        <span className="min-w-0">
+                          <span className="block text-sm font-bold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{i.name}</span>
+                          {i.address && <span className="block text-[11px] font-semibold text-ruwad-navy/45 truncate"><MapPin size={9} className="inline ml-0.5" />{i.address}</span>}
                         </span>
-                        <ArrowLeft size={15} className="text-ruwad-navy/25 group-hover:text-ruwad-blue group-hover:-translate-x-0.5 transition-all shrink-0" />
                       </Link>
-                    ))}
-                  </div>
-                )}
+                      {st === 'member' ? (
+                        <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 rounded-full px-2.5 py-1.5"><Check size={11} /> عضو</span>
+                      ) : st === 'pending' ? (
+                        <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full px-2.5 py-1.5"><Clock size={11} /> بالانتظار</span>
+                      ) : st === 'busy' ? (
+                        <Loader2 size={14} className="animate-spin text-ruwad-navy/30 shrink-0" />
+                      ) : (
+                        <button onClick={() => requestJoin(i.id)}
+                          className="shrink-0 text-[11px] font-bold text-white bg-ruwad-blue hover:opacity-90 rounded-full px-3 py-1.5 transition">
+                          انضمام
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
 
-                {/* الطلاب (للمدرب والمعهد) */}
-                {(results?.students.length ?? 0) > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <p className="text-[11px] font-extrabold text-ruwad-navy/40 px-1 flex items-center gap-1"><UserRound size={11} /> الطلاب</p>
-                    {results!.students.map((s) => (
-                      <div key={s.id} className="flex items-center gap-3 rounded-ruwad-sm hover:bg-[#F5F6FA] px-2.5 py-2.5 transition group">
-                        <Link href={`/s/${s.id}`} onClick={close} className="flex items-center gap-3 min-w-0 flex-1">
-                          {s.avatar ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={s.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-2 ring-ruwad-gray/50 shrink-0" />
-                          ) : (
-                            <span className="w-11 h-11 rounded-full bg-ruwad-gradient text-white font-black flex items-center justify-center shrink-0">{s.name.charAt(0)}</span>
-                          )}
-                          <span className="min-w-0">
-                            <span className="block text-sm font-extrabold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{s.name}</span>
-                            {s.code && <span className="block text-[11px] font-bold text-ruwad-navy/40" dir="ltr">{s.code}</span>}
-                          </span>
-                        </Link>
-                        <InviteToCourseButton studentId={s.id} courses={myCourses} />
-                      </div>
-                    ))}
+                {results?.trainers.map((t) => (
+                  <Link key={t.id} href={`/t/${t.id}`} onClick={onResultClick}
+                    className="flex items-center gap-2.5 rounded-ruwad-sm hover:bg-ruwad-gray/20 px-2.5 py-2.5 transition group">
+                    {t.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={t.avatar} alt="" className="w-10 h-10 rounded-full object-cover ring-1 ring-ruwad-gray/50 shrink-0" />
+                    ) : (
+                      <span className="w-10 h-10 rounded-full bg-ruwad-gradient text-white text-sm font-black flex items-center justify-center shrink-0">{t.name.charAt(0)}</span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{t.name}</span>
+                      {t.bio && <span className="block text-[11px] font-semibold text-ruwad-navy/45 truncate">{t.bio}</span>}
+                    </span>
+                    <ArrowLeft size={14} className="text-ruwad-navy/25 group-hover:text-ruwad-blue group-hover:-translate-x-0.5 transition-all shrink-0" />
+                  </Link>
+                ))}
+
+                {results?.students.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2.5 rounded-ruwad-sm hover:bg-ruwad-gray/20 px-2.5 py-2.5 transition group">
+                    <Link href={`/s/${s.id}`} onClick={onResultClick} className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {s.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.avatar} alt="" className="w-10 h-10 rounded-full object-cover ring-1 ring-ruwad-gray/50 shrink-0" />
+                      ) : (
+                        <span className="w-10 h-10 rounded-full bg-ruwad-gradient text-white text-sm font-black flex items-center justify-center shrink-0">{s.name.charAt(0)}</span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-sm font-bold text-ruwad-navy truncate group-hover:text-ruwad-blue transition-colors">{s.name}</span>
+                        {s.code && <span className="block text-[11px] font-semibold text-ruwad-navy/40" dir="ltr">{s.code}</span>}
+                      </span>
+                    </Link>
+                    <InviteToCourseButton studentId={s.id} courses={myCourses} />
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
