@@ -62,7 +62,6 @@ const instituteNav: NavItem[] = [
   { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
   { href: '/org/crm', label: 'المهتمون', icon: 'Target' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
-  { href: '/org/analytics', label: 'الإحصائيات', icon: 'BarChart3' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
   { href: '/org/training-requests', label: 'طلبات التدريب', icon: 'Target' },
