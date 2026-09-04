@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { CodeQrImage } from '@/components/shared/CodeQrImage'
-import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { LiveActivitySection, AttentionSection } from '@/components/institute/LiveDashboardCards'
 import { GrowthChart, TrainerComparisonChart, RateGauge } from '@/components/institute/InstituteAnalyticsCharts'
 import {
@@ -190,19 +188,6 @@ export default async function InstituteDashboardPage() {
     <>
       <Header title={institute.name} />
       <main className="p-4 sm:p-6 flex flex-col gap-5">
-        {/* الهوية ومعرّف الانضمام */}
-        <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 sm:p-8 flex items-center justify-between flex-wrap gap-4">
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-          <div className="relative flex items-center gap-4">
-            <AvatarUpload currentUrl={institute.logo_url} fallbackLetter={institute.name.charAt(0)} table="institutes" rowId={institute.id} column="logo_url" size={64} />
-            <div>
-              <p className="text-white/70 text-xs sm:text-sm">معرّف المعهد (شاركه للانضمام)</p>
-              <p className="relative text-2xl sm:text-3xl font-mono font-bold text-white tracking-widest mt-1">{institute.institute_code}</p>
-            </div>
-          </div>
-          <CodeQrImage code={institute.institute_code} size={90} className="relative" />
-        </div>
-
         {/* الآن + يحتاج انتباهك */}
         <LiveActivitySection
           events={liveData.ongoing_events} attendance={liveData.active_attendance}

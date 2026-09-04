@@ -9,6 +9,7 @@ import { PushNotificationSetup } from './PushNotificationSetup'
 import { InstallAppButton } from './InstallAppButton'
 import { PointsCard, type PointsBreakdown } from './PointsCard'
 import { SkillsEditor } from '@/components/student/SkillsEditor'
+import { CodeQrImage } from './CodeQrImage'
 
 const ROLE_LABELS: Record<string, string> = {
   trainer: 'مدرب',
@@ -26,7 +27,7 @@ const ROLE_STYLES: Record<string, { bg: string; chipBg: string; chipText: string
 
 interface Stat { label: string; value: string | number }
 
-export function ProfileClient({ profile, stats, points }: { profile: Profile; stats: Stat[]; points?: PointsBreakdown | null }) {
+export function ProfileClient({ profile, stats, points, instituteCode }: { profile: Profile; stats: Stat[]; points?: PointsBreakdown | null; instituteCode?: string | null }) {
   const [editing, setEditing]     = useState(false)
   const [name, setName]           = useState(profile.full_name)
   const [savedName, setSavedName] = useState(profile.full_name)
@@ -193,6 +194,17 @@ export function ProfileClient({ profile, stats, points }: { profile: Profile; st
                 <p className="text-xs text-ruwad-navy/60 text-center">{s.label}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {instituteCode && (
+          <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-6 flex items-center justify-between flex-wrap gap-4">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+            <div className="relative">
+              <p className="text-white/70 text-xs sm:text-sm">معرّف المعهد (شاركه للانضمام)</p>
+              <p className="relative text-2xl sm:text-3xl font-mono font-bold text-white tracking-widest mt-1">{instituteCode}</p>
+            </div>
+            <CodeQrImage code={instituteCode} size={90} className="relative" />
           </div>
         )}
 

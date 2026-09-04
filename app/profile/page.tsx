@@ -16,6 +16,7 @@ export default async function ProfilePage() {
 
   let stats: { label: string; value: string | number }[] = []
   let points: PointsBreakdown | null = null
+  let instituteCode: string | null = null
 
   if (profile.role === 'trainer') {
     const [{ count: coursesCount }, { count: studentsCount }, { count: examsCount }] = await Promise.all([
@@ -45,7 +46,7 @@ export default async function ProfilePage() {
       { label: 'متوسط النتائج', value: avg !== null ? `${avg}%` : '—' },
     ]
   } else if (profile.role === 'institute_admin') {
-    const { data: institute } = await supabase.from('institutes').select('id').eq('owner_id', user.id).single()
+    const { data: institute } = await supabase.from('institutes').select('id, institute_code').eq('owner_id', user.id).single()
     if (institute) {
       const [{ count: trainersCount }, { count: studentsCount }] = await Promise.all([
         supabase.from('institute_members').select('id', { count: 'exact', head: true }).eq('institute_id', institute.id).eq('member_role', 'trainer').eq('status', 'approved'),
@@ -55,8 +56,9 @@ export default async function ProfilePage() {
         { label: 'المدربون', value: trainersCount ?? 0 },
         { label: 'الطلاب', value: studentsCount ?? 0 },
       ]
+      instituteCode = institute.institute_code
     }
   }
 
-  return <ProfileClient profile={profile} stats={stats} points={points} />
+  return <ProfileClient profile={profile} stats={stats} points={points} instituteCode={instituteCode} />
 }
