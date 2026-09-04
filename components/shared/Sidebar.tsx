@@ -14,6 +14,7 @@ import type { Profile } from '@/lib/types'
 
 const trainerNav = [
   { href: '/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
+  { href: '/finance', label: 'المالية', icon: Wallet },
   { href: '/students', label: 'الطلاب', icon: Users },
   { href: '/courses', label: 'تدريبات', icon: BookOpen },
   { href: '/presentations', label: 'العروض التقديمية', icon: MonitorPlay },
