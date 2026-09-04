@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { toPng } from 'html-to-image'
 import { Share2, Download, X, Loader2, Building2 } from 'lucide-react'
 
@@ -12,6 +13,7 @@ interface StoryShareButtonProps {
 }
 
 export function StoryShareButton({ authorName, isInstitute, content, cardTitle, cardTypeLabel }: StoryShareButtonProps) {
+  const brand = usePortalBrand()
   const [open, setOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -25,7 +27,7 @@ export function StoryShareButton({ authorName, isInstitute, content, cardTitle, 
       const file = new File([blob], 'ruwad-story.png', { type: 'image/png' })
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'رُوّاد' })
+        await navigator.share({ files: [file], title: brand ? brand.displayName : 'رُوّاد' })
       } else {
         const link = document.createElement('a')
         link.href = dataUrl
@@ -72,7 +74,7 @@ export function StoryShareButton({ authorName, isInstitute, content, cardTitle, 
                 </div>
 
                 <div className="relative flex items-center justify-center gap-1.5 text-xs font-bold opacity-80">
-                  رُوّاد <span className="opacity-50">· Ruwad</span>
+                  {brand ? brand.displayName : (<>رُوّاد <span className="opacity-50">· Ruwad</span></>)}
                 </div>
               </div>
             </div>

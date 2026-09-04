@@ -1,10 +1,12 @@
 'use client'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export function LoginForm() {
+  const brand = usePortalBrand()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +51,7 @@ export function LoginForm() {
         <div className="relative lg:hidden bg-ruwad-gradient rounded-ruwad p-6 mb-6 overflow-hidden text-center">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-ruwad-lime/20 rounded-full blur-2xl" />
-          <h1 className="relative text-3xl font-extrabold text-white">رُوّاد</h1>
+          <h1 className="relative text-3xl font-extrabold text-white">{brand ? brand.displayName : 'رُوّاد'}</h1>
           <p className="relative text-white/80 mt-1 text-sm">منصتك التعليمية المتكاملة</p>
         </div>
 

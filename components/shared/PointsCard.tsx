@@ -1,3 +1,5 @@
+'use client'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { Trophy, Star, Sparkles, Award, Gem, Crown } from 'lucide-react'
 
 export interface PointsBreakdown {
@@ -51,6 +53,7 @@ function Stars() {
 }
 
 export function PointsCard({ points, compact = false }: { points: PointsBreakdown; compact?: boolean }) {
+  const brand = usePortalBrand()
   const level = getLevel(points.total)
   const LevelIcon = level.icon
 
@@ -107,7 +110,7 @@ export function PointsCard({ points, compact = false }: { points: PointsBreakdow
           </div>
         )}
         {!level.next && (
-          <p className="relative mt-5 text-center text-sm font-bold text-ruwad-lime">🎉 بلغتَ أعلى مستوى — أسطورة رُوّاد!</p>
+          <p className="relative mt-5 text-center text-sm font-bold text-ruwad-lime">🎉 بلغتَ أعلى مستوى — أسطورة {brand ? brand.displayName : 'رُوّاد'}!</p>
         )}
       </div>
 

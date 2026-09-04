@@ -11,6 +11,7 @@ import {
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 
 const trainerNav = [
   { href: '/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
@@ -99,11 +100,25 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
     router.refresh()
   }
 
+  const portalBrand = usePortalBrand()
+
   return (
     <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-ruwad-dark text-white min-h-screen px-4 py-6">
-      <div className="px-2 mb-8">
-        <h1 className="text-2xl font-extrabold">رُوّاد</h1>
-        <p className="text-xs text-white/50 mt-0.5">Ruwad</p>
+      <div className="px-2 mb-8 flex items-center gap-2.5">
+        {portalBrand ? (
+          <>
+            {portalBrand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={portalBrand.logoUrl} alt="" className="w-9 h-9 rounded-lg bg-white object-contain p-1 shrink-0" />
+            ) : null}
+            <h1 className="text-lg font-extrabold leading-tight truncate">{portalBrand.displayName}</h1>
+          </>
+        ) : (
+          <div>
+            <h1 className="text-2xl font-extrabold">رُوّاد</h1>
+            <p className="text-xs text-white/50 mt-0.5">Ruwad</p>
+          </div>
+        )}
       </div>
 
       <nav className="flex flex-col gap-1 flex-1">

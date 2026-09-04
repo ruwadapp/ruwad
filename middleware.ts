@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { createServerClient } from '@supabase/ssr'
-import { MAIN_HOSTS, resolvePortal, portalIsLive } from '@/lib/portal/resolve'
+import { MAIN_HOSTS, resolvePortal, portalIsLive, type PortalInfo } from '@/lib/portal/resolve'
 
 const TRAINER_ROUTES = [
   '/dashboard', '/students', '/courses', '/exams', '/surveys',
@@ -16,10 +16,16 @@ function matchesRoute(path: string, prefixes: string[]) {
   return prefixes.some((p) => path === p || path.startsWith(`${p}/`))
 }
 
+// حزمة هوية البوابة تُكتب على ترويسات الطلب نفسه (لا الاستجابة) كي يقرأها
+// أي مكوّن خادم لاحقاً عبر headers() — بما في ذلك layout الجذر وكل صفحة تُعرض بعده
+function tagPortal(request: NextRequest, portal: PortalInfo) {
+  request.headers.set('x-portal-id', portal.portal_id)
+  request.headers.set('x-portal-institute-id', portal.institute_id)
+  request.headers.set('x-portal-brand', encodeURIComponent(JSON.stringify(portal.brand)))
+}
+
 export async function middleware(request: NextRequest) {
-  // توحيد النطاق: أي زيارة عبر نطاق vercel.app تُحوَّل للنطاق الرسمي —
-  // كي تُسجَّل اشتراكات الإشعارات على النطاق الصحيح ويظهر اسمه في الإشعار بدل vercel.app
-  // (نستثني /api لأن قاعدة البيانات تستدعي مسار الدفع عبر نطاق vercel مباشرة)
+  // توحيد النطاق: أي زيارة عبر نطاق vercel.app تُحوَّل للنطاق الرسمي
   const host = request.headers.get('host') ?? ''
   if (host.endsWith('.vercel.app') && !request.nextUrl.pathname.startsWith('/api')) {
     const url = new URL(request.url)
@@ -29,43 +35,40 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308)
   }
 
+  const url = request.nextUrl
+  let portal: PortalInfo | null = null
+
   // ===== بوابات المعاهد: أي مضيف غير المنصة الأم =====
   if (!MAIN_HOSTS.has(host.toLowerCase())) {
-    const portal = await resolvePortal(host)
-    const url = request.nextUrl
+    portal = await resolvePortal(host)
 
     // مضيف مجهول (subdomain بلا بوابة أو دومين غير مربوط) → المنصة الأم
     if (!portal) {
       return NextResponse.redirect(new URL(`https://www.ruwaad.app${url.pathname}${url.search}`), 307)
     }
-    // بوابة موقوفة أو منتهية → صفحة التعليق (تُعرض على دومين المعهد نفسه)
+    // بوابة موقوفة أو منتهية → صفحة التعليق (على دومين المعهد نفسه)
     if (!portalIsLive(portal)) {
       if (url.pathname !== '/portal-inactive') {
         return NextResponse.rewrite(new URL('/portal-inactive', request.url))
       }
       return NextResponse.next()
     }
-    // بوابة حية: الجذر → صفحة البوابة العامة؛ بقية المسارات مؤقتاً → المنصة الأم
-    // (تجربة الدخول الكاملة على دومين البوابة تأتي في المرحلة 3)
-    if (url.pathname === '/' ) {
-      return NextResponse.rewrite(new URL(`/portal/${portal.portal_id}`, request.url))
+    tagPortal(request, portal)
+    // بوابة حية والجذر → صفحة التسويق العامة للبوابة
+    if (url.pathname === '/') {
+      return NextResponse.rewrite(new URL(`/portal/${portal.portal_id}`, request.url), { request: { headers: request.headers } })
     }
-    if (url.pathname === '/portal-inactive' || url.pathname.startsWith(`/portal/`)) {
-      return NextResponse.next()
+    if (url.pathname === '/portal-inactive' || url.pathname.startsWith('/portal/')) {
+      return NextResponse.next({ request: { headers: request.headers } })
     }
-    // مسارا المصادقة على دومين البوابة يحملان هويتها إلى المنصة الأم
-    if (url.pathname === '/register' || url.pathname === '/login') {
-      const authUrl = new URL(`https://www.ruwaad.app${url.pathname}${url.search}`)
-      if (url.pathname === '/register') authUrl.searchParams.set('portal', portal.portal_id)
-      return NextResponse.redirect(authUrl, 307)
-    }
-    return NextResponse.redirect(new URL(`https://www.ruwaad.app${url.pathname}${url.search}`), 307)
+    // كل ما عدا ذلك (تسجيل الدخول، إنشاء الحساب، وكامل التطبيق بعد الدخول)
+    // يستمر على نفس دومين البوابة بهويتها الكاملة — لا تحويل بعد الآن للمنصة الأم
   }
 
   const { user, response } = await updateSession(request)
   const path = request.nextUrl.pathname
 
-  // صفحات المصادقة — إذا كان مسجلاً دخوله اتجه للوحة المناسبة
+  // صفحات المصادقة — إذا كان مسجلاً دخوله اتجه للوحة المناسبة (على نفس الدومين الحالي)
   if (['/login', '/register'].includes(path)) {
     if (user) {
       const supabase = createServerClient(

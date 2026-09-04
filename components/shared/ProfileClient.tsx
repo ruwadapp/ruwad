@@ -10,6 +10,7 @@ import { InstallAppButton } from './InstallAppButton'
 import { PointsCard, type PointsBreakdown } from './PointsCard'
 import { SkillsEditor } from '@/components/student/SkillsEditor'
 import { CodeQrImage } from './CodeQrImage'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 
 const ROLE_LABELS: Record<string, string> = {
   trainer: 'مدرب',
@@ -28,6 +29,7 @@ const ROLE_STYLES: Record<string, { bg: string; chipBg: string; chipText: string
 interface Stat { label: string; value: string | number }
 
 export function ProfileClient({ profile, stats, points, instituteCode }: { profile: Profile; stats: Stat[]; points?: PointsBreakdown | null; instituteCode?: string | null }) {
+  const brand = usePortalBrand()
   const [editing, setEditing]     = useState(false)
   const [name, setName]           = useState(profile.full_name)
   const [savedName, setSavedName] = useState(profile.full_name)
@@ -46,7 +48,8 @@ export function ProfileClient({ profile, stats, points, instituteCode }: { profi
 
   async function shareProfile() {
     const url = `${window.location.origin}/s/${profile.id}`
-    const shareData = { title: `بروفايل ${savedName} على رُوّاد`, text: `شاهد إنجازاتي ونقاطي على منصة رُوّاد 🎓`, url }
+    const platformName = brand ? brand.displayName : 'رُوّاد'
+    const shareData = { title: `بروفايل ${savedName} على ${platformName}`, text: `شاهد إنجازاتي ونقاطي على منصة ${platformName} 🎓`, url }
     try {
       if (navigator.share) { await navigator.share(shareData); return }
     } catch { /* المستخدم ألغى المشاركة */ }
@@ -250,7 +253,7 @@ export function ProfileClient({ profile, stats, points, instituteCode }: { profi
         <div className="bg-white rounded-ruwad shadow-card p-6 flex flex-col gap-3">
           <h2 className="text-xs font-bold text-ruwad-navy/50 uppercase tracking-wider">تثبيت التطبيق</h2>
           <p className="text-sm text-ruwad-navy/60 leading-relaxed">
-            ثبّت رُوّاد على جهازك ليعمل كتطبيق حقيقي: أيقونة على شاشتك، فتح أسرع، وإشعارات أفضل.
+            ثبّت {brand ? brand.displayName : 'رُوّاد'} على جهازك ليعمل كتطبيق حقيقي: أيقونة على شاشتك، فتح أسرع، وإشعارات أفضل.
           </p>
           <InstallAppButton />
         </div>

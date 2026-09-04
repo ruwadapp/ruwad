@@ -1,10 +1,12 @@
 'use client'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createRecoveryClient } from '@/lib/supabase/client'
 import { ShieldAlert, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react'
 
 export function ResetPasswordForm({ hasValidSession: initialHasSession }: { hasValidSession: boolean }) {
+  const brand = usePortalBrand()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -59,7 +61,7 @@ export function ResetPasswordForm({ hasValidSession: initialHasSession }: { hasV
         <div className="relative lg:hidden bg-ruwad-gradient rounded-ruwad p-6 mb-6 overflow-hidden text-center">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-ruwad-lime/20 rounded-full blur-2xl" />
-          <h1 className="relative text-3xl font-extrabold text-white">رُوّاد</h1>
+          <h1 className="relative text-3xl font-extrabold text-white">{brand ? brand.displayName : 'رُوّاد'}</h1>
         </div>
 
         <div className="bg-white rounded-ruwad shadow-card p-8 flex flex-col gap-4">

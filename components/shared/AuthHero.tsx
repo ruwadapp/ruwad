@@ -1,4 +1,8 @@
+'use client'
+import { usePortalBrand } from '@/lib/portal/brand-context'
+
 export function AuthHero() {
+  const brand = usePortalBrand()
   return (
     <div className="relative hidden lg:flex lg:w-1/2 bg-ruwad-gradient overflow-hidden items-center justify-center p-12">
       {/* فقاعات ضوء معتّمة بالخلفية */}
@@ -8,11 +12,17 @@ export function AuthHero() {
 
       <div className="relative z-10 flex flex-col gap-10 max-w-md">
         <div>
-          <h1 className="text-5xl font-extrabold text-white">رُوّاد</h1>
-          <p className="text-white/80 text-lg mt-2">منصتك التعليمية المتكاملة</p>
-          <p className="text-white/60 text-sm mt-3 leading-relaxed">
-            كورسات، امتحانات، حضور لحظي، وتحديات تنافسية — كل ما يحتاجه المدرب لإدارة طلابه في مكان واحد.
-          </p>
+          {brand?.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brand.logoUrl} alt="" className="w-16 h-16 rounded-2xl bg-white object-contain p-2 mb-4" />
+          )}
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white">{brand ? brand.displayName : 'رُوّاد'}</h1>
+          <p className="text-white/80 text-lg mt-2">{brand ? 'منصتك التعليمية' : 'منصتك التعليمية المتكاملة'}</p>
+          {!brand && (
+            <p className="text-white/60 text-sm mt-3 leading-relaxed">
+              كورسات، امتحانات، حضور لحظي، وتحديات تنافسية — كل ما يحتاجه المدرب لإدارة طلابه في مكان واحد.
+            </p>
+          )}
         </div>
 
         {/* بطاقات عائمة تعرض محتوى حقيقياً من التطبيق */}

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { PushNotificationSetup } from './PushNotificationSetup'
 import { LocationCapture } from './LocationCapture'
 import { InstallAppButton } from './InstallAppButton'
@@ -21,6 +22,7 @@ export function OnboardingPermissions({
   hasLocation: boolean
   locationVisible?: boolean
 }) {
+  const brand = usePortalBrand()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function OnboardingPermissions({
           <button onClick={finish} aria-label="تخطي" className="absolute top-4 left-4 text-white/60 hover:text-white p-1.5 transition">
             <X size={18} />
           </button>
-          <h2 className="relative text-xl font-extrabold text-white">أهلاً بك في رُوّاد 🎉</h2>
+          <h2 className="relative text-xl font-extrabold text-white">أهلاً بك في {brand ? brand.displayName : 'رُوّاد'} 🎉</h2>
           <p className="relative text-sm text-white/80 mt-1.5 leading-relaxed">
             ثلاث خطوات سريعة تجعل تجربتك مكتملة — تستغرق أقل من دقيقة.
           </p>

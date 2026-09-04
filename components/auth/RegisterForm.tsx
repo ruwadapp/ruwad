@@ -1,4 +1,5 @@
 'use client'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -6,10 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
 export function RegisterForm() {
+  const brand = usePortalBrand()
   const searchParams = useSearchParams()
   // التسجيل عبر بوابة معهد: يفرض دور الطالب ويربطه بالمعهد تلقائياً (عبر trigger الخادم)
-  const portalId = searchParams.get('portal')
-  const [portalName, setPortalName] = useState<string | null>(null)
+  // — المصدر الأول هو دومين البوابة نفسه (brand)، ويبقى رابط ?portal= بديلاً متوافقاً مع الروابط القديمة
+  const portalId = brand?.id ?? searchParams.get('portal')
+  const [portalName, setPortalName] = useState<string | null>(brand?.displayName ?? null)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,6 +21,7 @@ export function RegisterForm() {
   useEffect(() => {
     if (!portalId) return
     setRole('student')
+    if (brand) return // الاسم متوفر مباشرة من هوية البوابة، لا حاجة لجلب إضافي
     supabase.rpc('get_portal_public', { p_portal_id: portalId }).single()
       .then(({ data }) => {
         const d = data as { brand?: { display_name?: string }; institute_name?: string } | null
@@ -80,7 +84,7 @@ export function RegisterForm() {
         <div className="relative lg:hidden bg-ruwad-gradient rounded-ruwad p-6 mb-6 overflow-hidden text-center">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-ruwad-lime/20 rounded-full blur-2xl" />
-          <h1 className="relative text-3xl font-extrabold text-white">رُوّاد</h1>
+          <h1 className="relative text-3xl font-extrabold text-white">{brand ? brand.displayName : 'رُوّاد'}</h1>
           <p className="relative text-white/80 mt-1 text-sm">ابدأ رحلتك التعليمية الآن</p>
         </div>
 

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePortalBrand } from '@/lib/portal/brand-context'
 import { MonitorDown, Check, Share, PlusSquare } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -12,6 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 // - iOS سفاري: لا يدعم التثبيت البرمجي، فنعرض إرشاد "مشاركة ← إضافة إلى الشاشة الرئيسية"
 // - مثبّت بالفعل: علامة تأكيد
 export function InstallAppButton() {
+  const brand = usePortalBrand()
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
   const [isIos, setIsIos] = useState(false)
@@ -84,7 +86,7 @@ export function InstallAppButton() {
             <p className="font-bold">على iPhone/iPad (سفاري):</p>
             <p className="flex items-center gap-1.5">1. اضغط زر المشاركة <Share size={14} className="text-ruwad-blue inline" /> أسفل المتصفح</p>
             <p className="flex items-center gap-1.5">2. اختر <span className="font-bold">"إضافة إلى الشاشة الرئيسية"</span> <PlusSquare size={14} className="text-ruwad-blue inline" /></p>
-            <p>3. اضغط "إضافة" — وستجد أيقونة رُوّاد على شاشتك 🎉</p>
+            <p>3. اضغط "إضافة" — وستجد أيقونة {brand ? brand.displayName : 'رُوّاد'} على شاشتك 🎉</p>
           </div>
         )}
       </div>
