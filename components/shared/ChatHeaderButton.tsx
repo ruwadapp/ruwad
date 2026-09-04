@@ -2,12 +2,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getCachedRole, setCachedRole } from '@/lib/role-cache'
 import { MessageCircle } from 'lucide-react'
 
 // زر "الدردشات" في الترويسة بجانب الحساب والإشعارات — يحدّد وجهته حسب دور المستخدم
 // ويظهر نقطة حمراء إن وُجدت مجموعة فيها رسائل غير مقروءة (وغير مكتومة)
 export function ChatHeaderButton() {
-  const [href, setHref] = useState<string | null>(null)
+  const roleToHref = (role: string | null | undefined) =>
+    role === 'institute_admin' ? '/org/groups' : role === 'trainer' ? '/groups' : role ? '/my-groups' : null
+  const [href, setHref] = useState<string | null>(() => roleToHref(getCachedRole()))
   const [hasUnread, setHasUnread] = useState(false)
   const supabase = createClient()
 
@@ -19,8 +22,8 @@ export function ChatHeaderButton() {
       if (!user || cancelled) return
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (cancelled) return
-      const base = profile?.role === 'institute_admin' ? '/org/groups' : profile?.role === 'trainer' ? '/groups' : '/my-groups'
-      setHref(base)
+      setCachedRole(profile?.role)
+      setHref(roleToHref(profile?.role))
 
       const { data: memberships } = await supabase
         .from('chat_members')

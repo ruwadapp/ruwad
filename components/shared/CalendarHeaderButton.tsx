@@ -2,12 +2,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getCachedRole, setCachedRole } from '@/lib/role-cache'
 import { CalendarDays } from 'lucide-react'
 
 // زر "التقويم" في الترويسة بجانب الدردشات والإشعارات والحساب —
 // وجهته حسب دور المستخدم (مدرب/معهد/طالب)
 export function CalendarHeaderButton() {
-  const [href, setHref] = useState<string | null>(null)
+  const roleToHref = (role: string | null | undefined) =>
+    role === 'institute_admin' ? '/org/calendar' : role === 'trainer' ? '/calendar' : role ? '/my-calendar' : null
+  const [href, setHref] = useState<string | null>(() => roleToHref(getCachedRole()))
   const supabase = createClient()
 
   useEffect(() => {
@@ -18,11 +21,8 @@ export function CalendarHeaderButton() {
       if (!user || cancelled) return
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       if (cancelled) return
-      setHref(
-        profile?.role === 'institute_admin' ? '/org/calendar'
-        : profile?.role === 'trainer' ? '/calendar'
-        : '/my-calendar',
-      )
+      setCachedRole(profile?.role)
+      setHref(roleToHref(profile?.role))
     }
     load()
     return () => { cancelled = true }
