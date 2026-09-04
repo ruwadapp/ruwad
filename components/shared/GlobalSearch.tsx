@@ -4,14 +4,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { getCachedRole, setCachedRole, type CachedRole } from '@/lib/role-cache'
 import { InviteToCourseButton } from './InviteToCourseButton'
-import {
-  Search, X, Loader2, Building2, MapPin,
-  Check, Clock, ArrowLeft,
-} from 'lucide-react'
+import { Search, X, Loader2, Building2, MapPin, Check, Clock, ArrowLeft } from 'lucide-react'
 
 /* ================================================================
-   البحث الشامل — شريط حقيقي بجانب أزرار الترويسة، يتوسع عند الضغط
-   والنتائج قائمة منسدلة أسفله (بنمط نافذة الإشعارات)
+   البحث الشامل — شريط ثابت دوماً بجانب أزرار الترويسة (لا يتوسع ولا
+   يُفتح بزر منفصل)، والنتائج قائمة منسدلة أسفله بنمط نافذة الإشعارات
    ================================================================ */
 
 interface Results {
@@ -23,7 +20,7 @@ interface Results {
 
 export function GlobalSearch() {
   const supabase = createClient()
-  const [open, setOpen] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
   const [results, setResults] = useState<Results | null>(null)
@@ -35,19 +32,22 @@ export function GlobalSearch() {
 
   const role = getCachedRole()
   const isStudent = (results?.role ?? role) === 'student'
+  const open = focused || q.trim().length > 0
 
+  // إغلاق القائمة عند الضغط خارج الشريط
   useEffect(() => {
     function onClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) close()
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setFocused(false)
+      }
     }
     if (open) document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
+  // عند بدء التفاعل: تحميل كورسات الداعي (للمدرب/المعهد) مرة واحدة، لاستخدامها في دعوة الطلاب
   useEffect(() => {
-    if (!open) return
-    setTimeout(() => inputRef.current?.focus(), 60)
+    if (!open || myCourses.length > 0) return
     let cancelled = false
     async function loadCourses() {
       const { data: { session } } = await supabase.auth.getSession()
@@ -75,8 +75,8 @@ export function GlobalSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
+  // بحث مؤجّل أثناء الكتابة
   useEffect(() => {
-    if (!open) return
     if (debounce.current) clearTimeout(debounce.current)
     const term = q.trim()
     if (term.length < 2) { setResults(null); setBusy(false); return }
@@ -88,7 +88,7 @@ export function GlobalSearch() {
     }, 350)
     return () => { if (debounce.current) clearTimeout(debounce.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, open])
+  }, [q])
 
   async function requestJoin(instId: string) {
     setJoinStates((s) => ({ ...s, [instId]: 'busy' }))
@@ -99,43 +99,37 @@ export function GlobalSearch() {
     setJoinStates((s) => ({ ...s, [instId]: error ? undefined : 'pending' }))
   }
 
-  function close() { setOpen(false); setQ(''); setResults(null) }
-  function onResultClick() { close() }
+  function clear() { setQ(''); setResults(null); inputRef.current?.blur(); setFocused(false) }
+  function onResultClick() { clear() }
 
   const showPanel = open && (results !== null || q.trim().length >= 2 || busy)
   const empty = results && results.trainers.length === 0 && results.institutes.length === 0 && results.students.length === 0
 
   return (
-    <div className="relative flex items-center" ref={containerRef} dir="rtl">
-      <div
-        className={`flex items-center h-10 bg-ruwad-gray/40 rounded-full transition-[width] duration-200 ease-out overflow-hidden ${
-          open ? 'w-44 sm:w-64' : 'w-10'}`}
-      >
-        <button
-          onClick={() => (open ? close() : setOpen(true))}
-          aria-label="بحث"
-          className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-ruwad-navy hover:bg-ruwad-gray transition"
-        >
-          <Search size={18} />
-        </button>
-        {open && (
-          <input
-            ref={inputRef}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={isStudent ? 'مدرب أو معهد...' : 'اسم الطالب...'}
-            className="flex-1 min-w-0 bg-transparent text-sm font-bold text-ruwad-navy placeholder:text-ruwad-navy/40 outline-none pl-1 pr-0.5"
-          />
-        )}
-        {open && q && (
-          <button onClick={() => setQ('')} aria-label="مسح" className="shrink-0 w-7 h-7 mr-1 rounded-full flex items-center justify-center text-ruwad-navy/40 hover:text-ruwad-navy hover:bg-ruwad-gray transition">
-            <X size={14} />
+    <div className="relative flex-1 min-w-0 max-w-[11rem] sm:max-w-xs" ref={containerRef} dir="rtl">
+      {/* شريط ثابت دوماً — بلا توسّع وبلا زر تبديل، يأخذ مساحته المرنة بجانب بقية الأيقونات */}
+      <div className={`flex items-center h-10 w-full bg-ruwad-gray/40 rounded-full pr-1 pl-1 transition-colors ${open ? 'ring-2 ring-ruwad-blue/40' : ''}`}>
+        <span className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-ruwad-navy/60">
+          <Search size={16} />
+        </span>
+        <input
+          ref={inputRef}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={() => setFocused(true)}
+          placeholder={isStudent ? 'مدرب أو معهد' : 'اسم الطالب'}
+          className="flex-1 min-w-0 bg-transparent text-sm font-bold text-ruwad-navy placeholder:text-ruwad-navy/40 outline-none"
+        />
+        {q && (
+          <button onClick={clear} aria-label="مسح" className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-ruwad-navy/40 hover:text-ruwad-navy hover:bg-ruwad-gray transition">
+            <X size={13} />
           </button>
         )}
       </div>
 
+      {/* القائمة المنسدلة — مثبَّتة من اليمين (الحافة الداخلية RTL) فلا تخرج عن حافة الشاشة */}
       {showPanel && (
-        <div className="absolute left-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-ruwad shadow-ruwad-lg border border-ruwad-gray/40 z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[92vw] bg-white rounded-ruwad shadow-ruwad-lg border border-ruwad-gray/40 z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-ruwad-gray/40 bg-ruwad-gray/10">
             <h3 className="font-bold text-ruwad-navy text-sm">
               {isStudent ? 'المدربون والمعاهد' : 'الطلاب'}
