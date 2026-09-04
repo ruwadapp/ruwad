@@ -69,7 +69,6 @@ const instituteNav: NavItem[] = [
   { href: '/org/training-requests', label: 'طلبات التدريب', icon: 'Target' },
   { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/posts', label: 'منشوراتي', icon: 'Rss' },
-  { href: '/org/members', label: 'الأعضاء', icon: 'UserCog' },
   { href: '/org/portal', label: 'بوابتي', icon: 'Globe2' },
 ]
 

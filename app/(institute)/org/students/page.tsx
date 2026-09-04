@@ -4,6 +4,7 @@ import { Header } from '@/components/shared/Header'
 import { EnrollmentRequests } from '@/components/trainer/EnrollmentRequests'
 import { AwardBadgePanel } from '@/components/shared/AwardBadgePanel'
 import { StudentsRoster } from '@/components/institute/StudentsRoster'
+import { GeneralJoinRequests } from '@/components/institute/GeneralJoinRequests'
 
 export default async function InstituteStudentsPage() {
   const supabase = await createServerSupabaseClient()
@@ -30,6 +31,19 @@ export default async function InstituteStudentsPage() {
     .eq('institute_id', institute.id)
     .eq('status', 'approved')
   const trainerIds = (members ?? []).map((m) => m.user_id)
+
+  // طلبات انضمام عامة للمعهد (عضوية طالب لا تخص كورساً محدداً) بانتظار موافقة إدارة المعهد
+  const { data: generalRequests } = await supabase
+    .from('institute_members')
+    .select('id, member:profiles!user_id(full_name, avatar_url)')
+    .eq('institute_id', institute.id).eq('member_role', 'student').eq('status', 'pending')
+    .order('created_at', { ascending: false })
+  const joinRequests = (generalRequests ?? [])
+    .map((r) => {
+      const m = r.member as unknown as { full_name?: string; avatar_url?: string | null } | null
+      return m?.full_name ? { id: r.id, full_name: m.full_name, avatar_url: m.avatar_url ?? null } : null
+    })
+    .filter((x): x is { id: string; full_name: string; avatar_url: string | null } => !!x)
 
   const { data: awardableBadges } = await supabase
     .from('badges')
@@ -105,6 +119,8 @@ export default async function InstituteStudentsPage() {
           })()}
           badges={(awardableBadges ?? []).map((b) => ({ id: b.id, name: b.name, icon: b.icon }))}
         />
+
+        <GeneralJoinRequests requests={joinRequests} />
 
         <StudentsRoster students={rosterStudents} publishedCourses={publishedCourses} />
 
