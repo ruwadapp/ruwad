@@ -411,7 +411,15 @@ function StaffModal({ instituteId, staffMember, onClose, onSaved }: { instituteI
         <input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={contractType === 'monthly' ? 'الراتب' : 'أجر الساعة'} className={inputCls + ' col-span-2'} />
         <select value={currency} onChange={(e) => setCurrency(e.target.value as 'SYP' | 'USD')} className={inputCls}><option value="SYP">ل.س</option><option value="USD">$</option></select>
       </div>
-      <label className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">تاريخ التوظيف</span><input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} className={inputCls} /></label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-extrabold text-ruwad-navy">تاريخ التوظيف</span>
+        <input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} className={inputCls} />
+        {contractType === 'monthly' && (
+          <p className="text-[11px] font-bold text-ruwad-navy/50 bg-ruwad-blue/5 rounded-ruwad-sm px-3 py-2 mt-0.5">
+            💡 هذا التاريخ يحدّد <strong className="text-ruwad-navy">يوم استحقاق الراتب</strong> شهرياً — بمجرد وصول نفس اليوم من كل شهر يفتح تلقائياً استحقاق للموظف في «المالية» وينتظر حتى تضغط دفعه.
+          </p>
+        )}
+      </label>
       <div className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">أيام الدوام</span><DayPicker value={workDays} onChange={setWorkDays} /></div>
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">من الساعة</span><input type="time" value={workStart} onChange={(e) => setWorkStart(e.target.value)} className={inputCls} /></label>
@@ -452,7 +460,13 @@ function HoursModal({ target, onClose, onSaved }: { target: TrainerRow; onClose:
   return (
     <ModalShell title={`دوام ${target.full_name}`} onClose={onClose}>
       <label className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">اللقب الوظيفي (اختياري)</span><input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="مدرب أول" className={inputCls} /></label>
-      <label className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">تاريخ الانضمام</span><input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} className={inputCls} /></label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-extrabold text-ruwad-navy">تاريخ الانضمام</span>
+        <input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} className={inputCls} />
+        <p className="text-[11px] font-bold text-ruwad-navy/50 bg-ruwad-blue/5 rounded-ruwad-sm px-3 py-2 mt-0.5">
+          💡 إن كان تعاقد المدرب براتب شهري ثابت، هذا التاريخ يحدّد يوم استحقاقه كل شهر في «المالية» تلقائياً.
+        </p>
+      </label>
       <div className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">أيام الدوام</span><DayPicker value={workDays} onChange={setWorkDays} /></div>
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5"><span className="text-xs font-extrabold text-ruwad-navy">من الساعة</span><input type="time" value={workStart} onChange={(e) => setWorkStart(e.target.value)} className={inputCls} /></label>

@@ -11,10 +11,10 @@ export default async function InstituteFinancePage() {
     .from('institutes').select('id, name').eq('owner_id', session!.user.id).single()
   if (!institute) redirect('/org/dashboard')
 
-  const [{ data: stats }, { data: ledger }, { data: studentMembers }, { data: shares }, { data: trainerMembers }, { data: compensations }] = await Promise.all([
+  const [{ data: stats }, { data: ledger }, { data: studentMembers }, { data: shares }, { data: trainerMembers }, { data: compensations }, { data: staffList }] = await Promise.all([
     supabase.rpc('finance_stats', { p_institute_id: institute.id }),
     supabase.from('finance_ledger')
-      .select('*, student:profiles!student_id(full_name), trainer:profiles!trainer_id(full_name), course:courses(title)')
+      .select('*, student:profiles!student_id(full_name), trainer:profiles!trainer_id(full_name), staff:institute_staff!staff_id(full_name), course:courses(title)')
       .eq('institute_id', institute.id)
       .order('occurred_at', { ascending: false })
       .limit(300),
@@ -29,6 +29,7 @@ export default async function InstituteFinancePage() {
     supabase.from('trainer_compensations')
       .select('*, trainer:profiles!trainer_id(full_name)')
       .eq('institute_id', institute.id),
+    supabase.from('institute_staff').select('id, full_name').eq('institute_id', institute.id).eq('status', 'active').order('full_name'),
   ])
 
   const courses = (shares ?? [])
@@ -46,6 +47,7 @@ export default async function InstituteFinancePage() {
           students={(studentMembers ?? []) as never}
           courses={courses}
           trainers={(trainerMembers ?? []) as never}
+          staff={(staffList ?? []) as never}
           compensations={(compensations ?? []) as never}
         />
       </main>

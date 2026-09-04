@@ -19,21 +19,24 @@ export type EntryType = 'income' | 'due' | 'expense' | 'withdrawal'
 export interface LedgerEntry {
   id: string; entry_type: EntryType
   student_id: string | null; course_id: string | null; party_name: string | null
-  category: string | null; trainer_id: string | null; due_link: string | null
+  category: string | null; trainer_id: string | null; staff_id: string | null; due_link: string | null
   amount: number; currency: 'SYP' | 'USD'; method: string | null
   description: string | null; due_date: string | null; occurred_at: string
   receipt_code: string | null
   student: { full_name: string } | null
   trainer: { full_name: string } | null
+  staff: { full_name: string } | null
   course: { title: string } | null
 }
 interface Stats {
   month: { currency: string; type: string; amount: number }[]
   dues: { currency: string; outstanding: number; overdue: number; open_count: number }[]
   series: { ym: string; currency: string; income: number; outgo: number }[]
-  trainer_dues: { trainer_id: string; name: string; comp_type: string; value: number; currency: string; owed: number; paid: number }[]
+  trainer_dues: { trainer_id: string; name: string; comp_type: string; value: number; currency: string; owed: number; paid: number; due_date: string | null }[]
+  staff_dues: { staff_id: string; name: string; contract_type: string; value: number; currency: string; owed: number; paid: number; due_date: string | null }[]
 }
 interface Person { user_id: string; profile: { full_name: string } }
+interface StaffPerson { id: string; full_name: string }
 interface Compensation { id: string; trainer_id: string; comp_type: 'percent' | 'fixed_monthly'; value: number; currency: string; trainer: { full_name: string } }
 
 const CUR: Record<string, string> = { SYP: 'ل.س', USD: '$' }
@@ -53,13 +56,14 @@ export function dueRemaining(due: LedgerEntry, all: LedgerEntry[]) {
   return { paid, remaining: Math.max(Number(due.amount) - paid, 0) }
 }
 
-export function FinanceHub({ instituteId, stats, ledger, students, courses, trainers, compensations }: {
+export function FinanceHub({ instituteId, stats, ledger, students, courses, trainers, staff, compensations }: {
   instituteId: string
   stats: Stats | null
   ledger: LedgerEntry[]
   students: Person[]
   courses: { id: string; title: string }[]
   trainers: Person[]
+  staff: StaffPerson[]
   compensations: Compensation[]
 }) {
   const router = useRouter()
@@ -229,25 +233,29 @@ export function FinanceHub({ instituteId, stats, ledger, students, courses, trai
         )}
       </div>
 
-      {/* مستحقات المدربين */}
+      {/* مستحقات الرواتب — مدربون براتب/نسبة وموظفون، حسب يوم استحقاق كل منهم */}
       <div className="bg-white rounded-ruwad shadow-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-extrabold text-ruwad-navy flex items-center gap-1.5"><UserRound size={15} className="text-ruwad-blue" /> مستحقات المدربين (هذا الشهر)</p>
-          <button onClick={() => setCompEditing(true)} className="text-[11px] font-extrabold text-ruwad-blue hover:underline">إدارة الاتفاقات</button>
+          <p className="text-sm font-extrabold text-ruwad-navy flex items-center gap-1.5"><UserRound size={15} className="text-ruwad-blue" /> مستحقات الرواتب (هذا الشهر)</p>
+          <button onClick={() => setCompEditing(true)} className="text-[11px] font-extrabold text-ruwad-blue hover:underline">إدارة تعاقدات المدربين</button>
         </div>
-        {(stats?.trainer_dues ?? []).length === 0 ? (
-          <p className="text-xs text-ruwad-navy/45 py-2">لا اتفاقات تعويض — أضفها من «إدارة الاتفاقات».</p>
+        {(stats?.trainer_dues ?? []).length === 0 && (stats?.staff_dues ?? []).length === 0 ? (
+          <p className="text-xs text-ruwad-navy/45 py-2">لا مدربون بعقد راتب/نسبة ولا موظفون شهريون بعد — أضفهم من «الفريق».</p>
         ) : (
           <div className="flex flex-col gap-2">
             {stats!.trainer_dues.map((d) => {
               const remaining = Math.max(Number(d.owed) - Number(d.paid), 0)
+              const notYetDue = d.comp_type === 'fixed_monthly' && Number(d.owed) === 0 && d.due_date
               return (
-                <div key={d.trainer_id + d.currency} className="flex items-center justify-between gap-3 bg-[#F5F6FA] rounded-ruwad-sm px-3.5 py-2.5">
+                <div key={'t-' + d.trainer_id + d.currency} className="flex items-center justify-between gap-3 bg-[#F5F6FA] rounded-ruwad-sm px-3.5 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-sm font-extrabold text-ruwad-navy truncate">{d.name}</p>
+                    <p className="text-sm font-extrabold text-ruwad-navy truncate flex items-center gap-1.5">
+                      {d.name}
+                      <span className="text-[9px] font-extrabold text-ruwad-blue bg-ruwad-blue/10 rounded-full px-1.5 py-0.5">مدرب</span>
+                    </p>
                     <p className="text-[11px] font-bold text-ruwad-navy/45">
                       {d.comp_type === 'percent' ? `${d.value}% من التحصيل` : `${fmt(d.value)} ${CUR[d.currency]} شهرياً`}
-                      {' · '}مستحق {fmt(d.owed)} · مدفوع {fmt(d.paid)} {CUR[d.currency]}
+                      {notYetDue ? ` · يستحق ${new Date(d.due_date!).toLocaleDateString('ar')}` : ` · مستحق ${fmt(d.owed)} · مدفوع ${fmt(d.paid)} ${CUR[d.currency]}`}
                     </p>
                   </div>
                   {remaining > 0 ? (
@@ -255,6 +263,36 @@ export function FinanceHub({ instituteId, stats, ledger, students, courses, trai
                       className="shrink-0 text-[11px] font-extrabold text-white bg-red-500 hover:bg-red-600 rounded-full px-3.5 py-2 flex items-center gap-1 transition">
                       <Banknote size={12} /> دفع {fmt(remaining)}
                     </button>
+                  ) : notYetDue ? (
+                    <span className="text-[11px] font-extrabold text-ruwad-navy/35">لم يستحق بعد</span>
+                  ) : (
+                    <span className="text-[11px] font-extrabold text-green-600">مسدَّد ✓</span>
+                  )}
+                </div>
+              )
+            })}
+            {(stats?.staff_dues ?? []).map((d) => {
+              const remaining = Math.max(Number(d.owed) - Number(d.paid), 0)
+              const notYetDue = Number(d.owed) === 0 && d.due_date
+              return (
+                <div key={'s-' + d.staff_id + d.currency} className="flex items-center justify-between gap-3 bg-[#F5F6FA] rounded-ruwad-sm px-3.5 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-ruwad-navy truncate flex items-center gap-1.5">
+                      {d.name}
+                      <span className="text-[9px] font-extrabold text-violet-600 bg-violet-50 rounded-full px-1.5 py-0.5">موظف</span>
+                    </p>
+                    <p className="text-[11px] font-bold text-ruwad-navy/45">
+                      {fmt(d.value)} {CUR[d.currency]} شهرياً
+                      {notYetDue ? ` · يستحق ${new Date(d.due_date!).toLocaleDateString('ar')}` : ` · مستحق ${fmt(d.owed)} · مدفوع ${fmt(d.paid)} ${CUR[d.currency]}`}
+                    </p>
+                  </div>
+                  {remaining > 0 ? (
+                    <button onClick={() => setModal({ type: 'expense', preset: { category: 'salary', staffId: d.staff_id, amount: remaining, currency: d.currency as 'SYP' | 'USD' } })}
+                      className="shrink-0 text-[11px] font-extrabold text-white bg-red-500 hover:bg-red-600 rounded-full px-3.5 py-2 flex items-center gap-1 transition">
+                      <Banknote size={12} /> دفع {fmt(remaining)}
+                    </button>
+                  ) : notYetDue ? (
+                    <span className="text-[11px] font-extrabold text-ruwad-navy/35">لم يستحق بعد</span>
                   ) : (
                     <span className="text-[11px] font-extrabold text-green-600">مسدَّد ✓</span>
                   )}
@@ -291,7 +329,7 @@ export function FinanceHub({ instituteId, stats, ledger, students, courses, trai
           <div className="flex flex-col gap-1.5">
             {shownLedger.map((e) => {
               const ui = TYPE_UI[e.entry_type]
-              const who = e.student?.full_name ?? e.trainer?.full_name ?? e.party_name
+              const who = e.student?.full_name ?? e.trainer?.full_name ?? e.staff?.full_name ?? e.party_name
               return (
                 <div key={e.id} className="flex items-center justify-between gap-2 rounded-ruwad-sm px-3 py-2.5" style={{ background: ui.soft }}>
                   <div className="min-w-0 flex items-center gap-2.5">
@@ -328,7 +366,7 @@ export function FinanceHub({ instituteId, stats, ledger, students, courses, trai
 
       {modal && (
         <EntryModal instituteId={instituteId} initialType={modal.type} preset={modal.preset}
-          students={students} courses={courses} trainers={trainers} openDues={openDues}
+          students={students} courses={courses} trainers={trainers} staff={staff} openDues={openDues}
           onClose={() => setModal(null)} onSaved={() => { setModal(null); router.refresh() }} />
       )}
       {compEditing && (
@@ -343,12 +381,12 @@ export function FinanceHub({ instituteId, stats, ledger, students, courses, trai
 
 interface PresetEntry {
   studentId: string; partyName: string; courseId: string; dueLink: string
-  amount: number; currency: 'SYP' | 'USD'; category: string; trainerId: string
+  amount: number; currency: 'SYP' | 'USD'; category: string; trainerId: string; staffId: string
 }
 
-function EntryModal({ instituteId, initialType, preset, students, courses, trainers, openDues, onClose, onSaved }: {
+function EntryModal({ instituteId, initialType, preset, students, courses, trainers, staff, openDues, onClose, onSaved }: {
   instituteId: string; initialType: EntryType; preset?: Partial<PresetEntry>
-  students: Person[]; courses: { id: string; title: string }[]; trainers: Person[]
+  students: Person[]; courses: { id: string; title: string }[]; trainers: Person[]; staff: StaffPerson[]
   openDues: (LedgerEntry & { remaining: number })[]
   onClose: () => void; onSaved: () => void
 }) {
@@ -361,6 +399,8 @@ function EntryModal({ instituteId, initialType, preset, students, courses, train
   const [dueLink, setDueLink] = useState(preset?.dueLink ?? '')
   const [category, setCategory] = useState(preset?.category ?? 'other')
   const [trainerId, setTrainerId] = useState(preset?.trainerId ?? '')
+  const [staffId, setStaffId] = useState(preset?.staffId ?? '')
+  const [salaryTarget, setSalaryTarget] = useState<'trainer' | 'staff'>(preset?.staffId ? 'staff' : 'trainer')
   const [amount, setAmount] = useState(preset?.amount ? String(preset.amount) : '')
   const [currency, setCurrency] = useState<'SYP' | 'USD'>(preset?.currency ?? 'SYP')
   const [method, setMethod] = useState<'cash' | 'transfer' | 'other'>('cash')
@@ -380,7 +420,8 @@ function EntryModal({ instituteId, initialType, preset, students, courses, train
     if (!a || a <= 0) { setError('أدخل مبلغاً صحيحاً'); return }
     if (needsParty && !external && !studentId) { setError('اختر الطالب أو فعّل «طرف خارجي»'); return }
     if (needsParty && external && partyName.trim().length < 2) { setError('اكتب اسم الطرف الخارجي'); return }
-    if (type === 'expense' && category === 'salary' && !trainerId) { setError('اختر المدرب للراتب'); return }
+    if (type === 'expense' && category === 'salary' && salaryTarget === 'trainer' && !trainerId) { setError('اختر المدرب للراتب'); return }
+    if (type === 'expense' && category === 'salary' && salaryTarget === 'staff' && !staffId) { setError('اختر الموظف للراتب'); return }
     setSaving(true); setError('')
     const { data: { session } } = await supabase.auth.getSession()
     let receipt_code: string | null = null
@@ -396,7 +437,8 @@ function EntryModal({ instituteId, initialType, preset, students, courses, train
       course_id: needsParty && courseId ? courseId : null,
       due_link: type === 'income' && dueLink ? dueLink : null,
       category: type === 'expense' ? category : null,
-      trainer_id: type === 'expense' && category === 'salary' ? trainerId : null,
+      trainer_id: type === 'expense' && category === 'salary' && salaryTarget === 'trainer' ? trainerId : null,
+      staff_id: type === 'expense' && category === 'salary' && salaryTarget === 'staff' ? staffId : null,
       amount: a, currency,
       method: type === 'income' ? method : null,
       due_date: type === 'due' ? dueDate : null,
@@ -494,10 +536,25 @@ function EntryModal({ instituteId, initialType, preset, students, courses, train
                   </select>
                 </label>
                 {category === 'salary' && (
-                  <select value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className={inputCls}>
-                    <option value="">— اختر المدرب —</option>
-                    {trainers.map((t) => <option key={t.user_id} value={t.user_id}>{t.profile.full_name}</option>)}
-                  </select>
+                  <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setSalaryTarget('trainer')}
+                        className={`py-2 rounded-ruwad-sm text-xs font-extrabold border-2 transition ${salaryTarget === 'trainer' ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>مدرب</button>
+                      <button type="button" onClick={() => setSalaryTarget('staff')}
+                        className={`py-2 rounded-ruwad-sm text-xs font-extrabold border-2 transition ${salaryTarget === 'staff' ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>موظف</button>
+                    </div>
+                    {salaryTarget === 'trainer' ? (
+                      <select value={trainerId} onChange={(e) => setTrainerId(e.target.value)} className={inputCls}>
+                        <option value="">— اختر المدرب —</option>
+                        {trainers.map((t) => <option key={t.user_id} value={t.user_id}>{t.profile.full_name}</option>)}
+                      </select>
+                    ) : (
+                      <select value={staffId} onChange={(e) => setStaffId(e.target.value)} className={inputCls}>
+                        <option value="">— اختر الموظف —</option>
+                        {staff.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+                      </select>
+                    )}
+                  </div>
                 )}
               </>
             )}
