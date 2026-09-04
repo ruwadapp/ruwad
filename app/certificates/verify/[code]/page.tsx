@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { CheckCircle2, ShieldCheck } from 'lucide-react'
+import type { PortalInfo } from '@/lib/portal/resolve'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +30,18 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
   const courseTitle = (cert.course as unknown as { title?: string })?.title ?? '—'
   const trainerName = (cert.trainer as unknown as { full_name?: string })?.full_name ?? '—'
 
+  // هوية بوابة المعهد (إن كان الكورس مشاركاً مع معهد له بوابة) — بلا أي ذكر لرُوّاد على شهاداته
+  let portalBrand: PortalInfo['brand'] = {}
+  const { data: share } = await supabase
+    .from('resource_institute_shares').select('institute_id')
+    .eq('resource_type', 'courses').eq('resource_id', cert.course_id).limit(1).maybeSingle()
+  if (share) {
+    const { data: portal } = await supabase
+      .from('institute_portals').select('brand, status')
+      .eq('institute_id', share.institute_id).eq('status', 'active').maybeSingle()
+    if (portal?.brand) portalBrand = portal.brand as PortalInfo['brand']
+  }
+
   return (
     <main className="min-h-screen bg-[#F5F6FA] flex items-center justify-center p-6" dir="rtl">
       <div className="bg-white rounded-ruwad shadow-ruwad-lg p-10 max-w-md w-full flex flex-col items-center gap-4 text-center">
@@ -49,7 +62,7 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
         </div>
 
         <div className="text-xs text-ruwad-navy/50 mt-2 flex flex-col gap-1">
-          <p>صادرة عن: {trainerName} — منصة رُوّاد</p>
+          <p>صادرة عن: {trainerName} — {portalBrand.display_name || 'منصة رُوّاد'}</p>
           <p>تاريخ الإصدار: {new Date(cert.issued_at).toLocaleDateString('ar')}</p>
         </div>
       </div>

@@ -27,7 +27,6 @@ export async function generateMetadata(): Promise<Metadata> {
       applicationName: 'رُوّاد',
       authors: [{ name: 'رُوّاد' }],
       creator: 'رُوّاد',
-      manifest: '/manifest.json',
       alternates: { canonical: '/' },
       icons: {
         icon: [

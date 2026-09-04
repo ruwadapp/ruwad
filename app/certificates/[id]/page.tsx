@@ -69,17 +69,22 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
             <div className="relative flex flex-col items-center gap-1 sm:gap-2">
               <div className="flex items-center gap-2">
-                <span className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-ruwad-gradient flex items-center justify-center shadow-ruwad">
-                  <Award size={20} className="text-white" />
-                </span>
-                <span className="text-xl sm:text-2xl font-extrabold text-ruwad-navy tracking-wide">رُوّاد</span>
+                {portalBrand.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={portalBrand.logo_url} alt="" className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white object-contain p-1 shadow-ruwad" />
+                ) : (
+                  <span className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-ruwad-gradient flex items-center justify-center shadow-ruwad">
+                    <Award size={20} className="text-white" />
+                  </span>
+                )}
+                <span className="text-xl sm:text-2xl font-extrabold text-ruwad-navy tracking-wide">{portalBrand.display_name || 'رُوّاد'}</span>
               </div>
               <p className="text-[10px] sm:text-xs font-semibold text-ruwad-navy/40 tracking-[0.3em] uppercase">Certificate of Completion</p>
             </div>
 
             <div className="relative w-20 sm:w-28 h-[3px] rounded-full bg-ruwad-lime my-3 sm:my-5" />
 
-            <p className="relative text-ruwad-navy/50 text-xs sm:text-sm">تشهد منصة رُوّاد بأن</p>
+            <p className="relative text-ruwad-navy/50 text-xs sm:text-sm">تشهد {portalBrand.display_name || 'منصة رُوّاد'} بأن</p>
             <h1 className="relative text-2xl sm:text-5xl font-extrabold text-ruwad-navy my-2 sm:my-3" style={{ fontFamily: "'Cairo', sans-serif" }}>
               {studentName}
             </h1>

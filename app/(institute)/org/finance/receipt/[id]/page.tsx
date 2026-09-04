@@ -53,7 +53,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
           ))}
           {rec.description && <p className="text-xs text-ruwad-navy/60 bg-[#F5F6FA] rounded-ruwad-sm px-3 py-2">{rec.description}</p>}
           <p className="text-center text-[10px] text-ruwad-navy/35 font-bold mt-2">
-            صادر عبر منصة رُوّاد — يُتحقق من صحته بمطابقة رقم الإيصال لدى إدارة المعهد
+            صادر عن {inst.name} — يُتحقق من صحته بمطابقة رقم الإيصال لدى إدارة المعهد
           </p>
         </div>
       </div>
