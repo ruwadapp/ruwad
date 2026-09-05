@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Users, BookOpen, FileText, ClipboardList,
+  LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen,
 } from 'lucide-react'
@@ -11,7 +11,7 @@ import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
-  LayoutDashboard, Users, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
+  LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
   CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen,
 }
 
@@ -20,6 +20,7 @@ interface NavItem { href: string; label: string; icon: string }
 const trainerNav: NavItem[] = [
   { href: '/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/courses', label: 'تدريبات', icon: 'BookOpen' },
+  { href: '/project-groups', label: 'المجموعات', icon: 'Users2' },
   { href: '/finance', label: 'المالية', icon: 'Wallet' },
   { href: '/students', label: 'الطلاب', icon: 'Users' },
   { href: '/exams', label: 'الامتحانات', icon: 'FileText' },
@@ -44,6 +45,7 @@ const studentNav: NavItem[] = [
   { href: '/request-training', label: 'اطلب تدريباً', icon: 'Target' },
   { href: '/cv', label: 'سيرتي الذاتية', icon: 'FileBadge' },
   { href: '/my-courses', label: 'التدريبات', icon: 'GraduationCap' },
+  { href: '/my-project-groups', label: 'المجموعات', icon: 'Users2' },
   { href: '/my-exams', label: 'امتحاناتي', icon: 'FileText' },
   { href: '/my-challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/my-presentations', label: 'العروض', icon: 'MonitorPlay' },
