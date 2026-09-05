@@ -70,11 +70,11 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
             <p className="flex items-center gap-1.5 text-sm text-white/70"><MapPin size={14} /> {portal.institute_address}</p>
           )}
           <div className="flex gap-3 mt-3">
-            <Link href={`https://www.ruwaad.app/register?portal=${portal.portal_id}`}
+            <Link href={`/register?portal=${portal.portal_id}`}
               className="bg-ruwad-lime text-ruwad-navy font-extrabold px-6 py-3 rounded-ruwad-sm hover:opacity-90 transition">
               سجّل كطالب
             </Link>
-            <Link href="https://www.ruwaad.app/login"
+            <Link href="/login"
               className="bg-white/15 backdrop-blur text-white font-bold px-6 py-3 rounded-ruwad-sm hover:bg-white/25 transition">
               تسجيل الدخول
             </Link>
@@ -94,7 +94,7 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.map((c) => (
-              <Link key={c.id} href={`https://www.ruwaad.app/land/${c.id}`}
+              <Link key={c.id} href={`/land/${c.id}`}
                 className="group bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-2 hover:shadow-ruwad-lg hover:-translate-y-0.5 transition-all">
                 <h3 className="font-extrabold text-ruwad-navy group-hover:text-ruwad-blue transition-colors line-clamp-2">{c.title}</h3>
                 {c.description && <p className="text-sm text-ruwad-navy/55 line-clamp-2 leading-relaxed">{c.description}</p>}
@@ -118,7 +118,7 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
       </section>
 
       <footer className="border-t border-ruwad-gray/60 py-6 text-center text-xs text-ruwad-navy/40">
-        بوابة {name} — تعمل بمنصة <a href="https://www.ruwaad.app" className="font-bold text-ruwad-blue hover:underline">رُوّاد</a>
+        © {new Date().getFullYear()} {name} — جميع الحقوق محفوظة
       </footer>
     </main>
   )

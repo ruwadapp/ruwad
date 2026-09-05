@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { BookOpen, Users, Star, GraduationCap, CheckCircle2 } from 'lucide-react'
+import { readActivePortal, portalCssVars } from '@/lib/portal/read-headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,15 +15,23 @@ export default async function CourseLandingPage({ params }: { params: Promise<{ 
   if (!course) notFound()
 
   const joinHref = `/register?next=${encodeURIComponent(`/my-courses/join?code=${course.course_code}`)}`
+  const { brand, raw } = await readActivePortal()
+  const platformName = brand?.displayName || 'رُوّاد'
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#F5F6FA]">
+    <main dir="rtl" className="min-h-screen bg-[#F5F6FA]" style={portalCssVars(raw)}>
       <div className="relative overflow-hidden bg-ruwad-gradient text-white">
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-ruwad-lime/20 rounded-full blur-3xl" />
 
         <div className="relative max-w-2xl mx-auto px-6 py-14 flex flex-col items-center text-center gap-5">
-          <Link href="/" className="text-lg font-extrabold tracking-tight">رُوّاد</Link>
+          <Link href="/" className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+            {brand?.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={brand.logoUrl} alt="" className="w-7 h-7 rounded-lg bg-white object-contain p-0.5" />
+            )}
+            {platformName}
+          </Link>
 
           {course.cover_image && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -76,7 +85,7 @@ export default async function CourseLandingPage({ params }: { params: Promise<{ 
         <div className="bg-white rounded-ruwad shadow-card p-6 flex items-center gap-4">
           <GraduationCap size={28} className="text-ruwad-blue shrink-0" />
           <p className="text-sm text-ruwad-navy/70 leading-relaxed">
-            هذا التدريب جزء من منصة <span className="font-bold text-ruwad-navy">رُوّاد</span> — منصة تعليمية شاملة
+            هذا التدريب جزء من منصة <span className="font-bold text-ruwad-navy">{platformName}</span> — منصة تعليمية شاملة
             تجمع المحاضرات، الامتحانات، الشهادات، وتتبّع تقدّمك في مكان واحد.
           </p>
         </div>
