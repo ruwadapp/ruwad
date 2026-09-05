@@ -32,8 +32,17 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
     }
   }, [submissionId])
 
+  // حفظ محلي مُبطَّأ: كتابة واحدة بعد توقف الطالب عن الكتابة ربع ثانية، لا كتابة متزامنة
+  // مع كل ضغطة حرف — الكتابة السريعة على هاتف ضعيف كانت تُثقل الخيط الرئيسي وتُحس كتجمّد
   useEffect(() => {
-    localStorage.setItem(`exam_answers_${submissionId}`, JSON.stringify(answers))
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(`exam_answers_${submissionId}`, JSON.stringify(answers))
+      } catch {
+        // تجاهل صمتاً (مثل امتلاء مساحة التخزين المحلي) — لا يوقف تدفق الامتحان
+      }
+    }, 250)
+    return () => clearTimeout(t)
   }, [answers, submissionId])
 
   const handleSubmit = useCallback(async () => {
@@ -62,12 +71,30 @@ export function ExamTaker({ exam, questions, submissionId }: ExamTakerProps) {
     router.refresh()
   }, [isSubmitting, questions, answers, exam, submissionId, supabase, router])
 
+  // مرجع دائماً على أحدث دالة تسليم — يمنع اعتماد المؤقّت عليها مباشرة
+  const handleSubmitRef = useRef(handleSubmit)
+  useEffect(() => { handleSubmitRef.current = handleSubmit }, [handleSubmit])
+
+  // المؤقّت: يُنشأ مرة واحدة فقط عند فتح الامتحان، لا يُعاد بناؤه مع كل إجابة —
+  // كان يعتمد سابقاً على handleSubmit التي تتغيّر مع كل حرف يكتبه الطالب (لأنها
+  // تعتمد على answers)، فكان يُلغي ويُعيد إنشاء المؤقّت في كل ضغطة حرف؛ مع الكتابة
+  // السريعة على هاتف ضعيف هذا يُثقل الخيط الرئيسي حتى يبدو التطبيق متجمّداً تماماً.
   useEffect(() => {
-    if (timeLeft === null) return
-    if (timeLeft <= 0) { handleSubmit(); return }
-    const timer = setInterval(() => setTimeLeft((t) => (t ?? 0) - 1), 1000)
+    if (exam.duration_minutes == null) return
+    const timer = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t === null) return t
+        if (t <= 1) {
+          clearInterval(timer)
+          handleSubmitRef.current()
+          return 0
+        }
+        return t - 1
+      })
+    }, 1000)
     return () => clearInterval(timer)
-  }, [timeLeft, handleSubmit])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exam.duration_minutes])
 
   const question = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
