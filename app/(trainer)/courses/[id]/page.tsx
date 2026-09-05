@@ -49,6 +49,12 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             🗺️ تنظيم رحلة الكورس
           </Link>
           <Link
+            href={`/courses/${id}/groups`}
+            className="gap-2 text-sm font-bold text-ruwad-navy border-2 border-ruwad-gray bg-white px-5 py-2.5 rounded-ruwad-sm hover:border-ruwad-navy transition"
+          >
+            👥 المجموعات
+          </Link>
+          <Link
             href={`/reports/course/${id}`}
             className="gap-2 text-sm font-bold text-ruwad-navy border-2 border-ruwad-gray bg-white px-5 py-2.5 rounded-ruwad-sm hover:border-ruwad-navy transition"
           >

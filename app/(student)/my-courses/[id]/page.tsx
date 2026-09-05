@@ -57,6 +57,9 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
     .select('lecture_id, completed')
     .eq('student_id', user!.id)
 
+  const { count: groupsCount } = await supabase
+    .from('project_groups').select('id', { count: 'exact', head: true }).eq('course_id', id)
+
   const completedIds = new Set((progress ?? []).filter((p) => p.completed).map((p) => p.lecture_id))
   const firstIncompleteIdx = (lectures ?? []).findIndex((l) => !completedIds.has(l.id))
   const courseProgress = enrollment.progress ?? 0
@@ -164,6 +167,12 @@ export default async function StudentCourseDetailPage({ params }: { params: Prom
       </div>
 
       <main className="p-6 max-w-3xl mx-auto w-full -mt-2">
+        {(groupsCount ?? 0) > 0 && (
+          <Link href={`/my-courses/${id}/groups`}
+            className="flex items-center gap-2 bg-white shadow-card rounded-ruwad-sm px-4 py-3 mb-4 text-sm font-extrabold text-ruwad-navy hover:shadow-ruwad transition">
+            👥 مجموعتك في هذا التدريب <span className="text-ruwad-blue mr-auto">عرض المجموعات ←</span>
+          </Link>
+        )}
         <CourseViewTabs
           journey={
             <CourseJourneyMap
