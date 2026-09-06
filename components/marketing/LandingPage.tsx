@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   BookOpen, FileCheck2, Flame, Award, QrCode, Users2, Bell, Download,
@@ -29,9 +30,11 @@ const FEATURE_STYLE = [
 ]
 
 const PLAN_STYLE = [
-  { r: -2, highlighted: false },
-  { r: 0, highlighted: true },
-  { r: 2, highlighted: false },
+  { r: -1.5, highlighted: false },
+  { r: 1, highlighted: true },
+  { r: -1, highlighted: false },
+  { r: 1.5, highlighted: false },
+  { r: -0.5, highlighted: false },
 ]
 
 const WHATSAPP_NUMBER = '963998285483'
@@ -56,7 +59,8 @@ function LandingPageInner() {
   const { t, dir, lang } = useLang()
   const ArrowFwd = dir === 'rtl' ? ArrowLeft : ArrowRight
   const FEATURES = t.features.items.map((f, i) => ({ ...f, ...FEATURE_STYLE[i] }))
-  const PLANS = t.plans.items.map((p, i) => ({ ...p, ...PLAN_STYLE[i] }))
+  const PLANS = t.plans.items.map((p, i) => ({ ...p, ...PLAN_STYLE[i], highlighted: p.highlighted ?? PLAN_STYLE[i].highlighted }))
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const FACTS = t.facts
   const STEPS = t.how.steps
   const FAQS = t.faq.items
@@ -259,49 +263,83 @@ function LandingPageInner() {
 
       {/* ===== PLANS ===== */}
       <section id="plans" className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-28">
-        <Reveal className="text-center max-w-xl mx-auto mb-16">
+        <Reveal className="text-center max-w-xl mx-auto mb-10">
           <span className="inline-block bg-ruwad-navy text-white text-xs font-extrabold px-4 py-1.5 rounded-full -rotate-1">{t.plans.tag}</span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-ruwad-navy mt-4">{t.plans.title}</h2>
           <p className="text-ruwad-navy/60 mt-3">{t.plans.desc}</p>
         </Reveal>
 
-        <div className="grid md:grid-cols-3 gap-8 md:pt-4">
-          {PLANS.map((plan) => (
-            <Reveal key={plan.name} rotate={plan.r}>
-              <div
-                style={{ transform: `rotate(${plan.r}deg)` }}
-                className={`relative rounded-ruwad p-7 h-full flex flex-col gap-5 border-2 border-ruwad-navy shadow-hard hover-pop ${
-                  plan.highlighted ? 'bg-ruwad-navy text-white md:-translate-y-2' : 'bg-white text-ruwad-navy'
+        {/* مبدّل شهري/سنوي — بأسلوب أزرار التنقل في التقويم */}
+        <Reveal className="flex justify-center mb-12">
+          <div className="inline-flex bg-white border-2 border-ruwad-navy rounded-full p-1 shadow-hard-sm">
+            {(['monthly', 'yearly'] as const).map((b) => (
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                className={`relative px-6 py-2.5 rounded-full text-sm font-extrabold transition-colors ${
+                  billing === b ? 'bg-ruwad-navy text-white' : 'text-ruwad-navy/60 hover:text-ruwad-navy'
                 }`}
               >
-                {plan.highlighted && (
-                  <span className="absolute -top-4 right-1/2 translate-x-1/2 bg-ruwad-lime text-ruwad-navy text-[11px] font-extrabold px-3 py-1.5 rounded-full border-2 border-ruwad-navy rotate-2">
-                    {t.plans.popular}
+                {b === 'monthly' ? t.plans.monthly : t.plans.yearly}
+                {b === 'yearly' && (
+                  <span className={`absolute -top-3 -left-3 text-[9px] font-extrabold px-2 py-0.5 rounded-full border-2 border-ruwad-navy rotate-6 ${
+                    billing === 'yearly' ? 'bg-ruwad-lime text-ruwad-navy' : 'bg-ruwad-lime text-ruwad-navy'
+                  }`}>
+                    {t.plans.save}
                   </span>
                 )}
-                <div>
-                  <h3 className="text-xl font-extrabold">{plan.name}</h3>
-                  <p className={`text-sm mt-1 ${plan.highlighted ? 'text-white/70' : 'text-ruwad-navy/60'}`}>{plan.tagline}</p>
-                </div>
-                <ul className="flex flex-col gap-2.5 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 size={16} className={plan.highlighted ? 'text-ruwad-lime' : 'text-ruwad-blue'} /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t.plans.whatsapp(plan.name))}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className={`text-center font-extrabold py-3 rounded-ruwad-sm border-2 border-ruwad-navy transition ${
-                    plan.highlighted ? 'bg-ruwad-lime text-ruwad-navy hover:opacity-90' : 'bg-ruwad-navy text-white hover:opacity-90'
+              </button>
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:pt-4">
+          {PLANS.map((plan) => {
+            const price = billing === 'monthly' ? plan.monthly : plan.yearly
+            const period = billing === 'monthly' ? t.plans.monthly : t.plans.yearly
+            return (
+              <Reveal key={plan.name} rotate={plan.r}>
+                <div
+                  style={{ transform: `rotate(${plan.r}deg)` }}
+                  className={`relative rounded-ruwad p-7 h-full flex flex-col gap-5 border-2 border-ruwad-navy shadow-hard hover-pop ${
+                    plan.highlighted ? 'bg-ruwad-navy text-white md:-translate-y-2' : 'bg-white text-ruwad-navy'
                   }`}
                 >
-                  {t.plans.cta}
-                </a>
-              </div>
-            </Reveal>
-          ))}
+                  {plan.highlighted && (
+                    <span className="absolute -top-4 right-1/2 translate-x-1/2 bg-ruwad-lime text-ruwad-navy text-[11px] font-extrabold px-3 py-1.5 rounded-full border-2 border-ruwad-navy rotate-2">
+                      {t.plans.popular}
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-extrabold">{plan.name}</h3>
+                    <p className={`text-sm mt-1 ${plan.highlighted ? 'text-white/70' : 'text-ruwad-navy/60'}`}>{plan.tagline}</p>
+                  </div>
+
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-4xl font-extrabold">${price}</span>
+                    <span className={`text-sm font-bold ${plan.highlighted ? 'text-white/60' : 'text-ruwad-navy/50'}`}>/ {period}</span>
+                  </div>
+
+                  <ul className="flex flex-col gap-2.5 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 size={16} className={plan.highlighted ? 'text-ruwad-lime' : 'text-ruwad-blue'} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t.plans.whatsapp(plan.name, price, period))}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className={`flex items-center justify-center gap-2 text-center font-extrabold py-3 rounded-ruwad-sm border-2 border-ruwad-navy transition ${
+                      plan.highlighted ? 'bg-ruwad-lime text-ruwad-navy hover:opacity-90' : 'bg-ruwad-navy text-white hover:opacity-90'
+                    }`}
+                  >
+                    <MessageCircle size={17} /> {t.plans.cta}
+                  </a>
+                </div>
+              </Reveal>
+            )
+          })}
         </div>
       </section>
 
