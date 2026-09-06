@@ -64,7 +64,6 @@ const instituteNav = [
   { href: '/org/jobs', label: 'فرص العمل', icon: Briefcase },
   { href: '/org/training-requests', label: 'طلبات التدريب', icon: Target },
   { href: '/org/surveys', label: 'الاستبيانات', icon: ClipboardList },
-  { href: '/org/posts', label: 'منشوراتي', icon: Rss },
   { href: '/org/courses', label: 'التدريبات', icon: BookOpen },
   { href: '/org/rooms', label: 'القاعات', icon: DoorOpen },
   { href: '/org/team', label: 'الفريق', icon: Users },

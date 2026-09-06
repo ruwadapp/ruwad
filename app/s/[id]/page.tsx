@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
+import { BackButton } from '@/components/shared/BackButton'
 import { Award, Medal, Target, Wrench, GraduationCap, CalendarDays } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
   return (
     <main className="min-h-screen bg-[#EEF0F7] p-4 md:p-6">
       <div className="max-w-3xl mx-auto flex flex-col gap-5">
+        <BackButton className="self-start" />
         {/* ===== ترويسة البروفايل ===== */}
         <div className="bg-white rounded-ruwad shadow-card overflow-hidden">
           <div className="h-24 bg-ruwad-gradient relative">

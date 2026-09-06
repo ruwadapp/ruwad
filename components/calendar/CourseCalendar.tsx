@@ -122,6 +122,11 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
   function eventColor(e: CalEvent) {
     return e.color ?? (e.institute_id ? '#252943' : '#3A4EFB')
   }
+  async function quickDelete(e: CalEvent) {
+    if (!confirm(`حذف موعد "${e.title}" نهائياً؟`)) return
+    const { error } = await supabase.from('calendar_events').delete().eq('id', e.id)
+    if (!error) load()
+  }
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5 max-w-full overflow-x-hidden" dir="rtl">
@@ -275,10 +280,16 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
                   )}
                 </div>
                 {canEdit(e) && (
-                  <button onClick={() => setModal({ open: true, event: e })} aria-label="تعديل"
-                    className="w-8 h-8 rounded-full border-2 border-ruwad-gray hover:border-ruwad-blue hover:text-ruwad-blue text-ruwad-navy/50 flex items-center justify-center shrink-0">
-                    <Pencil size={13} />
-                  </button>
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <button onClick={() => setModal({ open: true, event: e })} aria-label="تعديل"
+                      className="w-8 h-8 rounded-full border-2 border-ruwad-gray hover:border-ruwad-blue hover:text-ruwad-blue text-ruwad-navy/50 flex items-center justify-center">
+                      <Pencil size={13} />
+                    </button>
+                    <button onClick={() => quickDelete(e)} aria-label="حذف"
+                      className="w-8 h-8 rounded-full border-2 border-ruwad-gray hover:border-red-400 hover:text-red-500 text-ruwad-navy/50 flex items-center justify-center">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 )}
               </li>
             ))}

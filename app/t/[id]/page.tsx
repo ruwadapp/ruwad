@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
+import { BackButton } from '@/components/shared/BackButton'
 import { FollowButton } from '@/components/shared/FollowButton'
 import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { CourseDiscoveryList } from '@/components/shared/CourseDiscoveryList'
@@ -43,6 +44,7 @@ export default async function PublicTrainerProfilePage({ params }: { params: Pro
     <>
       <Header title={trainer.full_name} />
       <main className="p-6 flex flex-col gap-6 max-w-3xl">
+        <BackButton className="self-start" />
         <div className="relative overflow-hidden bg-ruwad-gradient rounded-ruwad shadow-ruwad-lg p-8">
           <div className="absolute -top-14 -right-14 w-52 h-52 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-ruwad-lime/20 rounded-full blur-3xl" />
