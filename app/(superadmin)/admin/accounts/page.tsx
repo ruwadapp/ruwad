@@ -7,14 +7,14 @@ export default async function SuperAdminAccountsPage() {
 
   const { data: accounts } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, account_status, created_at, is_frozen, subscription_ends_at')
+    .select('id, full_name, email, role, account_status, created_at, is_frozen, subscription_ends_at, plan_name, plan_price, billing_cycle')
     .neq('role', 'super_admin')
     .order('created_at', { ascending: false })
 
   return (
     <>
       <Header title="الحسابات" />
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         <AccountsApprovalManager initial={accounts ?? []} />
       </main>
     </>

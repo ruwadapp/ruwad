@@ -1,7 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { UserCheck, UserX, RotateCcw, Snowflake, Sun, KeyRound, Trash2, CalendarPlus, X } from 'lucide-react'
+import {
+  UserCheck, UserX, RotateCcw, Snowflake, Sun, KeyRound, Trash2, CalendarPlus,
+  X, Search, Tag, Loader2,
+} from 'lucide-react'
 
 interface AccountRow {
   id: string
@@ -12,6 +15,9 @@ interface AccountRow {
   created_at: string
   is_frozen: boolean
   subscription_ends_at: string | null
+  plan_name: string | null
+  plan_price: number | null
+  billing_cycle: 'monthly' | 'yearly' | null
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -20,9 +26,22 @@ const ROLE_LABELS: Record<string, string> = {
   institute_admin: 'مدير معهد',
 }
 
+// نفس خطط الصفحة الرئيسية — يختار السوبر أدمن منها مباشرة عند تعيين خطة لحساب
+const OFFICIAL_PLANS = [
+  { name: 'مدرب', monthly: 14, yearly: 140 },
+  { name: 'معهد', monthly: 74, yearly: 740 },
+  { name: 'بوابة بنطاق فرعي', monthly: 89, yearly: 890 },
+  { name: 'بوابة بنطاق مخصّص', monthly: 119, yearly: 1190 },
+  { name: 'بوابة بنطاق مخصّص Pro', monthly: 179, yearly: 1790 },
+]
+
 export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) {
   const [rows, setRows] = useState(initial)
   const [passwordModalFor, setPasswordModalFor] = useState<AccountRow | null>(null)
+  const [planModalFor, setPlanModalFor] = useState<AccountRow | null>(null)
+  const [q, setQ] = useState('')
+  const [roleFilter, setRoleFilter] = useState<'all' | 'trainer' | 'institute_admin' | 'student'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'expiring' | 'expired' | 'frozen'>('all')
   const supabase = createClient()
 
   async function setStatus(id: string, status: 'approved' | 'rejected' | 'pending') {
@@ -39,11 +58,17 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, is_frozen: freeze } : r)))
   }
 
-  async function extendSubscription(id: string, currentEndsAt: string | null, days: number) {
-    const base = currentEndsAt && new Date(currentEndsAt) > new Date() ? new Date(currentEndsAt) : new Date()
+  async function extendSubscription(row: AccountRow) {
+    const days = row.billing_cycle === 'yearly' ? 365 : 30
+    const base = row.subscription_ends_at && new Date(row.subscription_ends_at) > new Date() ? new Date(row.subscription_ends_at) : new Date()
     base.setDate(base.getDate() + days)
-    await supabase.from('profiles').update({ subscription_ends_at: base.toISOString() }).eq('id', id)
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, subscription_ends_at: base.toISOString() } : r)))
+    await supabase.from('profiles').update({ subscription_ends_at: base.toISOString() }).eq('id', row.id)
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, subscription_ends_at: base.toISOString() } : r)))
+  }
+
+  async function savePlan(id: string, plan_name: string, plan_price: number, billing_cycle: 'monthly' | 'yearly') {
+    await supabase.from('profiles').update({ plan_name, plan_price, billing_cycle }).eq('id', id)
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, plan_name, plan_price, billing_cycle } : r)))
   }
 
   async function deleteAccount(row: AccountRow) {
@@ -61,14 +86,58 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
     }
   }
 
-  const pending = rows.filter((r) => r.account_status === 'pending')
-  const approved = rows.filter((r) => r.account_status === 'approved')
-  const rejected = rows.filter((r) => r.account_status === 'rejected')
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase()
+    const now = Date.now()
+    return rows.filter((r) => {
+      if (term && !r.full_name?.toLowerCase().includes(term) && !r.email?.toLowerCase().includes(term)) return false
+      if (roleFilter !== 'all' && r.role !== roleFilter) return false
+      if (statusFilter === 'frozen' && !r.is_frozen) return false
+      if (statusFilter === 'expired') {
+        if (!r.subscription_ends_at || new Date(r.subscription_ends_at).getTime() >= now) return false
+      }
+      if (statusFilter === 'expiring') {
+        if (!r.subscription_ends_at) return false
+        const diff = new Date(r.subscription_ends_at).getTime() - now
+        if (diff < 0 || diff > 7 * 86400_000) return false
+      }
+      return true
+    })
+  }, [rows, q, roleFilter, statusFilter])
 
-  const sharedProps = { toggleFreeze, extendSubscription, deleteAccount, onSetPassword: setPasswordModalFor }
+  const pending = filtered.filter((r) => r.account_status === 'pending')
+  const approved = filtered.filter((r) => r.account_status === 'approved')
+  const rejected = filtered.filter((r) => r.account_status === 'rejected')
+
+  const sharedProps = { toggleFreeze, extendSubscription, deleteAccount, onSetPassword: setPasswordModalFor, onSetPlan: setPlanModalFor }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      {/* بحث وفلترة */}
+      <div className="bg-white rounded-ruwad shadow-card p-4 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ruwad-navy/35" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث بالاسم أو البريد..."
+            className="w-full border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm pr-10 pl-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none" />
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto">
+          {([['all', 'كل الأدوار'], ['trainer', 'مدربون'], ['institute_admin', 'معاهد'], ['student', 'طلاب']] as const).map(([v, l]) => (
+            <button key={v} onClick={() => setRoleFilter(v)}
+              className={`shrink-0 text-xs font-extrabold px-3 py-2 rounded-full border-2 transition ${roleFilter === v ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto">
+          {([['all', 'الكل'], ['expiring', 'قارب الانتهاء'], ['expired', 'منتهي'], ['frozen', 'مجمَّد']] as const).map(([v, l]) => (
+            <button key={v} onClick={() => setStatusFilter(v)}
+              className={`shrink-0 text-xs font-extrabold px-3 py-2 rounded-full border-2 transition ${statusFilter === v ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Section title={`بانتظار الموافقة (${pending.length})`} emptyText="لا توجد طلبات جديدة.">
         {pending.map((r) => (
           <Row key={r.id} row={r} {...sharedProps}>
@@ -82,7 +151,7 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
         ))}
       </Section>
 
-      <Section title={`الحسابات الموافَق عليها (${approved.length})`} emptyText="لا توجد حسابات موافَق عليها بعد.">
+      <Section title={`الحسابات الموافَق عليها (${approved.length})`} emptyText="لا توجد حسابات مطابقة.">
         {approved.map((r) => (
           <Row key={r.id} row={r} {...sharedProps}>
             <button onClick={() => setStatus(r.id, 'rejected')} className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-ruwad-sm transition">
@@ -105,6 +174,9 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
       {passwordModalFor && (
         <SetPasswordModal row={passwordModalFor} onClose={() => setPasswordModalFor(null)} />
       )}
+      {planModalFor && (
+        <PlanModal row={planModalFor} onClose={() => setPlanModalFor(null)} onSave={savePlan} />
+      )}
     </div>
   )
 }
@@ -112,7 +184,7 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
 function Section({ title, emptyText, children }: { title: string; emptyText: string; children: React.ReactNode }) {
   const hasChildren = Array.isArray(children) ? children.length > 0 : !!children
   return (
-    <div className="bg-white rounded-ruwad shadow-card p-6">
+    <div className="bg-white rounded-ruwad shadow-card p-4 sm:p-6">
       <h2 className="text-lg font-bold text-ruwad-navy mb-4">{title}</h2>
       {!hasChildren ? <p className="text-ruwad-navy/50 text-sm py-4 text-center">{emptyText}</p> : <div className="flex flex-col gap-2">{children}</div>}
     </div>
@@ -120,16 +192,19 @@ function Section({ title, emptyText, children }: { title: string; emptyText: str
 }
 
 function Row({
-  row, children, toggleFreeze, extendSubscription, deleteAccount, onSetPassword,
+  row, children, toggleFreeze, extendSubscription, deleteAccount, onSetPassword, onSetPlan,
 }: {
   row: AccountRow
   children: React.ReactNode
   toggleFreeze: (id: string, freeze: boolean) => void
-  extendSubscription: (id: string, currentEndsAt: string | null, days: number) => void
+  extendSubscription: (row: AccountRow) => void
   deleteAccount: (row: AccountRow) => void
   onSetPassword: (row: AccountRow) => void
+  onSetPlan: (row: AccountRow) => void
 }) {
   const expired = row.subscription_ends_at ? new Date(row.subscription_ends_at) < new Date() : false
+  const expiringSoon = !expired && row.subscription_ends_at
+    ? new Date(row.subscription_ends_at).getTime() - Date.now() < 7 * 86400_000 : false
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-ruwad-sm border border-ruwad-gray/60 flex-wrap">
@@ -137,10 +212,16 @@ function Row({
         {row.full_name?.charAt(0) ?? '؟'}
       </div>
       <div className="flex-1 min-w-[160px]">
-        <p className="font-medium text-ruwad-navy flex items-center gap-1.5">
+        <p className="font-medium text-ruwad-navy flex items-center gap-1.5 flex-wrap">
           {row.full_name}
           {row.is_frozen && <span className="text-[10px] bg-sky-100 text-sky-600 px-1.5 py-0.5 rounded-full font-semibold">مجمَّد</span>}
-          {expired && !row.is_frozen && <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-semibold">منتهي الاشتراك</span>}
+          {expired && !row.is_frozen && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-semibold">منتهي</span>}
+          {expiringSoon && !row.is_frozen && <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-semibold">قارب الانتهاء</span>}
+          {row.plan_name && (
+            <span className="text-[10px] bg-ruwad-blue/10 text-ruwad-blue px-1.5 py-0.5 rounded-full font-semibold">
+              {row.plan_name} · ${row.plan_price}{row.billing_cycle === 'yearly' ? '/سنة' : '/شهر'}
+            </span>
+          )}
         </p>
         <p className="text-xs text-ruwad-navy/50">{row.email} · {ROLE_LABELS[row.role] ?? row.role}</p>
         {row.subscription_ends_at && (
@@ -153,12 +234,21 @@ function Row({
 
       <div className="flex items-center gap-1.5 flex-wrap">
         {children}
+        {row.role !== 'student' && (
+          <button
+            onClick={() => onSetPlan(row)}
+            title="تعيين خطة"
+            className="flex items-center gap-1 text-xs font-semibold text-violet-600 hover:bg-violet-50 px-2.5 py-1.5 rounded-ruwad-sm transition"
+          >
+            <Tag size={14} /> {row.plan_name ? 'تعديل الخطة' : 'تعيين خطة'}
+          </button>
+        )}
         <button
-          onClick={() => extendSubscription(row.id, row.subscription_ends_at, 30)}
-          title="تمديد الاشتراك 30 يوماً"
+          onClick={() => extendSubscription(row)}
+          title={`تمديد الاشتراك ${row.billing_cycle === 'yearly' ? 'سنة' : 'شهراً'}`}
           className="flex items-center gap-1 text-xs font-semibold text-ruwad-navy/60 hover:bg-ruwad-gray/30 px-2.5 py-1.5 rounded-ruwad-sm transition"
         >
-          <CalendarPlus size={14} /> +30 يوم
+          <CalendarPlus size={14} /> تمديد
         </button>
         <button
           onClick={() => toggleFreeze(row.id, !row.is_frozen)}
@@ -181,6 +271,65 @@ function Row({
         >
           <Trash2 size={16} />
         </button>
+      </div>
+    </div>
+  )
+}
+
+/* ================= تعيين خطة الحساب ================= */
+
+function PlanModal({ row, onClose, onSave }: {
+  row: AccountRow
+  onClose: () => void
+  onSave: (id: string, plan_name: string, plan_price: number, billing_cycle: 'monthly' | 'yearly') => Promise<void>
+}) {
+  const [selected, setSelected] = useState(row.plan_name ?? OFFICIAL_PLANS[0].name)
+  const [customPrice, setCustomPrice] = useState(String(row.plan_price ?? ''))
+  const [cycle, setCycle] = useState<'monthly' | 'yearly'>(row.billing_cycle ?? 'monthly')
+  const [saving, setSaving] = useState(false)
+  const isCustom = selected === 'مخصّص'
+  const official = OFFICIAL_PLANS.find((p) => p.name === selected)
+  const price = isCustom ? Number(customPrice) || 0 : cycle === 'yearly' ? official?.yearly ?? 0 : official?.monthly ?? 0
+
+  async function save() {
+    if (!price) return
+    setSaving(true)
+    await onSave(row.id, selected, price, cycle)
+    setSaving(false)
+    onClose()
+  }
+
+  const inputCls = 'border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none w-full bg-white'
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-ruwad-navy/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5" dir="rtl">
+      <div className="bg-white w-full sm:max-w-sm rounded-t-ruwad sm:rounded-ruwad max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-ruwad-gray">
+          <h3 className="font-extrabold text-ruwad-navy">تعيين خطة — {row.full_name}</h3>
+          <button onClick={onClose} aria-label="إغلاق" className="text-ruwad-navy/50 hover:text-ruwad-navy"><X size={20} /></button>
+        </div>
+        <div className="p-5 flex flex-col gap-4">
+          <select value={selected} onChange={(e) => setSelected(e.target.value)} className={inputCls}>
+            {OFFICIAL_PLANS.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+            <option value="مخصّص">مخصّص (سعر يدوي)</option>
+          </select>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => setCycle('monthly')} className={`py-2.5 rounded-ruwad-sm text-sm font-extrabold border-2 transition ${cycle === 'monthly' ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>شهري</button>
+            <button onClick={() => setCycle('yearly')} className={`py-2.5 rounded-ruwad-sm text-sm font-extrabold border-2 transition ${cycle === 'yearly' ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>سنوي</button>
+          </div>
+
+          {isCustom ? (
+            <input type="number" min={0} value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} placeholder="السعر بالدولار" className={inputCls} />
+          ) : (
+            <p className="text-sm font-extrabold text-ruwad-navy bg-[#F5F6FA] rounded-ruwad-sm px-3.5 py-2.5">السعر: ${price} / {cycle === 'yearly' ? 'سنة' : 'شهر'}</p>
+          )}
+
+          <button onClick={save} disabled={saving || !price}
+            className="bg-ruwad-blue text-white font-extrabold py-3 rounded-ruwad-sm hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 transition">
+            {saving && <Loader2 size={15} className="animate-spin" />} حفظ الخطة
+          </button>
+        </div>
       </div>
     </div>
   )

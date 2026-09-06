@@ -21,10 +21,17 @@ interface Portal {
   custom_domain: string | null; domain_status: 'none' | 'pending_dns' | 'active'
   status: 'active' | 'suspended' | 'expired'
   expires_at: string | null; brand: Brand; notes: string | null
+  plan_name: string | null; plan_price: number | null; billing_cycle: 'monthly' | 'yearly' | null
   institute: { name: string } | null
 }
 
 const DEFAULT_BRAND: Brand = { primary: '#3A4EFB', secondary: '#33A4FA', accent: '#E3FF3B' }
+
+const PORTAL_PLANS = [
+  { name: 'بوابة بنطاق فرعي', monthly: 89, yearly: 890 },
+  { name: 'بوابة بنطاق مخصّص', monthly: 119, yearly: 1190 },
+  { name: 'بوابة بنطاق مخصّص Pro', monthly: 179, yearly: 1790 },
+]
 
 const STATUS_UI = {
   active: { label: 'نشطة', cls: 'bg-green-50 text-green-600', dot: 'bg-green-500' },
@@ -108,9 +115,14 @@ export function PortalsManager({ initial, institutes, signupCounts }: {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-[11px] text-ruwad-navy/50 font-bold">
+                  <div className="flex items-center gap-4 text-[11px] text-ruwad-navy/50 font-bold flex-wrap">
                     <span className="flex items-center gap-1"><Users size={11} /> {signupCounts[p.id] ?? 0} تسجيل عبرها</span>
                     {p.expires_at && <span>تنتهي {new Date(p.expires_at).toLocaleDateString('ar')}</span>}
+                    {p.plan_name && (
+                      <span className="text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                        {p.plan_name} · ${p.plan_price}{p.billing_cycle === 'yearly' ? '/سنة' : '/شهر'}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 mt-auto pt-2 border-t border-ruwad-gray/40">
@@ -165,6 +177,8 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
   const [secondary, setSecondary] = useState(portal?.brand?.secondary ?? DEFAULT_BRAND.secondary!)
   const [accent, setAccent] = useState(portal?.brand?.accent ?? DEFAULT_BRAND.accent!)
   const [expiresAt, setExpiresAt] = useState(portal?.expires_at ? portal.expires_at.slice(0, 10) : '')
+  const [planName, setPlanName] = useState(portal?.plan_name ?? PORTAL_PLANS[0].name)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(portal?.billing_cycle ?? 'monthly')
   const [notes, setNotes] = useState(portal?.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -187,12 +201,16 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
       return
     }
     setSaving(true); setError('')
+    const chosenPlan = PORTAL_PLANS.find((p) => p.name === planName)
     const payload = {
       institute_id: instituteId,
       subdomain: sub,
       brand: { primary, secondary, accent, display_name: displayName.trim() || undefined, logo_url: logoUrl.trim() || undefined },
       expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null,
       notes: notes.trim() || null,
+      plan_name: planName,
+      plan_price: chosenPlan ? (billingCycle === 'yearly' ? chosenPlan.yearly : chosenPlan.monthly) : null,
+      billing_cycle: billingCycle,
     }
     const { error: err } = portal
       ? await supabase.from('institute_portals').update(payload).eq('id', portal.id)
@@ -306,6 +324,22 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
               </div>
               <p className="text-center text-[10px] text-ruwad-navy/40 font-bold py-1.5">معاينة حية</p>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-extrabold text-ruwad-navy">خطة البوابة</span>
+              <select value={planName} onChange={(e) => setPlanName(e.target.value)} className={inputCls}>
+                {PORTAL_PLANS.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-extrabold text-ruwad-navy">الدورة</span>
+              <select value={billingCycle} onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly')} className={inputCls}>
+                <option value="monthly">شهري</option>
+                <option value="yearly">سنوي</option>
+              </select>
+            </label>
           </div>
 
           <label className="flex flex-col gap-1.5">
