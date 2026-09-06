@@ -11,6 +11,12 @@ import { PhoneShowcase } from './PhoneShowcase'
 import { Reveal } from './Reveal'
 import { ParallaxLayer } from './ParallaxLayer'
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
 const FEATURE_STYLE = [
   { icon: BookOpen, bg: 'bg-white', r: -2 },
   { icon: FileCheck2, bg: 'bg-ruwad-lime', r: 2 },
