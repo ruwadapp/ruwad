@@ -21,7 +21,7 @@ export default async function InstituteCourseDetailPage({ params }: { params: Pr
 
   const c = (overview as { course: {
     title: string; description: string | null; cover_image: string | null
-    status: string; created_at: string; trainer_name: string; trainer_avatar: string | null
+    status: string; created_at: string; trainer_name: string; trainer_avatar: string | null; trainer_id: string
   } }).course
 
   return (
@@ -67,7 +67,7 @@ export default async function InstituteCourseDetailPage({ params }: { params: Pr
           </div>
         </div>
 
-        <CourseOverviewTabs data={overview as never} />
+        <CourseOverviewTabs data={overview as never} courseId={id} trainerId={c.trainer_id} />
       </main>
     </div>
   )

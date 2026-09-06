@@ -33,7 +33,7 @@ const trainerNav: NavItem[] = [
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
-  { href: '/training-requests', label: 'طلبات التدريب', icon: 'Target' },
+  { href: '/radar', label: 'الرادار', icon: 'Target' },
   { href: '/analytics', label: 'التحليلات', icon: 'BarChart3' },
   { href: '/institute', label: 'المعهد', icon: 'Building2' },
 ]
@@ -62,11 +62,10 @@ const instituteNav: NavItem[] = [
   { href: '/org/rooms', label: 'القاعات', icon: 'DoorOpen' },
   { href: '/org/team', label: 'الفريق', icon: 'Users' },
   { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
-  { href: '/org/crm', label: 'المهتمون', icon: 'Target' },
+  { href: '/org/radar', label: 'الرادار', icon: 'Target' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
-  { href: '/org/training-requests', label: 'طلبات التدريب', icon: 'Target' },
   { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/portal', label: 'بوابتي', icon: 'Globe2' },
 ]

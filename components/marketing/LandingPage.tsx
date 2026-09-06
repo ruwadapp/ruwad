@@ -113,6 +113,9 @@ function LandingPageInner() {
                 {t.hero.demo} <ArrowFwd size={16} />
               </a>
             </div>
+            <Link href="/interested" className="inline-flex items-center gap-1.5 text-sm font-bold text-ruwad-lime hover:underline mt-5">
+              🎯 طالب وتبحث عن تدريب؟ اترك اهتمامك هنا
+            </Link>
           </div>
 
           <div>

@@ -19,17 +19,49 @@ interface CourseOpt { id: string; title: string }
 
 const CUR: Record<string, string> = { SYP: 'ل.س', USD: '$' }
 const fmt = (n: number) => Number(n).toLocaleString('ar')
+type SortKey = 'name' | 'progress' | 'courses' | 'debt'
 
 export function StudentsRoster({ students, publishedCourses }: { students: StudentRow[]; publishedCourses: CourseOpt[] }) {
   const [filter, setFilter] = useState<'all' | 'active' | 'graduate'>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [q, setQ] = useState('')
+  const [courseFilter, setCourseFilter] = useState('all')
+  const [debtOnly, setDebtOnly] = useState(false)
+  const [sort, setSort] = useState<SortKey>('name')
 
   const withStatus = useMemo(() => students.map((s) => ({
     ...s,
     isGraduate: s.courses.length > 0 && s.courses.every((c) => c.completed),
+    avgProgress: s.courses.length ? s.courses.reduce((a, c) => a + c.progress, 0) / s.courses.length : 0,
+    hasDebt: s.outstanding.some((o) => o.amount > 0),
   })), [students])
 
-  const shown = withStatus.filter((s) => filter === 'all' || (filter === 'graduate' ? s.isGraduate : !s.isGraduate))
+  const courseOptions = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const s of students) for (const c of s.courses) m.set(c.course_id, c.title)
+    return [...m.entries()].map(([id, title]) => ({ id, title })).sort((a, b) => a.title.localeCompare(b.title, 'ar'))
+  }, [students])
+
+  const shown = useMemo(() => {
+    const term = q.trim()
+    let list = withStatus.filter((s) => {
+      if (filter !== 'all' && (filter === 'graduate' ? !s.isGraduate : s.isGraduate)) return false
+      if (term && !s.full_name.includes(term)) return false
+      if (courseFilter !== 'all' && !s.courses.some((c) => c.course_id === courseFilter)) return false
+      if (debtOnly && !s.hasDebt) return false
+      return true
+    })
+    list = [...list].sort((a, b) => {
+      switch (sort) {
+        case 'progress': return b.avgProgress - a.avgProgress
+        case 'courses': return b.courses.length - a.courses.length
+        case 'debt': return Number(b.hasDebt) - Number(a.hasDebt)
+        default: return a.full_name.localeCompare(b.full_name, 'ar')
+      }
+    })
+    return list
+  }, [withStatus, q, filter, courseFilter, debtOnly, sort])
+
   const counts = { active: withStatus.filter((s) => !s.isGraduate).length, graduate: withStatus.filter((s) => s.isGraduate).length }
 
   return (
@@ -42,6 +74,27 @@ export function StudentsRoster({ students, publishedCourses }: { students: Stude
             {l}
           </button>
         ))}
+      </div>
+
+      <div className="bg-white rounded-ruwad shadow-card p-3 flex flex-col sm:flex-row gap-2.5">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم الطالب..."
+          className="flex-1 border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3.5 py-2 text-sm font-semibold text-ruwad-navy outline-none" />
+        <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}
+          className="border-2 border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm font-bold text-ruwad-navy outline-none bg-white">
+          <option value="all">كل التدريبات</option>
+          {courseOptions.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
+          className="border-2 border-ruwad-gray rounded-ruwad-sm px-3 py-2 text-sm font-bold text-ruwad-navy outline-none bg-white">
+          <option value="name">الاسم أبجدياً</option>
+          <option value="progress">الأعلى تقدماً</option>
+          <option value="courses">الأكثر تدريبات</option>
+          <option value="debt">عليهم مستحقات أولاً</option>
+        </select>
+        <button onClick={() => setDebtOnly(!debtOnly)}
+          className={`shrink-0 text-xs font-extrabold px-3 py-2 rounded-ruwad-sm border-2 transition ${debtOnly ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>
+          عليهم مستحقات فقط
+        </button>
       </div>
 
       {shown.length === 0 ? (

@@ -1,10 +1,12 @@
 'use client'
 import { useState, type ReactNode } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { SanitizedHtml } from '@/components/shared/SanitizedHtml'
 import {
   Users, PlaySquare, FileText, ListChecks, Trophy, CalendarCheck, MonitorPlay,
   CheckCircle2, Clock, Video, Presentation as PresIcon, CircleDot, ChevronDown,
-  Paperclip, ExternalLink, Check,
+  Paperclip, ExternalLink, Check, Award, Loader2,
 } from 'lucide-react'
 
 /* ================================================================
@@ -14,7 +16,7 @@ import {
 
 interface Question { id: string; text: string; type: string | null; options: unknown; correct: string | null; marks: number | null; explanation?: string | null; image_url?: string | null }
 interface Overview {
-  students: { id: string; name: string; avatar: string | null; progress: number | null; enrolled_at: string; completed: boolean }[]
+  students: { id: string; name: string; avatar: string | null; progress: number | null; enrolled_at: string; completed: boolean; certificate_id: string | null; certificate_code: string | null }[]
   lectures: { id: string; title: string; order_index: number; duration: number | null; published: boolean; description: string | null; content: string | null; video_url: string | null; presentation_url: string | null; attachments: unknown }[]
   exams: { id: string; title: string; description: string | null; instructions: string | null; total_marks: number | null; passing_marks: number | null; duration: number | null; active: boolean; starts_at: string | null; questions: Question[] }[]
   assignments: { id: string; title: string; description: string | null; instructions: string | null; attachments: unknown; total_marks: number | null; due_date: string | null; active: boolean }[]
@@ -128,7 +130,21 @@ function EmptyRow({ label }: { label: string }) {
   return <p className="text-xs text-ruwad-navy/45 text-center py-8">{label}</p>
 }
 
-export function CourseOverviewTabs({ data }: { data: Overview }) {
+export function CourseOverviewTabs({ data, courseId, trainerId }: { data: Overview; courseId: string; trainerId: string }) {
+  const supabase = createClient()
+  const [issuing, setIssuing] = useState<string | null>(null)
+  const [issued, setIssued] = useState<Record<string, string>>({})
+
+  async function issueCertificate(studentId: string) {
+    setIssuing(studentId)
+    const { data: code } = await supabase.rpc('generate_certificate_code')
+    const { data: cert, error } = await supabase.from('certificates')
+      .insert({ student_id: studentId, course_id: courseId, trainer_id: trainerId, score: 100, certificate_code: code as string })
+      .select('id, certificate_code').single()
+    setIssuing(null)
+    if (!error && cert) setIssued((prev) => ({ ...prev, [studentId]: cert.id }))
+  }
+
   const [tab, setTab] = useState<TabKey>('students')
   const [openId, setOpenId] = useState<string | null>(null)
   const toggle = (id: string) => setOpenId(openId === id ? null : id)
@@ -182,6 +198,17 @@ export function CourseOverviewTabs({ data }: { data: Overview }) {
                       </div>
                       <p className="text-[10px] font-bold text-ruwad-navy/45 mt-1">تقدّم {pct}%</p>
                     </div>
+                    {s.certificate_id || issued[s.id] ? (
+                      <Link href={`/certificates/${issued[s.id] ?? s.certificate_id}`} target="_blank"
+                        className="flex items-center gap-1 text-[10px] font-extrabold text-green-600 bg-green-50 rounded-full px-2.5 py-1 mt-1">
+                        <Award size={10} /> شهادة صادرة
+                      </Link>
+                    ) : (
+                      <button onClick={() => issueCertificate(s.id)} disabled={issuing === s.id}
+                        className="flex items-center gap-1 text-[10px] font-extrabold text-ruwad-blue bg-ruwad-blue/10 hover:bg-ruwad-blue/20 rounded-full px-2.5 py-1 mt-1 transition disabled:opacity-60">
+                        {issuing === s.id ? <Loader2 size={10} className="animate-spin" /> : <Award size={10} />} إصدار شهادة
+                      </button>
+                    )}
                   </div>
                 )
               })}
