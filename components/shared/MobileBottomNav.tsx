@@ -58,15 +58,15 @@ const studentNav: NavItem[] = [
 
 const instituteNav: NavItem[] = [
   { href: '/org/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
-  { href: '/org/courses', label: 'التدريبات', icon: 'BookOpen' },
-  { href: '/org/rooms', label: 'القاعات', icon: 'DoorOpen' },
   { href: '/org/team', label: 'الفريق', icon: 'Users' },
-  { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
-  { href: '/org/radar', label: 'الرادار', icon: 'Target' },
+  { href: '/org/courses', label: 'التدريبات', icon: 'BookOpen' },
   { href: '/org/students', label: 'الطلاب', icon: 'GraduationCap' },
+  { href: '/org/rooms', label: 'القاعات', icon: 'DoorOpen' },
+  { href: '/org/finance', label: 'المالية', icon: 'Wallet' },
+  { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
+  { href: '/org/radar', label: 'الرادار', icon: 'Target' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
-  { href: '/org/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
   { href: '/org/portal', label: 'بوابتي', icon: 'Globe2' },
 ]
 
