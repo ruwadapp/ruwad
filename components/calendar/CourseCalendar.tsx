@@ -117,7 +117,10 @@ export function CourseCalendar({ meta }: { meta: CalendarMeta }) {
   function canEdit(e: CalEvent) {
     if (meta.mode === 'student') return false
     if (e.created_by === meta.userId) return true
-    return meta.mode === 'institute' && !!meta.instituteId && e.institute_id === meta.instituteId
+    if (meta.mode !== 'institute') return false
+    // المعهد يدير أي موعد على كورس مشارَك معه فعلياً — سواء وُسم الموعد بمعهده أم أنشأه المدرب مباشرة
+    if (meta.instituteId && e.institute_id === meta.instituteId) return true
+    return !!e.course_id && meta.courses.some((c) => c.id === e.course_id)
   }
   function eventColor(e: CalEvent) {
     return e.color ?? (e.institute_id ? '#252943' : '#3A4EFB')
