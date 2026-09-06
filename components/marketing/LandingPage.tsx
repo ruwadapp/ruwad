@@ -30,6 +30,14 @@ const PLAN_STYLE = [
 
 const WHATSAPP_NUMBER = '963998285483'
 
+// تتبّع حدث Lead عند الضغط على أي زر "ابدأ مجاناً" — قبل أي محاولة تسجيل فعلية.
+// نمرر content_name لتمييز أي زر بالضبط تم الضغط عليه (Hero أو قسم التواصل).
+function trackStartFreeClick(source: 'hero' | 'contact') {
+  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    window.fbq('track', 'Lead', { content_name: `start_free_${source}` })
+  }
+}
+
 export function LandingPage() {
   return (
     <LangProvider>
@@ -84,7 +92,11 @@ function LandingPageInner() {
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mt-9">
-              <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop text-center">
+              <Link
+                href="/register"
+                onClick={() => trackStartFreeClick('hero')}
+                className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop text-center"
+              >
                 {t.hero.cta}
               </Link>
               <a href="#demo" className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white font-bold px-9 py-4 rounded-ruwad-sm hover:bg-white hover:text-ruwad-navy transition">
@@ -338,7 +350,11 @@ function LandingPageInner() {
           <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-snug">{t.contact.title}</h2>
           <p className="text-white/70 leading-relaxed">{t.contact.desc}</p>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <Link href="/register" className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-lime hover-pop">
+            <Link
+              href="/register"
+              onClick={() => trackStartFreeClick('contact')}
+              className="bg-ruwad-lime text-ruwad-navy font-extrabold px-9 py-4 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard-lime hover-pop"
+            >
               {t.contact.cta}
             </Link>
             <a
