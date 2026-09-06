@@ -28,6 +28,11 @@ export async function generateMetadata(): Promise<Metadata> {
       authors: [{ name: 'رُوّاد' }],
       creator: 'رُوّاد',
       alternates: { canonical: '/' },
+      verification: {
+        other: {
+          'facebook-domain-verification': 'cct503jksgu29qs23nzh0mkko9k4nw',
+        },
+      },
       icons: {
         icon: [
           { url: '/icons/icon-48.png', sizes: '48x48', type: 'image/png' },
