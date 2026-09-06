@@ -102,8 +102,8 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
   const portalBrand = usePortalBrand()
 
   return (
-    <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-ruwad-dark text-white min-h-screen px-4 py-6">
-      <div className="px-2 mb-8 flex items-center gap-2.5">
+    <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-ruwad-dark text-white h-screen sticky top-0 px-4 py-6 overflow-hidden">
+      <div className="px-2 mb-8 flex items-center gap-2.5 shrink-0">
         {portalBrand ? (
           <>
             {portalBrand.logoUrl ? (
@@ -120,7 +120,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
         )}
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
         {nav.map((item) => {
           const active = pathname.startsWith(item.href)
           const Icon = item.icon
@@ -141,7 +141,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
         })}
       </nav>
 
-      <div className="border-t border-white/10 pt-4 mt-4 flex flex-col gap-2">
+      <div className="border-t border-white/10 pt-4 mt-4 flex flex-col gap-2 shrink-0">
         <Link
           href="/profile"
           className="flex items-center gap-3 px-2 py-2 rounded-ruwad-sm hover:bg-white/10 transition group"
