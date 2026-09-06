@@ -6,6 +6,12 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
 export function RegisterForm() {
   const brand = usePortalBrand()
   const searchParams = useSearchParams()
@@ -55,6 +61,12 @@ export function RegisterForm() {
         : 'حدث خطأ أثناء إنشاء الحساب، حاول مرة أخرى')
       setLoading(false)
       return
+    }
+
+    // تسجيل حدث "إتمام التسجيل" لفيسبوك فور نجاح إنشاء الحساب فعلياً في Supabase —
+    // بغض النظر عن مسار التوجيه التالي (تأكيد بريد أو دخول مباشر).
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'CompleteRegistration', { content_name: role })
     }
 
     if (data.user && !data.session) {
