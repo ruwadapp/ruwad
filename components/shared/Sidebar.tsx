@@ -11,6 +11,7 @@ import {
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
+import { InstituteOptionsMenu } from '@/components/shared/InstituteOptionsMenu'
 import { usePortalBrand } from '@/lib/portal/brand-context'
 
 const trainerNav = [
@@ -67,7 +68,6 @@ const instituteNav = [
   { href: '/org/radar', label: 'الرادار', icon: Target },
   { href: '/org/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/org/jobs', label: 'فرص العمل', icon: Briefcase },
-  { href: '/org/portal', label: 'بوابتي', icon: Globe2 },
 ]
 
 const superAdminNav = [
@@ -162,6 +162,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
           <LogOut size={18} />
           تسجيل الخروج
         </button>
+        {profile?.role === 'institute_admin' && <InstituteOptionsMenu />}
       </div>
     </aside>
   )

@@ -67,7 +67,6 @@ const instituteNav: NavItem[] = [
   { href: '/org/radar', label: 'الرادار', icon: 'Target' },
   { href: '/org/nearby', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/org/jobs', label: 'فرص العمل', icon: 'Briefcase' },
-  { href: '/org/portal', label: 'بوابتي', icon: 'Globe2' },
 ]
 
 const superAdminNav: NavItem[] = [

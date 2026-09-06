@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
@@ -208,6 +209,26 @@ export function ProfileClient({ profile, stats, points, instituteCode }: { profi
               <p className="relative text-2xl sm:text-3xl font-mono font-bold text-white tracking-widest mt-1">{instituteCode}</p>
             </div>
             <CodeQrImage code={instituteCode} size={90} className="relative" />
+          </div>
+        )}
+
+        {profile.role === 'institute_admin' && (
+          <div className="bg-white rounded-ruwad shadow-card overflow-hidden">
+            <h2 className="text-xs font-bold text-ruwad-navy/50 px-6 pt-5 pb-2 uppercase tracking-wider">التحكم بالمنصة والبوابة</h2>
+            <div className="flex flex-col">
+              {[
+                { href: '/org/portal', label: 'بوابتي' },
+                { href: '/org/settings/subscription', label: 'الاشتراك' },
+                { href: '/org/settings/profile', label: 'بيانات المعهد' },
+                { href: '/org/settings/notifications', label: 'الإشعارات' },
+                { href: '/reset-password', label: 'الأمان' },
+              ].map((it) => (
+                <Link key={it.href} href={it.href}
+                  className="px-6 py-3 text-sm font-bold text-ruwad-navy hover:bg-[#F5F6FA] transition border-t border-ruwad-gray/40 first:border-t-0">
+                  {it.label}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
