@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags, DollarSign,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList, Trophy, FileCheck,
-  CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags,
+  CalendarCheck, CalendarDays, BarChart3, Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags, DollarSign,
 }
 
 interface NavItem { href: string; label: string; icon: string }
@@ -71,6 +71,7 @@ const instituteNav: NavItem[] = [
 const superAdminNav: NavItem[] = [
   { href: '/admin/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
   { href: '/admin/accounts', label: 'الحسابات', icon: 'UserCog' },
+  { href: '/admin/revenue', label: 'الإيرادات', icon: 'DollarSign' },
   { href: '/admin/portals', label: 'البوابات', icon: 'Globe2' },
   { href: '/admin/plans', label: 'الخطط', icon: 'Tags' },
 ]

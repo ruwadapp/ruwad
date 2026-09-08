@@ -8,7 +8,7 @@ import {
   DoorOpen,
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, LogOut, Pencil,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Tags,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Tags, DollarSign,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { InstituteOptionsMenu } from '@/components/shared/InstituteOptionsMenu'
@@ -71,6 +71,7 @@ const instituteNav = [
 const superAdminNav = [
   { href: '/admin/dashboard', label: 'الرئيسية', icon: LayoutDashboard },
   { href: '/admin/accounts', label: 'الحسابات', icon: UserCog },
+  { href: '/admin/revenue', label: 'الإيرادات', icon: DollarSign },
   { href: '/admin/portals', label: 'البوابات', icon: Globe2 },
   { href: '/admin/plans', label: 'الخطط والأسعار', icon: Tags },
 ]
