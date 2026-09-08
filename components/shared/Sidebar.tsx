@@ -7,7 +7,7 @@ import {
   Wallet,
   DoorOpen,
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
-  Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3, LogOut, Pencil,
+  Trophy, FileCheck, CalendarCheck, CalendarDays, LogOut, Pencil,
   Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Tags,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
@@ -28,12 +28,10 @@ const trainerNav = [
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
   { href: '/calendar', label: 'التقويم', icon: CalendarDays },
   { href: '/badges', label: 'الشارات', icon: Award },
-  { href: '/posts', label: 'منشوراتي', icon: Rss },
   { href: '/nearby-students', label: 'بالقرب مني', icon: MapPin },
   { href: '/jobs', label: 'فرص العمل', icon: Briefcase },
   { href: '/radar', label: 'الرادار', icon: Target },
   { href: '/notifications/send', label: 'إرسال إشعار', icon: Megaphone },
-  { href: '/analytics', label: 'التحليلات', icon: BarChart3 },
   { href: '/institute', label: 'المعهد', icon: Building2 },
 ]
 

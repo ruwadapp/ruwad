@@ -34,7 +34,6 @@ const trainerNav: NavItem[] = [
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
   { href: '/radar', label: 'الرادار', icon: 'Target' },
-  { href: '/analytics', label: 'التحليلات', icon: 'BarChart3' },
   { href: '/institute', label: 'المعهد', icon: 'Building2' },
 ]
 

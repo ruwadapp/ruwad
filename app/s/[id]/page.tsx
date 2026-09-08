@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
 import { BackButton } from '@/components/shared/BackButton'
+import { InviteToCourseButton } from '@/components/shared/InviteToCourseButton'
 import { Award, Medal, Target, Wrench, GraduationCap, CalendarDays } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,28 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
   const { data: profRows } = await supabase.rpc('student_public_profile', { p_student_id: id })
   const profile = profRows?.[0]
   if (!profile) notFound()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  let inviterCourses: { id: string; title: string }[] = []
+  if (user && user.id !== id) {
+    const { data: viewerProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (viewerProfile?.role === 'trainer') {
+      const { data: courses } = await supabase.from('courses').select('id, title').eq('trainer_id', user.id)
+      inviterCourses = courses ?? []
+    } else if (viewerProfile?.role === 'institute_admin') {
+      // كورسات المعهد لا مفتاح أجنبي مباشر لها — عبر جدول المشاركات (resource_id عام)
+      const { data: institute } = await supabase.from('institutes').select('id').eq('owner_id', user.id).single()
+      if (institute) {
+        const { data: shares } = await supabase.from('resource_institute_shares')
+          .select('resource_id').eq('resource_type', 'courses').eq('institute_id', institute.id)
+        const courseIds = (shares ?? []).map((s) => s.resource_id)
+        if (courseIds.length) {
+          const { data: courses } = await supabase.from('courses').select('id, title').in('id', courseIds)
+          inviterCourses = courses ?? []
+        }
+      }
+    }
+  }
 
   const [{ data: pointsRows }, { data: certificates }, { data: badgeLinks }] = await Promise.all([
     supabase.rpc('student_points', { p_student_id: id }),
@@ -43,10 +66,17 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
             </div>
           </div>
           <div className="pt-12 px-6 pb-6">
-            <h1 className="text-xl font-extrabold text-ruwad-navy">{profile.full_name}</h1>
-            <p className="flex items-center gap-1.5 text-xs text-ruwad-navy/50 mt-1">
-              <GraduationCap size={13} /> طالب · <CalendarDays size={12} /> انضمّ في {joined}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl font-extrabold text-ruwad-navy">{profile.full_name}</h1>
+                <p className="flex items-center gap-1.5 text-xs text-ruwad-navy/50 mt-1">
+                  <GraduationCap size={13} /> طالب · <CalendarDays size={12} /> انضمّ في {joined}
+                </p>
+              </div>
+              {inviterCourses.length > 0 && (
+                <InviteToCourseButton studentId={id} courses={inviterCourses} />
+              )}
+            </div>
             {profile.bio && <p className="text-sm text-ruwad-navy/70 mt-3 leading-relaxed">{profile.bio}</p>}
           </div>
         </div>

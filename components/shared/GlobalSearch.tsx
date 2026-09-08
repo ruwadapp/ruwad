@@ -117,7 +117,7 @@ export function GlobalSearch() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => setFocused(true)}
-          placeholder={isStudent ? 'مدرب أو معهد' : 'اسم الطالب'}
+          placeholder={isStudent ? 'مدرب أو معهد' : 'طالب أو معهد'}
           className="flex-1 min-w-0 bg-transparent text-sm font-bold text-ruwad-navy placeholder:text-ruwad-navy/40 outline-none"
         />
         {q && (
