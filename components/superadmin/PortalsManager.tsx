@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Globe, Plus, X, Loader2, Pause, Play, ExternalLink, Trash2,
-  Palette, Link2, RefreshCw, CheckCircle2, Copy, Users,
+  Palette, Link2, RefreshCw, CheckCircle2, Copy, Users, LayoutTemplate, ArrowRight,
 } from 'lucide-react'
+import { LandingEditor } from './LandingEditor'
 
 /* ================================================================
    لوحة إدارة بوابات المعاهد (super_admin) — إنشاء، هوية بمعاينة حية،
@@ -44,6 +45,7 @@ export function PortalsManager({ initial, institutes, signupCounts, plans }: {
 }) {
   const [portals, setPortals] = useState<Portal[]>(initial)
   const [editing, setEditing] = useState<Portal | 'new' | null>(null)
+  const [editingLanding, setEditingLanding] = useState<Portal | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -127,6 +129,10 @@ export function PortalsManager({ initial, institutes, signupCounts, plans }: {
                     <button onClick={() => setEditing(p)}
                       className="flex-1 flex items-center justify-center gap-1.5 text-xs font-extrabold text-ruwad-navy bg-[#F5F6FA] hover:bg-ruwad-gray/50 rounded-ruwad-sm py-2 transition">
                       <Palette size={13} /> إدارة
+                    </button>
+                    <button onClick={() => setEditingLanding(p)} title="تعديل صفحة الهبوط"
+                      className="w-9 h-9 rounded-ruwad-sm text-ruwad-blue bg-ruwad-blue/10 hover:bg-ruwad-blue/20 flex items-center justify-center transition">
+                      <LayoutTemplate size={14} />
                     </button>
                     <button onClick={() => toggleStatus(p)} title={p.status === 'active' ? 'إيقاف' : 'تفعيل'}
                       className={`w-9 h-9 rounded-ruwad-sm flex items-center justify-center transition ${p.status === 'active' ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-green-600 bg-green-50 hover:bg-green-100'}`}>
