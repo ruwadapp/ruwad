@@ -4,42 +4,58 @@ import { createClient } from '@/lib/supabase/client'
 import { RevenueTrendChart } from './RevenueTrendChart'
 import {
   Plus, X, Loader2, Search, TrendingUp, TrendingDown, Minus, CalendarClock,
-  CalendarDays, CalendarRange, Trash2, Pencil, UserRound, Building2,
+  CalendarDays, CalendarRange, Trash2, Pencil, UserRound, Building2, PauseCircle, PlayCircle,
 } from 'lucide-react'
 
-export interface PaymentRow {
+export interface SubscriptionRow {
   id: string
   subscriber_id: string | null
   subscriber_name: string
   amount: number
-  billing_cycle: 'monthly' | 'yearly' | 'one_time'
+  billing_cycle: 'monthly' | 'yearly'
   plan_name: string | null
-  paid_at: string // YYYY-MM-DD
+  started_at: string // YYYY-MM-DD
+  is_active: boolean
+  cancelled_at: string | null
   notes: string | null
 }
 
-const CYCLE_LABEL: Record<PaymentRow['billing_cycle'], string> = {
-  monthly: 'شهري', yearly: 'سنوي', one_time: 'دفعة واحدة',
-}
-
+const CYCLE_LABEL: Record<SubscriptionRow['billing_cycle'], string> = { monthly: 'شهري', yearly: 'سنوي' }
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
 const num = (v: unknown) => Number(v) || 0
 const fmt = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 const todayStr = () => new Date().toISOString().slice(0, 10)
-const ymKey = (d: string) => d.slice(0, 7) // YYYY-MM
-const yKey = (d: string) => d.slice(0, 4) // YYYY
 
-function shiftMonth(ym: string, delta: number) {
-  const [y, m] = ym.split('-').map(Number)
-  const d = new Date(y, m - 1 + delta, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+// القيمة السنوية المكافئة لاشتراك واحد: سنوي كما هو، شهري × 12
+function yearlyEquivalent(sub: { amount: number; billing_cycle: 'monthly' | 'yearly' }) {
+  return sub.billing_cycle === 'yearly' ? sub.amount : sub.amount * 12
 }
 
-export function RevenueManager({ initial }: { initial: PaymentRow[] }) {
-  const [rows, setRows] = useState<PaymentRow[]>(initial.map((r) => ({ ...r, amount: num(r.amount) })))
+// إجمالي الإيراد السنوي المتكرر (ARR) لكل الاشتراكات التي كانت "نشطة فعلياً" في تاريخ معيّن:
+// بدأت قبله أو فيه، ولم تُوقَف قبله. هذا ما يجعل مقارنة الاتجاه مبنية على حالة حقيقية في الماضي.
+function arrAsOf(subs: SubscriptionRow[], dateStr: string) {
+  return subs
+    .filter((s) => s.started_at <= dateStr && (!s.cancelled_at || s.cancelled_at > dateStr))
+    .reduce((sum, s) => sum + yearlyEquivalent(s), 0)
+}
+
+function shiftDate(dateStr: string, monthsDelta: number, daysDelta = 0) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setMonth(d.getMonth() + monthsDelta)
+  d.setDate(d.getDate() + daysDelta)
+  return d.toISOString().slice(0, 10)
+}
+
+function endOfMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).toISOString().slice(0, 10)
+}
+
+export function RevenueManager({ initial }: { initial: SubscriptionRow[] }) {
+  const [rows, setRows] = useState<SubscriptionRow[]>(initial.map((r) => ({ ...r, amount: num(r.amount) })))
   const [q, setQ] = useState('')
-  const [editing, setEditing] = useState<PaymentRow | 'new' | null>(null)
+  const [showCancelled, setShowCancelled] = useState(true)
+  const [editing, setEditing] = useState<SubscriptionRow | 'new' | null>(null)
   const [armedDelete, setArmedDelete] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const supabase = createClient()
@@ -47,34 +63,17 @@ export function RevenueManager({ initial }: { initial: PaymentRow[] }) {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
     return rows
+      .filter((r) => showCancelled || r.is_active)
       .filter((r) => !term || r.subscriber_name.toLowerCase().includes(term) || (r.plan_name ?? '').toLowerCase().includes(term))
-      .sort((a, b) => b.paid_at.localeCompare(a.paid_at))
-  }, [rows, q])
+      .sort((a, b) => (b.is_active === a.is_active ? b.started_at.localeCompare(a.started_at) : a.is_active ? -1 : 1))
+  }, [rows, q, showCancelled])
 
   const stats = useMemo(() => {
     const today = todayStr()
-    const thisMonth = ymKey(today)
-    const lastMonth = shiftMonth(thisMonth, -1)
-    const thisYear = yKey(today)
-    const lastYear = String(Number(thisYear) - 1)
-    const yesterday = (() => {
-      const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10)
-    })()
-
-    let todaySum = 0, yesterdaySum = 0
-    let thisMonthSum = 0, lastMonthSum = 0
-    let thisYearSum = 0, lastYearSum = 0
-
-    for (const r of rows) {
-      if (r.paid_at === today) todaySum += r.amount
-      if (r.paid_at === yesterday) yesterdaySum += r.amount
-      const ym = ymKey(r.paid_at)
-      if (ym === thisMonth) thisMonthSum += r.amount
-      if (ym === lastMonth) lastMonthSum += r.amount
-      const y = yKey(r.paid_at)
-      if (y === thisYear) thisYearSum += r.amount
-      if (y === lastYear) lastYearSum += r.amount
-    }
+    const arrNow = arrAsOf(rows, today)
+    const arrYesterday = arrAsOf(rows, shiftDate(today, 0, -1))
+    const arrLastMonth = arrAsOf(rows, shiftDate(today, -1))
+    const arrLastYear = arrAsOf(rows, shiftDate(today, -12))
 
     const trend = (curr: number, prev: number) => {
       if (prev === 0) return curr > 0 ? { dir: 'up' as const, pct: null } : { dir: 'flat' as const, pct: 0 }
@@ -83,37 +82,48 @@ export function RevenueManager({ initial }: { initial: PaymentRow[] }) {
     }
 
     return {
-      today: todaySum, todayTrend: trend(todaySum, yesterdaySum),
-      month: thisMonthSum, monthTrend: trend(thisMonthSum, lastMonthSum),
-      year: thisYearSum, yearTrend: trend(thisYearSum, lastYearSum),
+      daily: arrNow / 365, dailyTrend: trend(arrNow, arrYesterday),
+      monthly: arrNow / 12, monthlyTrend: trend(arrNow, arrLastMonth),
+      yearly: arrNow, yearlyTrend: trend(arrNow, arrLastYear),
     }
   }, [rows])
 
+  // منحنى الإيراد الشهري المتكرر (MRR) — لقطة حقيقية من حالة الاشتراكات في نهاية كل شهر من آخر 12 شهراً
   const chartData = useMemo(() => {
     const now = new Date()
     const points: { label: string; value: number }[] = []
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      const sum = rows.filter((r) => ymKey(r.paid_at) === key).reduce((s, r) => s + r.amount, 0)
-      points.push({ label: MONTHS_AR[d.getMonth()].slice(0, 3), value: sum })
+      const asOf = endOfMonth(d.getFullYear(), d.getMonth())
+      points.push({ label: MONTHS_AR[d.getMonth()].slice(0, 3), value: Math.round(arrAsOf(rows, asOf) / 12) })
     }
     return points
   }, [rows])
 
-  async function remove(row: PaymentRow) {
+  const activeCount = rows.filter((r) => r.is_active).length
+
+  async function toggleActive(row: SubscriptionRow) {
+    setBusyId(row.id)
+    const nextActive = !row.is_active
+    const patch = nextActive ? { is_active: true, cancelled_at: null } : { is_active: false, cancelled_at: todayStr() }
+    const { error } = await supabase.from('platform_subscriptions').update(patch).eq('id', row.id)
+    setBusyId(null)
+    if (!error) setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...patch } : r)))
+  }
+
+  async function remove(row: SubscriptionRow) {
     if (armedDelete !== row.id) {
       setArmedDelete(row.id)
       setTimeout(() => setArmedDelete((c) => (c === row.id ? null : c)), 3500)
       return
     }
     setBusyId(row.id); setArmedDelete(null)
-    const { error } = await supabase.from('platform_payments').delete().eq('id', row.id)
+    const { error } = await supabase.from('platform_subscriptions').delete().eq('id', row.id)
     setBusyId(null)
     if (!error) setRows((prev) => prev.filter((r) => r.id !== row.id))
   }
 
-  function onSaved(saved: PaymentRow) {
+  function onSaved(saved: SubscriptionRow) {
     setRows((prev) => {
       const exists = prev.some((r) => r.id === saved.id)
       return exists ? prev.map((r) => (r.id === saved.id ? saved : r)) : [saved, ...prev]
@@ -123,60 +133,76 @@ export function RevenueManager({ initial }: { initial: PaymentRow[] }) {
 
   return (
     <div className="flex flex-col gap-6" dir="rtl">
-      {/* ===== بطاقات الإيرادات ===== */}
+      {/* ===== بطاقات الإيراد المتكرر ===== */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <RevenueStatCard icon={CalendarClock} label="مدفوعات اليوم" value={stats.today} trend={stats.todayTrend} tone="navy" />
-        <RevenueStatCard icon={CalendarDays} label="مدفوعات هذا الشهر" value={stats.month} trend={stats.monthTrend} tone="blue" />
-        <RevenueStatCard icon={CalendarRange} label="مدفوعات هذه السنة" value={stats.year} trend={stats.yearTrend} tone="lime" />
+        <RevenueStatCard icon={CalendarClock} label="الوارد اليومي" hint="= الوارد السنوي ÷ 365" value={stats.daily} trend={stats.dailyTrend} tone="navy" />
+        <RevenueStatCard icon={CalendarDays} label="الوارد الشهري" hint="= الوارد السنوي ÷ 12" value={stats.monthly} trend={stats.monthlyTrend} tone="blue" />
+        <RevenueStatCard icon={CalendarRange} label="الوارد السنوي" hint={`من ${activeCount} اشتراكاً نشطاً`} value={stats.yearly} trend={stats.yearlyTrend} tone="lime" />
       </div>
+      <p className="text-xs font-bold text-ruwad-navy/50 -mt-3">
+        كل بطاقة تجمع اشتراكاتك النشطة الحالية وتطبّعها إلى قيمتها المكافئة (اشتراك سنوي ÷ 12 = حصته الشهرية، وهكذا) — وليست مجموع ما دُفع فعلياً في هذه الفترة.
+      </p>
 
-      {/* ===== رسم الاتجاه ===== */}
+      {/* ===== منحنى MRR ===== */}
       <div className="bg-white rounded-ruwad shadow-card p-6">
-        <h2 className="text-sm font-extrabold text-ruwad-navy mb-1">اتجاه الإيرادات — آخر 12 شهراً</h2>
-        <p className="text-xs text-ruwad-navy/50 mb-3">مبني على المدفوعات الفعلية المسجّلة، لا تقديرات.</p>
+        <h2 className="text-sm font-extrabold text-ruwad-navy mb-1">منحنى الإيراد الشهري المتكرر — آخر 12 شهراً</h2>
+        <p className="text-xs text-ruwad-navy/50 mb-3">لقطة حقيقية من حالة اشتراكاتك (نشطة/متوقفة) في نهاية كل شهر.</p>
         <RevenueTrendChart data={chartData} />
       </div>
 
       {/* ===== شريط الأدوات ===== */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ruwad-navy/40" />
-          <input
-            value={q} onChange={(e) => setQ(e.target.value)}
-            placeholder="ابحث باسم المشترك أو الخطة"
-            className="w-full border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm pr-10 pl-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none bg-white"
-          />
+        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ruwad-navy/40" />
+            <input
+              value={q} onChange={(e) => setQ(e.target.value)}
+              placeholder="ابحث باسم المشترك أو الخطة"
+              className="w-full border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm pr-10 pl-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none bg-white"
+            />
+          </div>
+          <label className="flex items-center gap-1.5 text-xs font-extrabold text-ruwad-navy/60 shrink-0 cursor-pointer">
+            <input type="checkbox" checked={showCancelled} onChange={(e) => setShowCancelled(e.target.checked)} className="accent-ruwad-blue" />
+            إظهار المتوقفة
+          </label>
         </div>
         <button onClick={() => setEditing('new')}
           className="flex items-center gap-2 bg-ruwad-blue text-white font-extrabold px-5 py-2.5 rounded-ruwad-sm border-2 border-ruwad-navy shadow-hard hover-pop shrink-0">
-          <Plus size={17} /> تسجيل دفعة
+          <Plus size={17} /> إضافة مشترك
         </button>
       </div>
 
-      {/* ===== قائمة المدفوعات ===== */}
+      {/* ===== قائمة الاشتراكات ===== */}
       <div className="bg-white rounded-ruwad shadow-card overflow-hidden">
         {filtered.length === 0 ? (
-          <p className="text-ruwad-navy/50 text-sm py-10 text-center">لا توجد مدفوعات مطابقة.</p>
+          <p className="text-ruwad-navy/50 text-sm py-10 text-center">لا توجد اشتراكات مطابقة.</p>
         ) : (
           <div className="flex flex-col divide-y divide-ruwad-gray/50">
             {filtered.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 p-4">
+              <div key={r.id} className={`flex items-center gap-3 p-4 ${!r.is_active ? 'opacity-50' : ''}`}>
                 <span className="w-10 h-10 rounded-full bg-ruwad-blue/10 text-ruwad-blue flex items-center justify-center shrink-0">
                   {r.subscriber_id ? <UserRound size={17} /> : <Building2 size={17} />}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-extrabold text-ruwad-navy text-sm truncate">{r.subscriber_name}</p>
+                  <p className="font-extrabold text-ruwad-navy text-sm truncate flex items-center gap-2">
+                    {r.subscriber_name}
+                    {!r.is_active && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-50 text-red-500">متوقف</span>}
+                  </p>
                   <p className="text-[11px] text-ruwad-navy/50 font-bold flex items-center gap-1.5 flex-wrap">
                     {r.plan_name && <span>{r.plan_name} ·</span>}
-                    {CYCLE_LABEL[r.billing_cycle]} · {new Date(r.paid_at).toLocaleDateString('ar')}
+                    {CYCLE_LABEL[r.billing_cycle]} · بدأ {new Date(r.started_at).toLocaleDateString('ar')}
                   </p>
                 </div>
-                <p className="font-extrabold text-ruwad-navy shrink-0">{fmt(r.amount)}</p>
+                <p className="font-extrabold text-ruwad-navy shrink-0">{fmt(r.amount)}<span className="text-[10px] text-ruwad-navy/40">/{r.billing_cycle === 'yearly' ? 'سنة' : 'شهر'}</span></p>
                 <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => toggleActive(r)} disabled={busyId === r.id} title={r.is_active ? 'إيقاف الاشتراك' : 'إعادة تفعيل'}
+                    className="p-2 rounded-lg hover:bg-ruwad-gray/40 text-ruwad-navy/60 hover:text-ruwad-blue transition">
+                    {busyId === r.id ? <Loader2 size={14} className="animate-spin" /> : r.is_active ? <PauseCircle size={14} /> : <PlayCircle size={14} />}
+                  </button>
                   <button onClick={() => setEditing(r)} title="تعديل" className="p-2 rounded-lg hover:bg-ruwad-gray/40 text-ruwad-navy/60 hover:text-ruwad-blue transition">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => remove(r)} disabled={busyId === r.id} title="حذف"
+                  <button onClick={() => remove(r)} disabled={busyId === r.id} title="حذف نهائي"
                     className={`p-2 rounded-lg transition ${armedDelete === r.id ? 'bg-red-500 text-white' : 'hover:bg-red-50 text-red-400'}`}>
                     {busyId === r.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                   </button>
@@ -187,16 +213,17 @@ export function RevenueManager({ initial }: { initial: PaymentRow[] }) {
         )}
       </div>
 
-      {editing && <PaymentEditor payment={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={onSaved} />}
+      {editing && <SubscriptionEditor sub={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={onSaved} />}
     </div>
   )
 }
 
 /* ================= بطاقة إحصائية بمؤشر اتجاه ================= */
 
-function RevenueStatCard({ icon: Icon, label, value, trend, tone }: {
+function RevenueStatCard({ icon: Icon, label, hint, value, trend, tone }: {
   icon: typeof CalendarClock
   label: string
+  hint: string
   value: number
   trend: { dir: 'up' | 'down' | 'flat'; pct: number | null }
   tone: 'navy' | 'blue' | 'lime'
@@ -219,32 +246,35 @@ function RevenueStatCard({ icon: Icon, label, value, trend, tone }: {
           <TrendIcon size={12} /> {trendText}
         </span>
       </div>
-      <p className="text-sm opacity-80">{label}</p>
-      <p className="text-3xl font-extrabold">{fmt(value)}</p>
+      <div>
+        <p className="text-sm opacity-80">{label}</p>
+        <p className="text-[10px] opacity-60 mt-0.5">{hint}</p>
+      </div>
+      <p className="text-3xl font-extrabold">{fmt(Math.round(value))}</p>
     </div>
   )
 }
 
-/* ================= نافذة تسجيل/تعديل دفعة ================= */
+/* ================= نافذة إضافة/تعديل مشترك ================= */
 
 interface SubscriberHit { id: string; full_name: string; email: string; role: string }
 
-function PaymentEditor({ payment, onClose, onSaved }: {
-  payment: PaymentRow | null
+function SubscriptionEditor({ sub, onClose, onSaved }: {
+  sub: SubscriptionRow | null
   onClose: () => void
-  onSaved: (p: PaymentRow) => void
+  onSaved: (p: SubscriptionRow) => void
 }) {
-  const [subscriberId, setSubscriberId] = useState(payment?.subscriber_id ?? null)
-  const [subscriberName, setSubscriberName] = useState(payment?.subscriber_name ?? '')
-  const [manualMode, setManualMode] = useState(!payment?.subscriber_id)
+  const [subscriberId, setSubscriberId] = useState(sub?.subscriber_id ?? null)
+  const [subscriberName, setSubscriberName] = useState(sub?.subscriber_name ?? '')
+  const [manualMode, setManualMode] = useState(!sub?.subscriber_id)
   const [query, setQuery] = useState('')
   const [hits, setHits] = useState<SubscriberHit[]>([])
   const [searching, setSearching] = useState(false)
-  const [amount, setAmount] = useState(payment ? String(num(payment.amount)) : '')
-  const [cycle, setCycle] = useState<PaymentRow['billing_cycle']>(payment?.billing_cycle ?? 'yearly')
-  const [planName, setPlanName] = useState(payment?.plan_name ?? '')
-  const [paidAt, setPaidAt] = useState(payment?.paid_at ?? todayStr())
-  const [notes, setNotes] = useState(payment?.notes ?? '')
+  const [amount, setAmount] = useState(sub ? String(num(sub.amount)) : '')
+  const [cycle, setCycle] = useState<SubscriptionRow['billing_cycle']>(sub?.billing_cycle ?? 'yearly')
+  const [planName, setPlanName] = useState(sub?.plan_name ?? '')
+  const [startedAt, setStartedAt] = useState(sub?.started_at ?? todayStr())
+  const [notes, setNotes] = useState(sub?.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const supabase = createClient()
@@ -285,17 +315,17 @@ function PaymentEditor({ payment, onClose, onSaved }: {
       amount: Number(amount),
       billing_cycle: cycle,
       plan_name: planName.trim() || null,
-      paid_at: paidAt,
+      started_at: startedAt,
       notes: notes.trim() || null,
     }
 
-    const q = payment
-      ? supabase.from('platform_payments').update(payload).eq('id', payment.id).select().single()
-      : supabase.from('platform_payments').insert(payload).select().single()
+    const q = sub
+      ? supabase.from('platform_subscriptions').update(payload).eq('id', sub.id).select().single()
+      : supabase.from('platform_subscriptions').insert({ ...payload, is_active: true, cancelled_at: null }).select().single()
     const { data, error: err } = await q
     setSaving(false)
     if (err || !data) return setError('تعذّر الحفظ — تأكد من صلاحياتك')
-    onSaved({ ...data, amount: num(data.amount) } as PaymentRow)
+    onSaved({ ...data, amount: num(data.amount) } as SubscriptionRow)
   }
 
   const inputCls = 'border-2 border-ruwad-gray focus:border-ruwad-blue rounded-ruwad-sm px-3.5 py-2.5 text-sm font-semibold text-ruwad-navy outline-none w-full bg-white'
@@ -305,7 +335,7 @@ function PaymentEditor({ payment, onClose, onSaved }: {
     <div className="fixed inset-0 z-[70] bg-ruwad-navy/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5" dir="rtl">
       <div className="bg-white w-full sm:max-w-md rounded-t-ruwad sm:rounded-ruwad max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b-2 border-ruwad-gray z-10">
-          <h3 className="font-extrabold text-ruwad-navy">{payment ? 'تعديل دفعة' : 'تسجيل دفعة جديدة'}</h3>
+          <h3 className="font-extrabold text-ruwad-navy">{sub ? 'تعديل اشتراك' : 'إضافة مشترك جديد'}</h3>
           <button onClick={onClose} aria-label="إغلاق" className="text-ruwad-navy/50 hover:text-ruwad-navy"><X size={20} /></button>
         </div>
 
@@ -352,19 +382,22 @@ function PaymentEditor({ payment, onClose, onSaved }: {
               <input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className={labelCls}>تاريخ الدفع</span>
-              <input type="date" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={inputCls} />
+              <span className={labelCls}>تاريخ بدء الاشتراك</span>
+              <input type="date" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className={inputCls} />
             </label>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {(['yearly', 'monthly', 'one_time'] as const).map((c) => (
+            {(['yearly', 'monthly'] as const).map((c) => (
               <button key={c} type="button" onClick={() => setCycle(c)}
                 className={`py-2.5 rounded-ruwad-sm text-sm font-extrabold border-2 transition ${cycle === c ? 'bg-ruwad-navy text-white border-ruwad-navy' : 'bg-white text-ruwad-navy/60 border-ruwad-gray'}`}>
-                {CYCLE_LABEL[c]}
+                يدفع {CYCLE_LABEL[c]}اً
               </button>
             ))}
           </div>
+          <p className="text-[11px] font-bold text-ruwad-navy/40 -mt-2">
+            سيُحتسب تلقائياً: {cycle === 'yearly' ? `~${fmt(Math.round((Number(amount) || 0) / 12))} كحصة شهرية` : `~${fmt(Math.round((Number(amount) || 0) * 12))} كحصة سنوية`}
+          </p>
 
           <label className="flex flex-col gap-1.5">
             <span className={labelCls}>اسم الخطة (اختياري)</span>
@@ -380,7 +413,7 @@ function PaymentEditor({ payment, onClose, onSaved }: {
 
           <button onClick={save} disabled={saving}
             className="bg-ruwad-blue text-white font-extrabold py-3 rounded-ruwad-sm hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 transition">
-            {saving && <Loader2 size={15} className="animate-spin" />} حفظ الدفعة
+            {saving && <Loader2 size={15} className="animate-spin" />} حفظ
           </button>
         </div>
       </div>

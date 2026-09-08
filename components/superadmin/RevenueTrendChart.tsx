@@ -8,7 +8,7 @@ interface RevenuePoint {
 
 export function RevenueTrendChart({ data }: { data: RevenuePoint[] }) {
   if (data.every((d) => d.value === 0)) {
-    return <p className="text-ruwad-navy/50 text-sm py-16 text-center">لا توجد مدفوعات مسجّلة بعد لعرض الاتجاه.</p>
+    return <p className="text-ruwad-navy/50 text-sm py-16 text-center">لا توجد اشتراكات مسجّلة بعد لعرض منحنى الإيراد المتكرر.</p>
   }
 
   return (
@@ -24,7 +24,7 @@ export function RevenueTrendChart({ data }: { data: RevenuePoint[] }) {
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} />
-          <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'الإيراد']} />
+          <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'الإيراد الشهري المتكرر']} />
           <Area type="monotone" dataKey="value" stroke="#3A4EFB" strokeWidth={2.5} fill="url(#revenueFill)" />
         </AreaChart>
       </ResponsiveContainer>
