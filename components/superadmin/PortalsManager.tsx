@@ -27,11 +27,8 @@ interface Portal {
 
 const DEFAULT_BRAND: Brand = { primary: '#3A4EFB', secondary: '#33A4FA', accent: '#E3FF3B' }
 
-const PORTAL_PLANS = [
-  { name: 'بوابة بنطاق فرعي', monthly: 89, yearly: 890 },
-  { name: 'بوابة بنطاق مخصّص', monthly: 119, yearly: 1190 },
-  { name: 'بوابة بنطاق مخصّص Pro', monthly: 179, yearly: 1790 },
-]
+// خطط البوابات تأتي من جدول platform_plans حيث is_portal=true (تُدار من صفحة "الخطط والأسعار")
+type PlanOption = { name: string; monthly_price: number; yearly_price: number }
 
 const STATUS_UI = {
   active: { label: 'نشطة', cls: 'bg-green-50 text-green-600', dot: 'bg-green-500' },
@@ -39,10 +36,11 @@ const STATUS_UI = {
   expired: { label: 'منتهية', cls: 'bg-red-50 text-red-500', dot: 'bg-red-400' },
 } as const
 
-export function PortalsManager({ initial, institutes, signupCounts }: {
+export function PortalsManager({ initial, institutes, signupCounts, plans }: {
   initial: Portal[]
   institutes: { id: string; name: string }[]
   signupCounts: Record<string, number>
+  plans: PlanOption[]
 }) {
   const [portals, setPortals] = useState<Portal[]>(initial)
   const [editing, setEditing] = useState<Portal | 'new' | null>(null)
@@ -149,6 +147,7 @@ export function PortalsManager({ initial, institutes, signupCounts }: {
       {editing && (
         <PortalEditor
           portal={editing === 'new' ? null : editing}
+          plans={plans}
           institutes={institutes}
           takenInstitutes={new Set(portals.map((p) => p.institute_id))}
           onClose={() => setEditing(null)}
@@ -161,8 +160,9 @@ export function PortalsManager({ initial, institutes, signupCounts }: {
 
 /* ================= محرّر البوابة: هوية بمعاينة حية + الدومين ================= */
 
-function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }: {
+function PortalEditor({ portal, plans, institutes, takenInstitutes, onClose, onSaved }: {
   portal: Portal | null
+  plans: PlanOption[]
   institutes: { id: string; name: string }[]
   takenInstitutes: Set<string>
   onClose: () => void
@@ -177,7 +177,7 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
   const [secondary, setSecondary] = useState(portal?.brand?.secondary ?? DEFAULT_BRAND.secondary!)
   const [accent, setAccent] = useState(portal?.brand?.accent ?? DEFAULT_BRAND.accent!)
   const [expiresAt, setExpiresAt] = useState(portal?.expires_at ? portal.expires_at.slice(0, 10) : '')
-  const [planName, setPlanName] = useState(portal?.plan_name ?? PORTAL_PLANS[0].name)
+  const [planName, setPlanName] = useState(portal?.plan_name ?? plans[0]?.name ?? '')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(portal?.billing_cycle ?? 'monthly')
   const [notes, setNotes] = useState(portal?.notes ?? '')
   const [saving, setSaving] = useState(false)
@@ -201,7 +201,7 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
       return
     }
     setSaving(true); setError('')
-    const chosenPlan = PORTAL_PLANS.find((p) => p.name === planName)
+    const chosenPlan = plans.find((p) => p.name === planName)
     const payload = {
       institute_id: instituteId,
       subdomain: sub,
@@ -209,7 +209,7 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
       expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null,
       notes: notes.trim() || null,
       plan_name: planName,
-      plan_price: chosenPlan ? (billingCycle === 'yearly' ? chosenPlan.yearly : chosenPlan.monthly) : null,
+      plan_price: chosenPlan ? Number(billingCycle === 'yearly' ? chosenPlan.yearly_price : chosenPlan.monthly_price) : null,
       billing_cycle: billingCycle,
     }
     const { error: err } = portal
@@ -330,7 +330,7 @@ function PortalEditor({ portal, institutes, takenInstitutes, onClose, onSaved }:
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-extrabold text-ruwad-navy">خطة البوابة</span>
               <select value={planName} onChange={(e) => setPlanName(e.target.value)} className={inputCls}>
-                {PORTAL_PLANS.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+                {plans.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
               </select>
             </label>
             <label className="flex flex-col gap-1.5">

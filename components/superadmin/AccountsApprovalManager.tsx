@@ -26,16 +26,10 @@ const ROLE_LABELS: Record<string, string> = {
   institute_admin: 'مدير معهد',
 }
 
-// نفس خطط الصفحة الرئيسية — يختار السوبر أدمن منها مباشرة عند تعيين خطة لحساب
-const OFFICIAL_PLANS = [
-  { name: 'مدرب', monthly: 14, yearly: 140 },
-  { name: 'معهد', monthly: 74, yearly: 740 },
-  { name: 'بوابة بنطاق فرعي', monthly: 89, yearly: 890 },
-  { name: 'بوابة بنطاق مخصّص', monthly: 119, yearly: 1190 },
-  { name: 'بوابة بنطاق مخصّص Pro', monthly: 179, yearly: 1790 },
-]
+// الخطط تأتي من جدول platform_plans (تُدار من صفحة "الخطط والأسعار")
+export type PlanOption = { name: string; monthly_price: number; yearly_price: number }
 
-export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) {
+export function AccountsApprovalManager({ initial, plans }: { initial: AccountRow[]; plans: PlanOption[] }) {
   const [rows, setRows] = useState(initial)
   const [passwordModalFor, setPasswordModalFor] = useState<AccountRow | null>(null)
   const [planModalFor, setPlanModalFor] = useState<AccountRow | null>(null)
@@ -175,7 +169,7 @@ export function AccountsApprovalManager({ initial }: { initial: AccountRow[] }) 
         <SetPasswordModal row={passwordModalFor} onClose={() => setPasswordModalFor(null)} />
       )}
       {planModalFor && (
-        <PlanModal row={planModalFor} onClose={() => setPlanModalFor(null)} onSave={savePlan} />
+        <PlanModal row={planModalFor} plans={plans} onClose={() => setPlanModalFor(null)} onSave={savePlan} />
       )}
     </div>
   )
@@ -278,18 +272,21 @@ function Row({
 
 /* ================= تعيين خطة الحساب ================= */
 
-function PlanModal({ row, onClose, onSave }: {
+function PlanModal({ row, plans, onClose, onSave }: {
   row: AccountRow
+  plans: PlanOption[]
   onClose: () => void
   onSave: (id: string, plan_name: string, plan_price: number, billing_cycle: 'monthly' | 'yearly') => Promise<void>
 }) {
-  const [selected, setSelected] = useState(row.plan_name ?? OFFICIAL_PLANS[0].name)
+  const [selected, setSelected] = useState(row.plan_name ?? plans[0]?.name ?? 'مخصّص')
   const [customPrice, setCustomPrice] = useState(String(row.plan_price ?? ''))
   const [cycle, setCycle] = useState<'monthly' | 'yearly'>(row.billing_cycle ?? 'monthly')
   const [saving, setSaving] = useState(false)
-  const isCustom = selected === 'مخصّص'
-  const official = OFFICIAL_PLANS.find((p) => p.name === selected)
-  const price = isCustom ? Number(customPrice) || 0 : cycle === 'yearly' ? official?.yearly ?? 0 : official?.monthly ?? 0
+  const official = plans.find((p) => p.name === selected)
+  const isCustom = selected === 'مخصّص' || !official
+  const price = isCustom
+    ? Number(customPrice) || 0
+    : Number(cycle === 'yearly' ? official.yearly_price : official.monthly_price) || 0
 
   async function save() {
     if (!price) return
@@ -310,7 +307,7 @@ function PlanModal({ row, onClose, onSave }: {
         </div>
         <div className="p-5 flex flex-col gap-4">
           <select value={selected} onChange={(e) => setSelected(e.target.value)} className={inputCls}>
-            {OFFICIAL_PLANS.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+            {plans.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
             <option value="مخصّص">مخصّص (سعر يدوي)</option>
           </select>
 

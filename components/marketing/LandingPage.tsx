@@ -5,6 +5,7 @@ import {
   BookOpen, FileCheck2, Flame, Award, QrCode, Users2, Bell, Download,
   CheckCircle2, MessageCircle, Mail, ArrowLeft, ArrowRight, Star,
 } from 'lucide-react'
+import type { PlatformPlan } from '@/lib/plans'
 import { LandingNav } from './LandingNav'
 import { LangProvider, useLang } from './LangProvider'
 import { LiveQuizDemo } from './LiveQuizDemo'
@@ -47,19 +48,35 @@ function trackStartFreeClick(source: 'hero' | 'contact') {
   }
 }
 
-export function LandingPage() {
+export function LandingPage({ dbPlans = [] }: { dbPlans?: PlatformPlan[] }) {
   return (
     <LangProvider>
-      <LandingPageInner />
+      <LandingPageInner dbPlans={dbPlans} />
     </LangProvider>
   )
 }
 
-function LandingPageInner() {
+type PlanCard = { name: string; tagline: string; monthly: number; yearly: number; features: string[]; highlighted?: boolean }
+
+function LandingPageInner({ dbPlans }: { dbPlans: PlatformPlan[] }) {
   const { t, dir, lang } = useLang()
   const ArrowFwd = dir === 'rtl' ? ArrowLeft : ArrowRight
   const FEATURES = t.features.items.map((f, i) => ({ ...f, ...FEATURE_STYLE[i] }))
-  const PLANS = t.plans.items.map((p, i) => ({ ...p, ...PLAN_STYLE[i], highlighted: p.highlighted ?? PLAN_STYLE[i].highlighted }))
+  // المصدر الأساسي: الخطط المُدارة من لوحة السوبر أدمن — ونصوص i18n احتياط فقط
+  const planSource: PlanCard[] = dbPlans.length
+    ? dbPlans.map((p) => ({
+        name: lang === 'ar' ? p.name : p.name_en || p.name,
+        tagline: lang === 'ar' ? p.tagline : p.tagline_en || p.tagline,
+        monthly: Number(p.monthly_price) || 0,
+        yearly: Number(p.yearly_price) || 0,
+        features: lang === 'ar' ? p.features : (p.features_en?.length ? p.features_en : p.features),
+        highlighted: p.is_popular,
+      }))
+    : (t.plans.items as PlanCard[])
+  const PLANS = planSource.map((p, i) => {
+    const st = PLAN_STYLE[i % PLAN_STYLE.length]
+    return { ...p, r: st.r, highlighted: p.highlighted ?? st.highlighted }
+  })
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const FACTS = t.facts
   const STEPS = t.how.steps
