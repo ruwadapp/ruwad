@@ -3,12 +3,21 @@
 export interface LandingSections {
   hero: boolean
   stats: boolean
+  cards: boolean
   courses: boolean
   about: boolean
   news: boolean
   testimonials: boolean
   cta: boolean
   inquiry: boolean
+}
+
+export interface LandingCard {
+  image_url: string
+  title: string
+  description: string
+  button_text: string
+  button_url: string
 }
 
 export interface LandingContent {
@@ -25,6 +34,7 @@ export interface LandingContent {
     manual: { label: string; value: string }[]
   }
   about: { title: string; body: string; image_url: string }
+  cards: LandingCard[]
   testimonials: { name: string; role: string; text: string; avatar_url: string }[]
   cta: { title: string; subtitle: string; button_text: string }
   footer: {
@@ -36,10 +46,11 @@ export interface LandingContent {
 }
 
 export const DEFAULT_LANDING: LandingContent = {
-  sections: { hero: true, stats: true, courses: true, about: true, news: true, testimonials: false, cta: true, inquiry: true },
+  sections: { hero: true, stats: true, cards: false, courses: true, about: true, news: true, testimonials: false, cta: true, inquiry: true },
   hero: { headline: '', tagline: '', cta_text: 'سجّل الآن', slides: [], slide_interval_s: 5 },
   stats: { auto: true, manual: [] },
   about: { title: 'من نحن', body: '', image_url: '' },
+  cards: [],
   testimonials: [],
   cta: { title: '', subtitle: '', button_text: 'ابدأ رحلتك التدريبية' },
   footer: { phone: '', email: '', address: '', socials: { facebook: '', instagram: '', whatsapp: '', telegram: '', youtube: '' } },
@@ -56,6 +67,12 @@ export function mergeLanding(saved: unknown): LandingContent {
       manual: Array.isArray(s.stats?.manual) ? s.stats!.manual.filter((m) => m && typeof m.label === 'string' && typeof m.value === 'string') : [],
     },
     about: { ...DEFAULT_LANDING.about, ...(s.about ?? {}) },
+    cards: Array.isArray(s.cards)
+      ? s.cards.filter((c) => c && typeof c.title === 'string').map((c) => ({
+          image_url: c.image_url ?? '', title: c.title, description: c.description ?? '',
+          button_text: c.button_text ?? '', button_url: c.button_url ?? '',
+        }))
+      : [],
     testimonials: Array.isArray(s.testimonials)
       ? s.testimonials.filter((t) => t && typeof t.text === 'string').map((t) => ({ name: t.name ?? '', role: t.role ?? '', text: t.text, avatar_url: t.avatar_url ?? '' }))
       : [],

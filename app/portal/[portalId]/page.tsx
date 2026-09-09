@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { brandStyle, type PortalInfo } from '@/lib/portal/resolve'
-import { mergeLanding } from '@/lib/portal/landing'
+import { mergeLanding, type LandingCard } from '@/lib/portal/landing'
 import { HeroSlider } from '@/components/portal/HeroSlider'
 import { InquiryForm } from '@/components/portal/InquiryForm'
 import {
@@ -333,6 +333,46 @@ export default async function PortalLandingPage({ params }: { params: Promise<{ 
                     </span>
                   </figcaption>
                 </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+      {/* ===== 6. بطاقات المحتوى ===== */}
+      {L.sections.cards && L.cards.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-6xl mx-auto px-5">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {L.cards.map((card: LandingCard, i: number) => (
+                <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                  {card.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={card.image_url} alt={card.title}
+                      className="w-full h-48 object-cover" />
+                  ) : (
+                    <div className="w-full h-48 bg-ruwad-gradient flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-20"
+                        style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '25px 25px' }} />
+                      <GraduationCap size={48} className="text-white/30" />
+                    </div>
+                  )}
+                  <div className="p-6 flex flex-col gap-3 flex-1">
+                    <h3 className="font-black text-ruwad-navy text-lg leading-snug group-hover:text-ruwad-blue transition-colors">
+                      {card.title}
+                    </h3>
+                    {card.description && (
+                      <p className="text-gray-500 text-sm leading-loose flex-1">{card.description}</p>
+                    )}
+                    {card.button_text && card.button_url && (
+                      <a href={card.button_url} target="_blank" rel="noopener noreferrer"
+                        className="mt-auto inline-flex items-center gap-2 bg-ruwad-blue text-white font-black text-sm px-5 py-2.5 rounded-full hover:opacity-90 transition-all w-fit">
+                        {card.button_text} <ChevronLeft size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

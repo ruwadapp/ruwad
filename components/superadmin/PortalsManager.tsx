@@ -15,6 +15,7 @@ import { LandingEditor } from './LandingEditor'
 
 interface Brand {
   primary?: string; secondary?: string; accent?: string
+  navy?: string; heroText?: string; cardBg?: string; buttonText?: string
   logo_url?: string; display_name?: string
 }
 interface Portal {
@@ -26,7 +27,7 @@ interface Portal {
   institute: { name: string } | null
 }
 
-const DEFAULT_BRAND: Brand = { primary: '#3A4EFB', secondary: '#33A4FA', accent: '#E3FF3B' }
+const DEFAULT_BRAND: Brand = { primary: '#3A4EFB', secondary: '#33A4FA', accent: '#E3FF3B', navy: '#252943', heroText: '#FFFFFF', cardBg: '#FFFFFF', buttonText: '#252943' }
 
 // خطط البوابات تأتي من جدول platform_plans حيث is_portal=true (تُدار من صفحة "الخطط والأسعار")
 type PlanOption = { name: string; monthly_price: number; yearly_price: number }
@@ -209,6 +210,10 @@ function PortalEditor({ portal, plans, institutes, takenInstitutes, onClose, onS
   const [primary, setPrimary] = useState(portal?.brand?.primary ?? DEFAULT_BRAND.primary!)
   const [secondary, setSecondary] = useState(portal?.brand?.secondary ?? DEFAULT_BRAND.secondary!)
   const [accent, setAccent] = useState(portal?.brand?.accent ?? DEFAULT_BRAND.accent!)
+  const [navyColor, setNavyColor] = useState((portal?.brand as Brand | null)?.navy ?? DEFAULT_BRAND.navy!)
+  const [heroText, setHeroText] = useState((portal?.brand as Brand | null)?.heroText ?? DEFAULT_BRAND.heroText!)
+  const [cardBg, setCardBg] = useState((portal?.brand as Brand | null)?.cardBg ?? DEFAULT_BRAND.cardBg!)
+  const [buttonText, setButtonText] = useState((portal?.brand as Brand | null)?.buttonText ?? DEFAULT_BRAND.buttonText!)
   const [expiresAt, setExpiresAt] = useState(portal?.expires_at ? portal.expires_at.slice(0, 10) : '')
   const [planName, setPlanName] = useState(portal?.plan_name ?? plans[0]?.name ?? '')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(portal?.billing_cycle ?? 'monthly')
@@ -238,7 +243,7 @@ function PortalEditor({ portal, plans, institutes, takenInstitutes, onClose, onS
     const payload = {
       institute_id: instituteId,
       subdomain: sub,
-      brand: { primary, secondary, accent, display_name: displayName.trim() || undefined, logo_url: logoUrl.trim() || undefined },
+      brand: { primary, secondary, accent, navy: navyColor, heroText, cardBg, buttonText, display_name: displayName.trim() || undefined, logo_url: logoUrl.trim() || undefined },
       expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null,
       notes: notes.trim() || null,
       plan_name: planName,
@@ -332,13 +337,21 @@ function PortalEditor({ portal, plans, institutes, takenInstitutes, onClose, onS
 
           {/* الألوان + معاينة حية */}
           <div className="sm:col-span-2 grid sm:grid-cols-[1fr_auto] gap-4 items-start">
-            <div className="flex flex-col gap-3">
-              {([['اللون الأساسي', primary, setPrimary], ['اللون الثانوي', secondary, setSecondary], ['لون التمييز', accent, setAccent]] as const).map(([label, val, set]) => (
-                <label key={label} className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-extrabold text-ruwad-navy">{label}</span>
-                  <span className="flex items-center gap-2" dir="ltr">
-                    <input type="color" value={val} onChange={(e) => set(e.target.value)} className="w-9 h-9 rounded-lg border-2 border-ruwad-gray cursor-pointer" />
-                    <input value={val} onChange={(e) => set(e.target.value)} className="w-24 border-2 border-ruwad-gray rounded-lg px-2 py-1.5 text-xs font-mono text-ruwad-navy outline-none focus:border-ruwad-blue" />
+            <div className="flex flex-col gap-2.5">
+              {([
+                ['لون الهيرو (رئيسي)', primary, setPrimary],
+                ['لون الهيرو (ثانوي/تدرج)', secondary, setSecondary],
+                ['لون التمييز / الأزرار', accent, setAccent],
+                ['لون الخلفيات الداكنة', navyColor, setNavyColor],
+                ['لون نص الهيرو', heroText, setHeroText],
+                ['خلفية البطاقات', cardBg, setCardBg],
+                ['نص الأزرار', buttonText, setButtonText],
+              ] as const).map(([label, val, set]) => (
+                <label key={label} className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-extrabold text-ruwad-navy/70 w-44 shrink-0">{label}</span>
+                  <span className="flex items-center gap-1.5" dir="ltr">
+                    <input type="color" value={val} onChange={(e) => set(e.target.value)} className="w-8 h-8 rounded-lg border border-ruwad-gray cursor-pointer shrink-0" />
+                    <input value={val} onChange={(e) => set(e.target.value)} className="w-20 border border-ruwad-gray rounded-lg px-1.5 py-1 text-[11px] font-mono text-ruwad-navy outline-none focus:border-ruwad-blue" />
                   </span>
                 </label>
               ))}

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { mergeLanding, type LandingContent } from '@/lib/portal/landing'
+import { mergeLanding, type LandingContent, type LandingCard } from '@/lib/portal/landing'
 import {
   Save, Check, Eye, Image as ImageIcon, Plus, Trash2, ArrowUp, ArrowDown,
   ToggleLeft, ToggleRight, Upload, X, Loader2,
@@ -10,10 +10,12 @@ import {
 const inputCls = 'w-full border border-ruwad-gray rounded-ruwad-sm px-3 py-2.5 text-sm outline-none focus:border-ruwad-blue transition bg-white'
 const labelCls = 'block text-xs font-bold text-ruwad-navy/60 mb-1'
 const SECTION_LABELS: Record<string, string> = {
-  hero: 'الهيرو (البانر الرئيسي)', stats: 'شريط الإحصاءات', courses: 'التدريبات المتاحة',
+  hero: 'الهيرو (البانر الرئيسي)', stats: 'شريط الإحصاءات', cards: 'بطاقات مخصصة', courses: 'التدريبات المتاحة',
   about: 'من نحن', news: 'آخر الأخبار', testimonials: 'آراء الطلاب', cta: 'البانر الختامي', inquiry: 'نموذج الاستفسار',
 }
 const SECTION_KEYS = Object.keys(SECTION_LABELS) as (keyof LandingContent['sections'])[]
+
+const EMPTY_CARD: LandingCard = { image_url: '', title: '', description: '', button_text: '', button_url: '' }
 
 // ===== رفع صورة على Supabase Storage (bucket: portal-assets) =====
 function useImageUploader(portalId: string) {
@@ -164,6 +166,69 @@ export function LandingEditor({ portalId, portalSubdomain, initialLanding }: {
               )}
             </div>
           )}
+        </section>
+      )}
+
+      {/* ===== بطاقات المحتوى ===== */}
+      {L.sections.cards && (
+        <section className="bg-white rounded-ruwad shadow-card p-5 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-extrabold text-ruwad-navy">بطاقات المحتوى (٣ في كل سطر)</h3>
+            {L.cards.length < 12 && (
+              <button type="button" onClick={() => set('cards', [...L.cards, { ...EMPTY_CARD }])}
+                className="flex items-center gap-1.5 text-xs font-bold text-ruwad-blue border border-ruwad-blue/30 bg-ruwad-blue/5 rounded-ruwad-sm px-3 py-2 hover:bg-ruwad-blue/10 transition">
+                <Plus size={13} /> إضافة بطاقة
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-ruwad-navy/50 -mt-2">الصور تُرفع على Supabase Storage — الزر والرابط اختياريان</p>
+          {L.cards.length === 0 && (
+            <p className="text-sm text-ruwad-navy/40 bg-ruwad-gray/10 rounded-ruwad-sm p-4 text-center">لا توجد بطاقات بعد — اضغط "إضافة بطاقة"</p>
+          )}
+          {L.cards.map((card, i) => (
+            <div key={i} className="border border-ruwad-gray/40 rounded-ruwad-sm p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-ruwad-navy/60">بطاقة #{i + 1}</span>
+                <div className="flex items-center gap-1">
+                  <button type="button" disabled={i === 0}
+                    onClick={() => { const a=[...L.cards];[a[i-1],a[i]]=[a[i],a[i-1]];set('cards',a) }}
+                    className="p-1.5 text-ruwad-navy/40 hover:text-ruwad-navy disabled:opacity-25"><ArrowUp size={13} /></button>
+                  <button type="button" disabled={i === L.cards.length - 1}
+                    onClick={() => { const a=[...L.cards];[a[i],a[i+1]]=[a[i+1],a[i]];set('cards',a) }}
+                    className="p-1.5 text-ruwad-navy/40 hover:text-ruwad-navy disabled:opacity-25"><ArrowDown size={13} /></button>
+                  <button type="button" onClick={() => set('cards', L.cards.filter((_, j) => j !== i))}
+                    className="p-1.5 text-red-400 hover:text-red-600"><Trash2 size={13} /></button>
+                </div>
+              </div>
+              {/* صورة البطاقة */}
+              <div className="flex items-start gap-3">
+                {card.image_url && (
+                  <div className="relative shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={card.image_url} alt="" className="w-20 h-14 object-cover rounded-ruwad-sm" />
+                    <button type="button" onClick={() => { const a=[...L.cards];a[i]={...a[i],image_url:''};set('cards',a) }}
+                      className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5"><X size={10} /></button>
+                  </div>
+                )}
+                <UploadButton portalId={portalId} label="رفع صورة البطاقة"
+                  onUrl={(u) => { const a=[...L.cards];a[i]={...a[i],image_url:u};set('cards',a) }} />
+              </div>
+              <input value={card.title}
+                onChange={(e) => { const a=[...L.cards];a[i]={...a[i],title:e.target.value};set('cards',a) }}
+                placeholder="عنوان البطاقة *" className={inputCls} />
+              <textarea rows={2} value={card.description}
+                onChange={(e) => { const a=[...L.cards];a[i]={...a[i],description:e.target.value};set('cards',a) }}
+                placeholder="وصف مختصر للبطاقة (اختياري)" className={`${inputCls} resize-none`} />
+              <div className="grid grid-cols-2 gap-2">
+                <input value={card.button_text}
+                  onChange={(e) => { const a=[...L.cards];a[i]={...a[i],button_text:e.target.value};set('cards',a) }}
+                  placeholder="نص الزر (اختياري)" className={inputCls} />
+                <input value={card.button_url} dir="ltr"
+                  onChange={(e) => { const a=[...L.cards];a[i]={...a[i],button_url:e.target.value};set('cards',a) }}
+                  placeholder="https://رابط الزر" className={inputCls} />
+              </div>
+            </div>
+          ))}
         </section>
       )}
 
