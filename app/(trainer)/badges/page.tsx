@@ -4,13 +4,14 @@ import { BadgeCard } from '@/components/shared/BadgeCard'
 import { CreateBadgeForm } from '@/components/trainer/CreateBadgeForm'
 import { BadgeApprovalsPanel } from '@/components/trainer/BadgeApprovalsPanel'
 import { AwardBadgePanel } from '@/components/shared/AwardBadgePanel'
+import { AwardCertificatePanel } from '@/components/trainer/AwardCertificatePanel'
 import { DeleteButton } from '@/components/shared/DeleteButton'
 
 export default async function TrainerBadgesPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: badges }, { data: approvals }, { data: myEnrollments }] = await Promise.all([
+  const [{ data: badges }, { data: approvals }, { data: myEnrollments }, { data: myCourses }] = await Promise.all([
     supabase.from('badges').select('*').or(`trainer_id.is.null,trainer_id.eq.${user!.id}`).order('rarity', { ascending: false }),
     supabase.from('badge_approvals')
       .select('*, badge:badges(*), student:profiles!student_id(full_name)')
@@ -22,6 +23,7 @@ export default async function TrainerBadgesPage() {
       .select('student_id, status, student:profiles!student_id(full_name), course:courses!inner(trainer_id)')
       .eq('course.trainer_id', user!.id)
       .eq('status', 'approved'),
+    supabase.from('courses').select('id, title').eq('trainer_id', user!.id).order('created_at', { ascending: false }),
   ])
 
   // طلاب المدرب بلا تكرار — لقائمة اختيار منح الشارة
@@ -37,7 +39,7 @@ export default async function TrainerBadgesPage() {
 
   return (
     <>
-      <Header title="الشارات والإنجازات" />
+      <Header title="الشارات والشهادات" />
       <main className="p-6 flex flex-col gap-8">
         <BadgeApprovalsPanel approvals={approvals ?? []} />
 

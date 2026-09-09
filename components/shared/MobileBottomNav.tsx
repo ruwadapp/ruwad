@@ -29,7 +29,7 @@ const trainerNav: NavItem[] = [
   { href: '/challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/assignments', label: 'الوظائف', icon: 'FileCheck' },
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
-  { href: '/badges', label: 'الشارات', icon: 'Award' },
+  { href: '/badges', label: 'الشارات والشهادات', icon: 'Award' },
   { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
   { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },

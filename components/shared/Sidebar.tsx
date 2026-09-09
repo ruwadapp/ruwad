@@ -26,7 +26,7 @@ const trainerNav = [
   { href: '/challenges', label: 'التحديات', icon: Trophy },
   { href: '/assignments', label: 'الوظائف', icon: FileCheck },
   { href: '/attendance', label: 'الحضور', icon: CalendarCheck },
-  { href: '/badges', label: 'الشارات', icon: Award },
+  { href: '/badges', label: 'الشارات والشهادات', icon: Award },
   { href: '/nearby-students', label: 'بالقرب مني', icon: MapPin },
   { href: '/jobs', label: 'فرص العمل', icon: Briefcase },
   { href: '/radar', label: 'الرادار', icon: Target },
