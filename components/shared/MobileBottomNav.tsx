@@ -19,22 +19,22 @@ interface NavItem { href: string; label: string; icon: string }
 
 const trainerNav: NavItem[] = [
   { href: '/dashboard', label: 'الرئيسية', icon: 'LayoutDashboard' },
-  { href: '/courses', label: 'تدريبات', icon: 'BookOpen' },
-  { href: '/project-groups', label: 'المجموعات', icon: 'Users2' },
   { href: '/finance', label: 'المالية', icon: 'Wallet' },
-  { href: '/students', label: 'الطلاب', icon: 'Users' },
+  { href: '/courses', label: 'التدريبات', icon: 'BookOpen' },
   { href: '/exams', label: 'الامتحانات', icon: 'FileText' },
-  { href: '/presentations', label: 'العروض', icon: 'MonitorPlay' },
-  { href: '/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
-  { href: '/challenges', label: 'التحديات', icon: 'Trophy' },
   { href: '/assignments', label: 'الوظائف', icon: 'FileCheck' },
+  { href: '/challenges', label: 'التحديات', icon: 'Trophy' },
+  { href: '/presentations', label: 'العروض التقديمية', icon: 'MonitorPlay' },
+  { href: '/students', label: 'الطلاب', icon: 'Users' },
   { href: '/attendance', label: 'الحضور', icon: 'CalendarCheck' },
-  { href: '/badges', label: 'الشارات والشهادات', icon: 'Award' },
-  { href: '/posts', label: 'منشوراتي', icon: 'Rss' },
   { href: '/nearby-students', label: 'بالقرب مني', icon: 'MapPin' },
-  { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
+  { href: '/notifications/send', label: 'إرسال إشعار', icon: 'Megaphone' },
   { href: '/radar', label: 'الرادار', icon: 'Target' },
+  { href: '/surveys', label: 'الاستبيانات', icon: 'ClipboardList' },
+  { href: '/groups', label: 'الدردشات', icon: 'MessageCircle' },
   { href: '/institute', label: 'المعهد', icon: 'Building2' },
+  { href: '/jobs', label: 'فرص العمل', icon: 'Briefcase' },
+  { href: '/badges', label: 'الشارات والشهادات', icon: 'Award' },
 ]
 
 const studentNav: NavItem[] = [
