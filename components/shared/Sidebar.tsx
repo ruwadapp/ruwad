@@ -9,7 +9,7 @@ import {
   DoorOpen,
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, LogOut, Pencil,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Tags, DollarSign,
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, Megaphone, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Tags, DollarSign, ChevronDown,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { InstituteOptionsMenu } from '@/components/shared/InstituteOptionsMenu'
@@ -155,6 +155,14 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
           )
         })}
       </nav>
+
+      {/* سهم التمرير */}
+      <div className={`pointer-events-none flex justify-center py-1 transition-opacity duration-300 ${showArrow ? 'opacity-100' : 'opacity-0'}`}>
+        <span className="flex flex-col items-center animate-bounce">
+          <ChevronDown size={16} className="text-white/40" />
+          <ChevronDown size={16} className="text-white/20 -mt-3" />
+        </span>
+      </div>
 
       <div className="border-t border-white/10 pt-4 mt-4 flex flex-col gap-2 shrink-0">
         <Link
