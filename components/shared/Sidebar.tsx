@@ -1,4 +1,5 @@
 'use client'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -88,6 +89,19 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const navRef = useRef<HTMLElement>(null)
+  const [showArrow, setShowArrow] = useState(false)
+
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    const check = () => setShowArrow(el.scrollTop + el.clientHeight < el.scrollHeight - 8)
+    check()
+    el.addEventListener('scroll', check, { passive: true })
+    window.addEventListener('resize', check)
+    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check) }
+  }, [])
+
   const nav =
     profile?.role === 'trainer' ? trainerNav :
     profile?.role === 'institute_admin' ? instituteNav :
@@ -121,7 +135,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
         )}
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0 -mx-1 px-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+      <nav ref={navRef} className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0 -mx-1 px-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
         {nav.map((item) => {
           const active = pathname.startsWith(item.href)
           const Icon = item.icon
