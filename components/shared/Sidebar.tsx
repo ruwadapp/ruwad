@@ -121,7 +121,7 @@ export function Sidebar({ profile }: { profile: Profile | null }) {
         )}
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
+      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0 -mx-1 px-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
         {nav.map((item) => {
           const active = pathname.startsWith(item.href)
           const Icon = item.icon
