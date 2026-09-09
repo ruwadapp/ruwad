@@ -64,6 +64,33 @@ export function PortalsManager({ initial, institutes, signupCounts, plans }: {
     if (!error) setPortals((list) => list.filter((x) => x.id !== p.id))
   }
 
+  if (editingLanding) return (
+    <div className="flex flex-col gap-4">
+      <button onClick={() => setEditingLanding(null)}
+        className="self-start flex items-center gap-1.5 text-sm font-bold text-ruwad-navy/60 hover:text-ruwad-navy transition">
+        <ArrowRight size={15} /> رجوع إلى قائمة البوابات
+      </button>
+      <div className="bg-white rounded-ruwad shadow-card p-4 flex items-center gap-3">
+        <Globe size={20} className="text-ruwad-blue shrink-0" />
+        <div>
+          <p className="font-extrabold text-ruwad-navy">{editingLanding.subdomain}.ruwaad.app</p>
+          <p className="text-xs text-ruwad-navy/50">
+            {(editingLanding.institute as unknown as { name?: string })?.name ?? 'معهد'} — تعديل صفحة الهبوط
+          </p>
+        </div>
+        <a href={`https://${editingLanding.subdomain}.ruwaad.app`} target="_blank" rel="noopener noreferrer"
+          className="mr-auto flex items-center gap-1.5 text-xs font-bold text-ruwad-blue hover:underline">
+          <ExternalLink size={13} /> فتح الموقع
+        </a>
+      </div>
+      <LandingEditor
+        portalId={editingLanding.id}
+        portalSubdomain={editingLanding.subdomain}
+        initialLanding={(editingLanding as unknown as { landing?: unknown }).landing ?? {}}
+      />
+    </div>
+  )
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
