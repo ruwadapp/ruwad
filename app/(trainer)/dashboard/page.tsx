@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { PlatformAdsBar } from '@/components/shared/PlatformAdsBar'
 import { Header } from '@/components/shared/Header'
 import { StatsCard } from '@/components/shared/StatsCard'
 import { AnalyticsBarChart } from '@/components/trainer/AnalyticsBarChart'
@@ -231,6 +232,7 @@ export default async function DashboardPage() {
     <>
       <Header title="لوحة التحكم" />
       <main className="p-6 flex flex-col gap-6">
+        <PlatformAdsBar />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {stats.map((s) => (
             <StatsCard key={s.title} {...s} />

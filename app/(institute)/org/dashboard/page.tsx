@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { PlatformAdsBar } from '@/components/shared/PlatformAdsBar'
 import { Header } from '@/components/shared/Header'
 import { LiveActivitySection, AttentionSection } from '@/components/institute/LiveDashboardCards'
 import { GrowthChart, TrainerComparisonChart, RateGauge } from '@/components/institute/InstituteAnalyticsCharts'
@@ -24,6 +25,7 @@ export default async function InstituteDashboardPage() {
       <>
         <Header title="لوحة المعهد" />
         <main className="p-6">
+        <PlatformAdsBar />
           <div className="bg-red-50 text-red-600 text-sm rounded-ruwad-sm px-4 py-3">لم يتم العثور على معهد مرتبط بحسابك.</div>
         </main>
       </>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { FireChallengeBadge, FireCardFrame } from '@/components/shared/FireChallengeBadge'
 import { PointsCard, type PointsBreakdown } from '@/components/shared/PointsCard'
+import { PlatformAdsBar } from '@/components/shared/PlatformAdsBar'
 import { DismissNotifButton } from '@/components/student/DismissNotifButton'
 
 export default async function StudentHomePage() {
@@ -176,6 +177,7 @@ export default async function StudentHomePage() {
     <>
       <Header title="الرئيسية" />
       <main className="p-6 flex flex-col gap-6">
+        <PlatformAdsBar />
         {points && points.total > 0 && (
           <Link href="/profile" className="block transition hover:-translate-y-0.5">
             <PointsCard points={points} compact />
