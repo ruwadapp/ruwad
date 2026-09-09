@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { X, ExternalLink, MessageCircle, Tag, Megaphone } from 'lucide-react'
@@ -43,7 +43,7 @@ export function PlatformAdCard({ ad, onDismiss }: { ad: Ad; onDismiss: (id: stri
   }
 
   // سجّل المشاهدة عند أول عرض
-  useState(() => { markShown() })
+  useEffect(() => { markShown() }, [])
 
   const buttonEl = (() => {
     if (!ad.button_text) return null
