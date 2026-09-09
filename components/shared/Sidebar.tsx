@@ -74,6 +74,7 @@ const superAdminNav = [
   { href: '/admin/revenue', label: 'الإيرادات', icon: DollarSign },
   { href: '/admin/portals', label: 'البوابات', icon: Globe2 },
   { href: '/admin/plans', label: 'الخطط والأسعار', icon: Tags },
+  { href: '/admin/ads', label: 'الإعلانات', icon: Megaphone },
 ]
 
 const ROLE_LABELS: Record<string, string> = {

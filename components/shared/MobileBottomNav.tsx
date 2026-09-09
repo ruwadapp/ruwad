@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Users2, BookOpen, FileText, ClipboardList,
   Trophy, FileCheck, CalendarCheck, CalendarDays, BarChart3,
-  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags, DollarSign,
-} from 'lucide-react'
+  Home, GraduationCap, Award, ListChecks, MonitorPlay, Building2, UserCog, ScanLine, ShieldCheck, Rss, MapPin, FileBadge, Briefcase, Target, MessageCircle, Wallet, Globe2, DoorOpen, Tags, DollarSign, Megaphone,
+ } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { QrScannerModal } from './QrScannerModal'
 
@@ -74,6 +74,7 @@ const superAdminNav: NavItem[] = [
   { href: '/admin/revenue', label: 'الإيرادات', icon: 'DollarSign' },
   { href: '/admin/portals', label: 'البوابات', icon: 'Globe2' },
   { href: '/admin/plans', label: 'الخطط', icon: 'Tags' },
+  { href: '/admin/ads', label: 'الإعلانات', icon: 'Megaphone' },
 ]
 
 export function MobileBottomNav({ profile }: { profile: Profile | null }) {
