@@ -66,6 +66,7 @@ const instituteNav = [
   { href: '/org/radar', label: 'الرادار', icon: Target },
   { href: '/org/nearby', label: 'بالقرب مني', icon: MapPin },
   { href: '/org/jobs', label: 'فرص العمل', icon: Briefcase },
+  { href: '/org/notifications/send', label: 'إرسال إشعار', icon: Megaphone },
 ]
 
 const superAdminNav = [

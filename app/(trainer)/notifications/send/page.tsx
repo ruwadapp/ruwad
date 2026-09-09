@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Header } from '@/components/shared/Header'
-import { AnnouncementComposer } from '@/components/trainer/AnnouncementComposer'
+import { AnnouncementComposer } from '@/components/shared/AnnouncementComposer'
 
 export default async function SendNotificationPage() {
   const supabase = await createServerSupabaseClient()
