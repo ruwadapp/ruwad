@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { realtimeManager } from '@/lib/realtime/manager'
 import { getCachedRole, setCachedRole } from '@/lib/role-cache'
 import { MessageCircle } from 'lucide-react'
 
@@ -53,11 +54,9 @@ export function ChatHeaderButton() {
     let channel: ReturnType<typeof supabase.channel> | null = null
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session || cancelled) return
-      supabase.realtime.setAuth(session.access_token)
-      channel = supabase
-        .channel(`chat-badge:${session.user.id}:${Math.random().toString(36).slice(2)}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => setHasUnread(true))
-        .subscribe()
+      const cbId = `chat-badge-${Math.random().toString(36).slice(2)}`
+      realtimeManager.register('chat_message', cbId, () => { if (!cancelled) setHasUnread(true) })
+      ;(globalThis as unknown as Record<string, () => void>)[`_chat_cleanup_${cbId}`] = () => realtimeManager.unregister('chat_message', cbId)
     })
 
     return () => { cancelled = true; if (channel) supabase.removeChannel(channel) }

@@ -1,3 +1,4 @@
+import { RealtimeProvider } from '@/components/shared/RealtimeProvider'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/shared/Sidebar'
@@ -23,6 +24,7 @@ export default async function InstituteLayout({ children }: { children: React.Re
     <div className="flex min-h-screen bg-[#F5F6FA]" dir="rtl">
       <Sidebar profile={profile} />
       <div className="flex-1 min-w-0 pb-24 md:pb-0"><PageTransition>{children}</PageTransition></div>
+      <RealtimeProvider userId={user.id} />
       <MobileBottomNav profile={profile} />
       <OnboardingPermissions locationMode="institute" instituteId={myInstitute?.id} hasLocation={myInstitute?.latitude != null} />
     </div>

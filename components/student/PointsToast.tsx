@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { realtimeManager } from '@/lib/realtime/manager'
 import { Sparkles, X } from 'lucide-react'
 
 interface PointEvent {
@@ -43,14 +44,12 @@ export function PointsToast() {
         .limit(4)
         .then(({ data }) => { if (data?.length && !cancelled) setQueue((q) => [...q, ...data]) })
 
-      supabase.realtime.setAuth(session.access_token)
-      channel = supabase
-        .channel(`points:${session.user.id}:${Math.random().toString(36).slice(2)}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'point_events', filter: `student_id=eq.${session.user.id}` }, (payload) => {
-          const ev = payload.new as PointEvent & { seen: boolean }
-          if (!ev.seen) setQueue((q) => (q.some((x) => x.id === ev.id) ? q : [...q, ev]))
-        })
-        .subscribe()
+      const cbId = `pts-${Math.random().toString(36).slice(2)}`
+      realtimeManager.register('point_event', cbId, (payload) => {
+        const ev = (payload as { new: PointEvent & { seen: boolean } }).new
+        if (!ev.seen && !cancelled) setQueue((q) => (q.some((x) => x.id === ev.id) ? q : [...q, ev]))
+      })
+      ;(globalThis as unknown as Record<string, () => void>)[`_pts_cleanup_${cbId}`] = () => realtimeManager.unregister('point_event', cbId)
     })
 
     return () => { cancelled = true; if (channel) supabase.removeChannel(channel) }

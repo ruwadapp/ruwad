@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { realtimeManager } from '@/lib/realtime/manager'
 import { Bell, BookOpen, FileText, Zap, FileCheck, UserPlus, Award, ShieldCheck, CheckCheck, Megaphone, Mail, Check, X } from 'lucide-react'
 
 interface Notification {
@@ -72,32 +73,16 @@ export function NotificationBell() {
 
   useEffect(() => {
     load()
-    let channel: ReturnType<typeof supabase.channel> | null = null
     let cancelled = false
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session || cancelled) return
-      // حاسم للوصول الفوري: تمرير رمز جلسة المستخدم لقناة الـ WebSocket صراحةً.
-      // بدونه قد يشترك العميل كمجهول، ومع سياسات RLS يرفض الخادم تسليم أي حدث بصمت،
-      // فلا تظهر الإشعارات إلا عند إعادة تحميل الصفحة.
-      supabase.realtime.setAuth(session.access_token)
-
-      const subscribeChannel = () => {
-        // اسم قناة فريد لكل تركيب يمنع خطأ "cannot add postgres_changes callbacks after subscribe()"
-        channel = supabase
-          .channel(`notifications:${session.user.id}:${Math.random().toString(36).slice(2)}`)
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${session.user.id}` }, (payload) => {
-            setNotifications((prev) => (prev.some((n) => n.id === (payload.new as Notification).id) ? prev : [payload.new as Notification, ...prev]))
-          })
-          .subscribe((status) => {
-            // انقطاع الاتصال (نوم الجهاز، تبديل الشبكة): إعادة اشتراك تلقائية بعد لحظة
-            if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !cancelled) {
-              if (channel) supabase.removeChannel(channel)
-              setTimeout(() => { if (!cancelled) subscribeChannel() }, 2000)
-            }
-          })
-      }
-      subscribeChannel()
+      const cbId = `bell-${Math.random().toString(36).slice(2)}`
+      realtimeManager.register('notification', cbId, (payload) => {
+        const n = (payload as { new: Notification }).new
+        if (!cancelled) setNotifications((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]))
+      })
+      ;(globalThis as unknown as Record<string, () => void>)[`_bell_${cbId}`] = () => realtimeManager.unregister('notification', cbId)
     })
 
     // شبكة أمان: مزامنة دورية خفيفة كل 20 ثانية (والصفحة ظاهرة فقط) —
